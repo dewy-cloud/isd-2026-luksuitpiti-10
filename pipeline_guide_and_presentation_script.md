@@ -57,9 +57,10 @@ flowchart TD
 |---|---|:---:|---|:---:|:---:|
 | **DSBA** | วท.บ. (วิทยาการข้อมูลและการวิเคราะห์เชิงธุรกิจ) | 132 | แผนปกติ (`no_coop`)<br>แผนสหกิจ (`coop`) | หน้า 26–32<br>หน้า 33–39 | หน้า 22–32<br>หน้า 22–25, 33–39 |
 | **BIT** | วท.บ. (เทคโนโลยีสารสนเทศทางธุรกิจ) | 126 | แผนปกติ (`no_coop`)<br>แผนสหกิจ (`coop`) | หน้า 26–30<br>หน้า 31–35 | หน้า 22–30<br>หน้า 22–25, 31–35 |
-| **IT** | วท.บ. (เทคโนโลยีสารสนเทศ) | 130 | แผนปกติ (`no_coop`)<br>แผนสหกิจ (`coop`) | หน้า 32–38<br>หน้า 39–45 | หน้า 24–38<br>หน้า 24–31, 39–45 |
+| **IT** | วท.บ. (เทคโนโลยีสารสนเทศ) | 129 | แผนปกติ (`no_coop`)<br>แผนสหกิจ (`coop`) | หน้า 32–38<br>หน้า 39–45 | หน้า 24–38<br>หน้า 24–31, 39–45 |
 | **AIT** | วท.บ. (เทคโนโลยีปัญญาประดิษฐ์) | 120 | แผนเดี่ยว (`single`) | หน้า 23–26 | หน้า 21–26 |
-| **ข้อบังคับสถาบันฯ** | ข้อบังคับ สจล. ว่าด้วยการศึกษาระดับปริญญาตรี 2564 | - | ภาคผนวก ก | หน้า 89, 91, 92, 93, 94, 96 | - |
+| **หมวดวิชาศึกษาทั่วไป (GenEd)** | หมวดวิชาศึกษาทั่วไป ฉบับปรับปรุง พ.ศ. 2564 | - | ใช้ร่วมกันทั้ง 4 หลักสูตร | หน้า 154–227 | ภาคผนวก ง |
+| **ข้อบังคับสถาบันฯ** | ข้อบังคับ สจล. ว่าด้วยการศึกษาระดับปริญญาตรี 2564 | - | ภาคผนวก ก | หน้า 94, 96, 97, 98, 99, 101 | - |
 
 ---
 
@@ -93,6 +94,14 @@ ollama pull scb10x/typhoon-ocr1.5-3b
 
 🎙️ **สคริปต์บทพูดสำหรับ Phase 0:**
 > "ในการเริ่มต้นระบบ เราเริ่มจากการเตรียมสภาพแวดล้อมบนเครื่องคอมพิวเตอร์ โดยสร้าง Python Virtual Environment และติดตั้ง Dependencies ที่จำเป็นทั้งหมด จากนั้นเราสตาร์ทบริการ Ollama บนเครื่อง Local ซึ่งจุดเด่นสำคัญของระบบเราคือ **ทำงานแบบ Offline ภายในเครื่องทั้งหมด** โดยไม่ต้องพึ่งพา Cloud API ภายนอก ทำให้ไม่มีค่าใช้จ่าย และรักษาความปลอดภัยของข้อมูลได้อย่างสมบูรณ์ โดยเราใช้โมเดล **Qwen3 (4B)** สำหรับการประมวลผลข้อความและเขียน SQL และโมเดล **Typhoon-OCR 1.5** สำหรับการอ่านข้อความภาษาไทยจากภาพสแกนครับ"
+
+💡 **นโยบายการกำหนดค่า Temperature (Deterministic vs Generative Policy)**:
+* **`temperature = 0.0` (Zero Randomness / Greedy Decoding)**:
+  * **ใช้ตอนไหน**: ใช้ใน **OCR Stage** (อ่านภาพสแกนด้วย Typhoon-OCR), **NL2SQL Engine** (แปลงภาษาเป็นคำสั่ง SQL ด้วย Qwen3:4b), และ **Text Pipeline** (จัดโครงสร้างตารางเรียนเป็น JSON)
+  * **เหตุผล**: บังคับให้ผลลัพธ์มีความแน่นอนตายตัว (Deterministic 100%) ตัดความสุ่มทิ้งทั้งหมด เพื่อให้อ่านตัวอักษร/รหัสวิชาตรงตามต้นฉบับเป๊ะ และเขียน SQL ถูกไวยากรณ์ ไม่เกิด Hallucination
+* **`temperature = 0.1` (Low Stochasticity)**:
+  * **ใช้ตอนไหน**: ใช้ใน **Answer Synthesis** (สรุปคำตอบภาษาไทยในเว็บแอป Lab 10) และ **Regulation Structuring** (จัดโครงสร้างข้อบังคับร้อยแก้วในภาคผนวก ก)
+  * **เหตุผล**: อนุญาตให้มีความยืดหยุ่นทางภาษาเล็กน้อย เพื่อให้การเรียบเรียงประโยคภาษาไทยมีความสละสลวย อ่านเข้าใจง่าย และลดการติดลูปคำซ้ำ
 
 ---
 
@@ -147,25 +156,30 @@ python lab6/run_lab6_eval.py
 
 ---
 
-### Phase 3: การสกัดแผนการศึกษาด้วย Text Pipeline และข้อบังคับด้วย Local VLM/LLM (Lab 7B)
+### Phase 3: การสกัดแผนการศึกษาด้วย Text Pipeline (Chunked LLM) และข้อบังคับด้วย Local VLM/LLM (Lab 7B)
 
-สกัดโครงสร้างตารางเรียนด้วย Text Pipeline (Rule-based Parser) และสกัดข้อบังคับสถาบันฯ ด้วย Typhoon-OCR และ Qwen3:
+สกัดโครงสร้างตารางเรียนด้วย Text Pipeline (Chunked LLM: Qwen3:4b) และสกัดข้อบังคับสถาบันฯ ด้วย Typhoon-OCR และ Qwen3:
 
 ```powershell
-# 1. สกัดตารางแผนการเรียน DSBA (แผนปกติและสหกิจ)
-python src/ocr_system/lab7b_curriculum.py -i data/input/fulldoc_dsba.pdf --pages 26-39 --pipeline text --out work/lab7b_run/DSBA
+# 1. สกัดตารางแผนการเรียน DSBA (แผนสหกิจ + กลุ่มวิชาเลือกเฉพาะ: หน้า 19–25, 33–39)
+python src/ocr_system/lab7b_curriculum.py -i data/input/fulldoc_dsba.pdf --pages 19-25,33-39 --pipeline text --out work/lab7b_run/DSBA
 
-# 2. สกัดตารางแผนการเรียน BIT
-python src/ocr_system/lab7b_curriculum.py -i data/input/fulldoc_bit.pdf --pages 26-35 --pipeline text --out work/lab7b_run/BIT
+# 2. สกัดตารางแผนการเรียน BIT (แผนสหกิจ + กลุ่มวิชาเลือกเฉพาะ: หน้า 24–25, 31–35)
+python src/ocr_system/lab7b_curriculum.py -i data/input/fulldoc_bit.pdf --pages 24-25,31-35 --pipeline text --out work/lab7b_run/BIT
 
-# 3. สกัดตารางแผนการเรียน IT
-python src/ocr_system/lab7b_curriculum.py -i data/input/fulldoc_it.pdf --pages 32-45 --pipeline text --out work/lab7b_run/IT
+# 3. สกัดตารางแผนการเรียน IT (แผนสหกิจ + กลุ่มวิชาเลือกเฉพาะ: หน้า 26–30, 39–45)
+python src/ocr_system/lab7b_curriculum.py -i data/input/fulldoc_it.pdf --pages 26-30,39-45 --pipeline text --out work/lab7b_run/IT
 
-# 4. สกัดตารางแผนการเรียน AIT
-python src/ocr_system/lab7b_curriculum.py -i data/input/fulldoc_AIT.pdf --pages 23-26 --pipeline text --out work/lab7b_run/AIT
+# 4. สกัดตารางแผนการเรียน AIT (แผนเดี่ยว + กลุ่มวิชาเลือกเฉพาะ: หน้า 21–26)
+python src/ocr_system/lab7b_curriculum.py -i data/input/fulldoc_AIT.pdf --pages 21-26 --pipeline text --out work/lab7b_run/AIT
 
-# 5. สกัดข้อบังคับสถาบันฯ ภาคผนวก ก (เกณฑ์ลงทะเบียน, ทุจริต, ภาคทัณฑ์, พ้นสภาพ, เกียรตินิยม)
+# (หมายเหตุ: หากต้องการสกัดเฉพาะตารางแผนการศึกษา 4 ปีโดยไม่รวมวิชาเลือก สามารถระบุ DSBA: 26-39, BIT: 26-35, IT: 32-45, AIT: 23-26)
+
+# 5. สกัดข้อบังคับสถาบันฯ ภาคผนวก ก หน้า 94, 96–99, 101 (เกณฑ์ลงทะเบียน, ทุจริต, ภาคทัณฑ์, พ้นสภาพ, เกียรตินิยม)
 python -c "from src.ocr_system.lab7b_curriculum import run_extract_regulations; run_extract_regulations()"
+
+# 6. สกัดคำอธิบายรายวิชาหมวดศึกษาทั่วไป (GenEd) หน้า 154–227 ด้วย Two-Stage Architecture (Typhoon-OCR 1.5 + Qwen3)
+python src/ocr_system/extract_gened.py -i data/input/fulldoc_dsba.pdf --pages 154-227 -o work/lab7b_run/gened_courses.json --out-md work/lab7b_run/gened_combined.md --md-dir work/lab7b_run/markdown_pages
 ```
 
 📁 **ผลลัพธ์ที่ได้**:
@@ -175,13 +189,18 @@ python -c "from src.ocr_system.lab7b_curriculum import run_extract_regulations; 
 * `work/lab7b_run/AIT/pred_text.json`
 * `work/lab7b_run/regulations/regulations.json`
 * `work/lab7b_run/regulations/intermediate_regulations_vlm.md`
+* `work/lab7b_run/markdown_pages/` (แคช Markdown รายหน้า 74 หน้า)
+* `work/lab7b_run/gened_combined.md` (ไฟล์ Markdown รวมหมวดวิชาศึกษาทั่วไปทั้งหมด)
+* `work/lab7b_run/gened_courses.json` (ข้อมูลรายวิชา GenEd ครบทั้ง 266 วิชา พร้อมคำอธิบายไทย-อังกฤษ และหน่วยกิตย่อย lecture_h, lab_h, self_h ครบถ้วน 100%)
 
 🎙️ **สคริปต์บทพูดสำหรับ Phase 3:**
-> "ใน Phase ที่ 3 มีจุดเด่นด้านวิศวกรรมคือเราแบ่งกลยุทธ์การสกัดออกเป็น 2 รูปแบบอย่างเหมาะสมกับลักษณะข้อมูล:
+> "ใน Phase ที่ 3 มีจุดเด่นด้านวิศวกรรมคือเราแบ่งกลยุทธ์การสกัดออกเป็น 3 รูปแบบอย่างเหมาะสมกับลักษณะข้อมูล:
 > 
-> 1. **สำหรับตารางแผนการศึกษาทั้ง 4 สาขา (คำสั่งที่ 1–4)**: เราเลือกใช้ **`--pipeline text`** ซึ่งเป็นการสกัดข้อความจากเล่มโดยตรง (Digital Text Layer) ร่วมกับ **Deterministic Rule-based Parser และ Regex** เพื่อให้สามารถจับคู่รหัสวิชา, ชั้นปี (Year), ภาคการศึกษา (Semester), และแผนปกติ/สหกิจ ได้อย่างถูกต้องแม่นยำและเสถียร โดยตัดปัญหาการมโนตัวเลขหรือการแต่งข้อมูลของโมเดล (Zero Hallucination) และทำงานได้รวดเร็วมาก
+> 1. **สำหรับตารางแผนการศึกษาทั้ง 4 สาขา (คำสั่งที่ 1–4)**: เราเลือกใช้ **`--pipeline text`** ซึ่งเป็นการดึงข้อความดิจิทัลจากเล่มโดยตรง (Digital Text Layer) แล้วส่งประมวลผลผ่าน **Chunked Local LLM (Qwen3:4b)** โดยตรงทีละหน้า/ชิ้นส่วน เพื่อให้โมเดลจัดโครงสร้างตารางเรียนเป็น JSON ตาม Schema ครอบคลุมทั้งรหัสวิชา, ชื่อวิชา, ชั้นปี (Year), ภาคการศึกษา (Semester), และแยกแผนปกติ/สหกิจได้อย่างแม่นยำ โดยแต่ละหลักสูตรใช้เวลาประมวลผลประมาณ 106–410 วินาทีครับ
 > 
-> 2. **สำหรับข้อบังคับสถาบันฯ ในภาคผนวก ก (คำสั่งที่ 5)**: เนื่องจากเป็นข้อความบรรยายร้อยแก้วยาวๆ ในหน้า 89–96 เราจึงใช้ **Local VLM & LLM Pipeline** โดยใช้ **Typhoon-OCR 1.5** ในการอ่านข้อความจากภาพสแกน และใช้ **Qwen3 (4B)** ในการสกัดเงื่อนไขตัวเลข GPA, หน่วยกิตขั้นต่ำ/สูงสุด, และบทลงโทษการทุจริต ออกมาเป็นโครงสร้าง `regulations.json` พร้อมระบุเลขข้อบังคับและเลขหน้าอ้างอิงจริงครับ"
+> 2. **สำหรับข้อบังคับสถาบันฯ ในภาคผนวก ก (คำสั่งที่ 5)**: เนื่องจากเป็นข้อความบรรยายร้อยแก้วยาวๆ ในหน้า 94, 96–99, 101 เราจึงใช้ **Local VLM & LLM Pipeline** โดยใช้ **Typhoon-OCR 1.5** ในการอ่านข้อความจากภาพสแกน และใช้ **Qwen3 (4B)** ในการสกัดเงื่อนไขตัวเลข GPA, หน่วยกิตขั้นต่ำ/สูงสุด, และบทลงโทษการทุจริต ออกมาเป็นโครงสร้าง `regulations.json` พร้อมระบุเลขข้อบังคับและเลขหน้าอ้างอิงจริงครับ
+> 
+> 3. **สำหรับหมวดวิชาศึกษาทั่วไป (GenEd ในหน้า 154–227) (คำสั่งที่ 6)**: เนื่องจากส่วนนี้เป็นเอกสารสแกนที่มี Font Encoding เสียหายจน Text Extractor ทั่วไปอ่านเป็นภาษาต่างดาว เราจึงพัฒนา Two-Stage Architecture โดยใช้ **Typhoon-OCR 1.5** อ่านภาพเป็น Markdown และใช้ **Qwen3 (4B)** สกัดเป็น JSON ตาม Schema พร้อมเทคนิค **Batch Stage Processing** แยกก้อนประมวลผล OCR และ LLM เพื่อกำจัดปัญหา Ollama Memory Swapping และมี **Page-by-page Caching** ทำให้ได้ข้อมูลหน่วยกิตและคำอธิบายรายวิชาที่สมบูรณ์ 100% ครบทั้ง 266 วิชาครับ"
 
 ---
 
@@ -195,9 +214,9 @@ python run_lab8b.py --program all --skip-eval
 ```
 
 📁 **ผลลัพธ์ที่ได้**:
-* `work/lab8b_run/curriculum.db` (ขนาด ~192 KB บรรจุตาราง program, study_plan, course, plan_course, prerequisite, regulation)
-* `work/lab8b_run/verify.json` (รายงานการตรวจสอบกฎ 7 ข้อ: ผ่านเกณฑ์ความสอดคล้องครบทุกข้อ)
-* `work/lab8b_run/schema.sql` (ไฟล์ DDL สำหรับสร้างฐานข้อมูล)
+* `work/lab8b_run/curriculum.db` (ขนาด ~192 KB บรรจุ 8 ตาราง: `program`, `study_plan`, `course`, `plan_item`, `elective_slot`, `program_course`, `prerequisite`, `regulation` พร้อม views `v_plan` และ `v_semester_credits`)
+* `work/lab8b_run/verify.json` (รายงานการตรวจสอบกฎ 7 ข้อ CHK1–CHK7: ผ่านเกณฑ์ความสอดคล้องครบทุกข้อ 100.0%)
+* `work/lab8b_run/schema/schema.sql` (ไฟล์ DDL สำหรับสร้างฐานข้อมูลเชิงสัมพันธ์)
 
 🎙️ **สคริปต์บทพูดสำหรับ Phase 4:**
 > "เมื่อได้ข้อมูล JSON ครบถ้วน เราจะรันสคริปต์ `run_lab8b.py` ซึ่งจะทำการแปลงและโหลดข้อมูลทั้งหมดเข้าสู่ฐานข้อมูลเชิงสัมพันธ์ SQLite ชื่อ `curriculum.db` โดยเก็บครบทั้งข้อมูลหลักสูตร, แผนการเรียน, รายวิชา, วิชาบังคับก่อน, และข้อบังคับสถาบันฯ
@@ -246,82 +265,111 @@ uvicorn lab10_fastapi.curriculum_app.main:app --host 127.0.0.1 --port 8000 --rel
 
 ## 4. โครงสร้างตารางฐานข้อมูลและการเชื่อมโยง (Database Schema)
 
-ฐานข้อมูล `curriculum.db` ถูกออกแบบให้เป็น Relational Database เพื่อแก้ปัญหา Hallucination ของโมเดลภาษา โดยมีตารางหลักดังนี้:
+ฐานข้อมูล `curriculum.db` ถูกออกแบบให้เป็น Relational Database (Option 2: Full Separation) เพื่อแก้ปัญหา Hallucination ของโมเดลภาษา โดยแยกเป็น 8 ตารางหลัก และ 2 Analytical Views ดังนี้:
 
 ```mermaid
 erDiagram
-    PROGRAM ||--o{ STUDY_PLAN : "has"
-    PROGRAM ||--o{ COURSE : "offers"
-    STUDY_PLAN ||--o{ PLAN_COURSE : "contains"
-    COURSE ||--o{ PLAN_COURSE : "scheduled_in"
-    COURSE ||--o{ PREREQUISITE : "requires"
-    REGULATION }o--|| PROGRAM : "applies_to"
+    PROGRAM ||--o{ STUDY_PLAN : offers
+    PROGRAM ||--o{ PROGRAM_COURSE : offers
+    PROGRAM ||--o{ PLAN_ITEM : contextualizes
+    STUDY_PLAN ||--o{ PLAN_ITEM : contains
+    STUDY_PLAN ||--o{ ELECTIVE_SLOT : defines
+    COURSE ||--o{ PLAN_ITEM : referenced_by
+    COURSE ||--o{ PROGRAM_COURSE : mapped_to
+    COURSE ||--o{ PREREQUISITE : has_prereq
+    REGULATION }|..|| PROGRAM : governs
 
     PROGRAM {
-        text program_id PK "รหัสหลักสูตร (DSBA, BIT, IT, AIT)"
-        text name_th "ชื่อหลักสูตรภาษาไทย"
-        text name_en "ชื่อหลักสูตรภาษาอังกฤษ"
-        text degree "ชื่อปริญญา"
-        int total_credits "หน่วยกิตรวมตลอดหลักสูตร"
+        string program_id PK "รหัสหลักสูตร (DSBA, IT, BIT, AIT)"
+        string name_th "ชื่อหลักสูตรภาษาไทย"
+        string name_en "ชื่อหลักสูตรภาษาอังกฤษ"
+        string degree "ชื่อปริญญา"
+        int total_credits "หน่วยกิตรวม (120-132)"
         int years "ระยะเวลาศึกษา (4 ปี)"
     }
-
     STUDY_PLAN {
-        text plan_id PK "รหัสแผน (เช่น DSBA_coop, IT_no_coop)"
-        text program_id FK "เชื่อมโยงกับ program"
-        text plan_type "coop หรือ no_coop"
-        text name_th "ชื่อแผนการศึกษา"
+        string plan_id PK "รหัสแผน เช่น DSBA_COOP"
+        string program_id FK "UQ(plan_id, program_id)"
+        string name_th "ชื่อแผนการศึกษาภาษาไทย"
+        string name_en "ชื่อแผนการศึกษาภาษาอังกฤษ"
+        string plan_type "coop, no_coop, single"
     }
-
     COURSE {
-        text code PK "รหัสวิชา 8 หลัก (เช่น 06026240)"
-        text program_id FK "หลักสูตรเจ้าของวิชา"
-        text name_th "ชื่อวิชาภาษาไทย"
-        text name_en "ชื่อวิชาภาษาอังกฤษ"
+        string code PK "รหัสวิชา 8 หลัก (06xxxxxx, 90xxxxxx)"
+        string name_th "ชื่อวิชาภาษาไทย"
+        string name_en "ชื่อวิชาภาษาอังกฤษ"
         int credits "จำนวนหน่วยกิต"
-        text credit_structure "โครงสร้างหน่วยกิต เช่น 3(3-0-6)"
-        text category "หมวดวิชา (ศึกษาทั่วไป / เฉพาะ / เลือกเสรี)"
+        int lecture_h "ชั่วโมงบรรยาย"
+        int lab_h "ชั่วโมงปฏิบัติการ"
+        int self_h "ชั่วโมงศึกษาด้วยตนเอง"
+        string description_th "คำอธิบายรายวิชาภาษาไทย"
+        string pdf_pages "เลขหน้าไฟล์ PDF"
+        string printed_pages "เลขหน้าที่พิมพ์ในเอกสาร"
     }
-
-    PLAN_COURSE {
+    PLAN_ITEM {
         int id PK "ลำดับรายการ"
-        text plan_id FK "รหัสแผนการเรียน"
-        text code FK "รหัสวิชา"
-        int year "ชั้นปีที่เรียน (1-4)"
+        string plan_id FK "Composite FK(plan_id, program_id)"
+        string program_id FK "Composite FK(plan_id, program_id)"
+        int year "ชั้นปี (1-4)"
         int semester "ภาคการศึกษา (1-2)"
-        int is_elective_slot "1 = slot วิชาเลือก, 0 = วิชาบังคับจริง"
-        int source_page "เลขหน้าอ้างอิงจริงในเล่ม PDF"
+        string code FK "FK ไปยัง course(code)"
+        int credits "หน่วยกิตในแผน"
+        string alt_group "กลุ่มวิชาทางเลือก"
+        string note "หมายเหตุ"
     }
-
+    ELECTIVE_SLOT {
+        int id PK "ลำดับสล็อต"
+        string plan_id FK "รหัสแผนการศึกษา"
+        int year "ชั้นปี (1-4)"
+        int semester "ภาคการศึกษา (1-2)"
+        string slot_name_th "ชื่อสล็อตภาษาไทย"
+        string slot_name_en "ชื่อสล็อตภาษาอังกฤษ"
+        string code_pattern "รูปแบบรหัสวิชา"
+        int credits "หน่วยกิตของสล็อต"
+        string credit_options "ทางเลือกหน่วยกิต"
+        string note "หมายเหตุ"
+    }
+    PROGRAM_COURSE {
+        string program_id PK "รหัสหลักสูตร"
+        string code PK "รหัสวิชา"
+    }
     PREREQUISITE {
-        int id PK "ลำดับเงื่อนไข"
-        text code FK "รหัสวิชาปลายทาง"
-        text requires FK "รหัสวิชาที่ต้องผ่านก่อน"
-        text kind "ประเภทเงื่อนไข (pre / co)"
+        string code PK "รหัสวิชาปลายทาง"
+        string requires PK "รหัสวิชาบังคับก่อน"
+        string kind PK "ประเภทเงื่อนไข (pre, co)"
     }
-
     REGULATION {
         int id PK "ลำดับข้อบังคับ"
-        text program_id "หลักสูตรที่บังคับใช้ (ALL)"
-        text category "หมวดหมู่ (เช่น เกณฑ์เกียรตินิยม, การลงทะเบียน)"
-        text topic "หัวข้อย่อย"
-        text condition_desc "คำอธิบายเงื่อนไข"
-        real min_gpa "เกรดเฉลี่ยสะสมขั้นต่ำ"
-        real max_gpa "เกรดเฉลี่ยสะสมสูงสุด"
+        string program_id FK "หลักสูตรที่บังคับใช้ (ALL)"
+        string category "หมวดหมู่ข้อบังคับ"
+        string topic "หัวข้อ"
+        string condition_desc "คำอธิบายเงื่อนไข"
+        float min_gpa "เกรดเฉลี่ยขั้นต่ำ"
+        float max_gpa "เกรดเฉลี่ยสูงสุด"
         int min_credits "หน่วยกิตขั้นต่ำ"
         int max_credits "หน่วยกิตสูงสุด"
-        text penalty_action "บทลงโทษ (พักการเรียน / พ้นสภาพ)"
-        text article_no "เลขข้อบังคับ เช่น ข้อ 27.2.2"
-        int source_page "เลขหน้าอ้างอิงในภาคผนวก ก"
+        string penalty_action "บทลงโทษ"
+        string article_no "เลขข้อบังคับ"
+        int source_page "เลขหน้าอ้างอิงภาคผนวก ก"
     }
 ```
 
+### ตาราง Analytical Views สำคัญ
+* `v_plan`: รวมข้อมูลวิชาในแผนพร้อมคำอธิบายรายวิชาและสล็อตวิชาเลือก เชื่อมโยงผ่าน `study_plan` พร้อมแฟล็ก `is_elective_slot`
+* `v_semester_credits`: สรุปผลรวมหน่วยกิตและจำนวนวิชาต่อภาคเรียนอย่างถูกต้อง แม่นยำ และไม่นับซ้ำ (คำนวณสล็อตวิชาเลือกและกลุ่มวิชาเลือกสลับ `alt_group`)
+
 ### การตรวจสอบความสอดคล้อง 7 กฎ (7-Rule Consistency Check)
-สคริปต์ `verify.py` ทำการทดสอบทางตรรกะเพื่อให้มั่นใจว่าข้อมูลมีความถูกต้องและสอดคล้องตามเกณฑ์ที่กำหนด:
-1. **CHK1 (Total Credits)**: ผลรวมหน่วยกิตในแผนตรงกับ `total_credits` ของหลักสูตร
-2. **CHK2 (Course Code Format)**: รหัสวิชาทุกตัวมีความยาว 8 หลักตรงตามมาตรฐาน
-3. **CHK3 (Semester Credit Limit)**: หน่วยกิตในแต่ละเทอมอยู่ในเกณฑ์ 9–22 หน่วยกิตตามข้อบังคับข้อ 11
-4. **CHK4 (No Prerequisite Cycle)**: ไม่มีเงื่อนไขวิชาบังคับก่อนวนลูป (No Cyclic Dependency)
-5. **CHK5 (Valid Plan Type)**: ทุกแผนต้องเป็น `coop` หรือ `no_coop`
-6. **CHK6 (Page Citation Integrity)**: ทุกรายวิชามีเลขหน้าอ้างอิงจริงในเอกสาร มคอ.2
-7. **CHK7 (Regulation Bound Integrity)**: ข้อมูลเกณฑ์ตัวเลขในข้อบังคับไม่ขัดแย้งกันเอง
+ระบบมีฟังก์ชัน `verify_db()` ใน `src/ocr_system/lab8b_curriculum_db.py` ทำการทดสอบทางตรรกะเพื่อให้มั่นใจว่าข้อมูลมีความถูกต้องและสอดคล้องตามเกณฑ์ที่กำหนด:
+1. **CHK1 (Total Credits)**: ผลรวมหน่วยกิตในแผนการศึกษาต้องเท่ากับหน่วยกิตรวมที่หลักสูตรประกาศ (เช่น DSBA 132, IT 129, BIT 126, AIT 120)
+2. **CHK2 (No Orphan Codes)**: ทุกรหัสวิชาที่ปรากฏในแผน ต้องมีคำอธิบายรายวิชาในตาราง `course`
+3. **CHK3 (Valid 8-Digit Codes)**: รหัสวิชาต้องเป็นตัวเลข 8 หลักตามมาตรฐาน สจล. ทุกรายการ
+4. **CHK4 (Credit Consistency)**: หน่วยกิตในแผนการศึกษาต้องตรงกับหน่วยกิตในคำอธิบายรายวิชา
+5. **CHK5 (Prerequisite Sequence)**: วิชาบังคับก่อน (Prerequisite) ต้องจัดสอนในภาคเรียนก่อนหน้าที่วิชาหลักจะเปิดสอน (ตรวจสอบเจาะจงขอบเขตรายแผนการศึกษา `b.plan_id = a.plan_id` ป้องกันความสับสนระหว่างภาคเรียนของแผนปกติและแผนสหกิจ)
+6. **CHK6 (No Duplicate Courses)**: ห้ามมีวิชาซ้ำซ้อนกันในภาคเรียนเดียวกันของหลักสูตรเดียวกัน
+7. **CHK7 (Term Credit Limits)**: หน่วยกิตที่ลงทะเบียนต่อภาคการศึกษาปกติ ต้องอยู่ระหว่าง 9 – 22 หน่วยกิต (ยกเว้นภาคสหกิจ/ฝึกงาน และภาคฤดูร้อน)
+
+```powershell
+# คำสั่งรันการตรวจสอบความสอดคล้อง (Verification) โดยตรง:
+python src/ocr_system/lab8b_curriculum_db.py verify -d work/lab8b_run/curriculum.db
+```
+*(รายงานผลลัพธ์จะถูกบันทึกลงใน `work/lab8b_run/verify.json` โดยผ่านเกณฑ์ครบทั้ง 7 กฎ 100.0%)*

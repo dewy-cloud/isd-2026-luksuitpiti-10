@@ -1,17 +1,53 @@
 {
   "main_database": {
     "total_questions": 180,
-    "correct_answers": 172,
-    "execution_accuracy": 95.56,
+    "correct_answers": 169,
+    "execution_accuracy": 93.89,
     "valid_sql_count": 180,
     "valid_sql_rate": 100.0,
     "error_distribution": {
       "syntax_error": 0,
-      "empty_rows": 8,
+      "empty_rows": 11,
       "wrong_value": 0,
       "other": 0
     },
     "wrong_cases_sample": [
+      {
+        "question": "ปี 1 เทอม 1 เรียนกี่หน่วยกิต",
+        "expect": {
+          "type": "value",
+          "value": 18
+        },
+        "sql": "SELECT v.credits FROM v_semester_credits AS v JOIN study_plan AS sp ON sp.plan_id = v.plan_id WHERE v.program_id = 'DSBA' AND sp.plan_type = 'no_coop' AND v.year = 1 AND v.semester = 1 LIMIT 1",
+        "why": "ไม่พบค่า 18 (ได้ [])"
+      },
+      {
+        "question": "ปี 1 เทอม 1 เรียนกี่วิชา",
+        "expect": {
+          "type": "value",
+          "value": 7
+        },
+        "sql": "SELECT v.n_courses FROM v_semester_credits AS v JOIN study_plan AS sp ON sp.plan_id = v.plan_id WHERE v.program_id = 'DSBA' AND sp.plan_type = 'no_coop' AND v.year = 1 AND v.semester = 1 LIMIT 1",
+        "why": "ไม่พบค่า 7 (ได้ [])"
+      },
+      {
+        "question": "ปี 2 เทอม 1 เรียนกี่หน่วยกิต",
+        "expect": {
+          "type": "value",
+          "value": 18
+        },
+        "sql": "SELECT v.credits FROM v_semester_credits AS v JOIN study_plan AS sp ON sp.plan_id = v.plan_id WHERE v.program_id = 'DSBA' AND sp.plan_type = 'no_coop' AND v.year = 2 AND v.semester = 1 LIMIT 1",
+        "why": "ไม่พบค่า 18 (ได้ [])"
+      },
+      {
+        "question": "ปี 2 เทอม 2 เรียนกี่หน่วยกิต",
+        "expect": {
+          "type": "value",
+          "value": 21
+        },
+        "sql": "SELECT v.credits FROM v_semester_credits AS v JOIN study_plan AS sp ON sp.plan_id = v.plan_id WHERE v.program_id = 'DSBA' AND sp.plan_type = 'no_coop' AND v.year = 2 AND v.semester = 2 LIMIT 1",
+        "why": "ไม่พบค่า 21 (ได้ [])"
+      },
       {
         "question": "วิชา 06016401 ในหลักสูตร AIT เรียนชั้นปีที่เท่าไร",
         "expect": {
@@ -20,42 +56,6 @@
         },
         "sql": "SELECT year FROM plan_item WHERE code = '06016401' AND program_id = 'AIT' LIMIT 1",
         "why": "ไม่พบค่า 1 (ได้ [])"
-      },
-      {
-        "question": "วิชา 06016401 ในหลักสูตร AIT เรียนภาคการศึกษาใด",
-        "expect": {
-          "type": "value",
-          "value": 1
-        },
-        "sql": "SELECT semester FROM plan_item WHERE code = '06016401' AND program_id = 'AIT' LIMIT 1",
-        "why": "ไม่พบค่า 1 (ได้ [])"
-      },
-      {
-        "question": "วิชา 06066000 เรียนชั้นปีที่เท่าไร",
-        "expect": {
-          "type": "value",
-          "value": 1
-        },
-        "sql": "SELECT year FROM plan_item WHERE code = '06066000' LIMIT 1",
-        "why": "ไม่พบค่า 1 (ได้ ['2'])"
-      },
-      {
-        "question": "วิชา 06046406 ต้องเรียนวิชาใดมาก่อน",
-        "expect": {
-          "type": "value",
-          "value": "06046401"
-        },
-        "sql": "SELECT requires FROM prerequisite WHERE code = '06046406' AND kind = 'pre' LIMIT 200",
-        "why": "ไม่พบค่า 06046401 (ได้ [])"
-      },
-      {
-        "question": "วิชา 06046414 ต้องเรียนวิชาใดมาก่อน",
-        "expect": {
-          "type": "value",
-          "value": "06046410"
-        },
-        "sql": "SELECT requires FROM prerequisite WHERE code = '06046414' AND kind = 'pre' LIMIT 200",
-        "why": "ไม่พบค่า 06046410 (ได้ [])"
       }
     ]
   },
@@ -90,77 +90,77 @@
     },
     "DSBA": {
       "total_questions": 45,
-      "correct_answers": 41,
-      "execution_accuracy": 91.11,
+      "correct_answers": 39,
+      "execution_accuracy": 86.67,
       "valid_sql_count": 45,
       "valid_sql_rate": 100.0,
       "error_distribution": {
         "syntax_error": 0,
-        "empty_rows": 4,
+        "empty_rows": 6,
         "wrong_value": 0,
         "other": 0
       },
       "wrong_cases_sample": [
         {
+          "question": "วิชา 90641001 มีกี่หน่วยกิต",
+          "expect": {
+            "type": "value",
+            "value": 2
+          },
+          "sql": "SELECT credits FROM course WHERE code = '90641001' LIMIT 1",
+          "why": "ไม่พบค่า 2 (ได้ ['3'])"
+        },
+        {
           "question": "ปี 1 เทอม 1 เรียนกี่หน่วยกิต",
           "expect": {
             "type": "value",
-            "value": 21
+            "value": 18
           },
-          "sql": "SELECT credits FROM v_semester_credits WHERE year = 1 AND semester = 1 LIMIT 1",
-          "why": "ไม่พบค่า 21 (ได้ ['18'])"
+          "sql": "SELECT v.credits FROM v_semester_credits AS v JOIN study_plan AS sp ON sp.plan_id = v.plan_id WHERE v.program_id = 'DSBA' AND sp.plan_type = 'no_coop' AND v.year = 1 AND v.semester = 1 LIMIT 1",
+          "why": "ไม่พบค่า 18 (ได้ [])"
         },
         {
           "question": "ปี 1 เทอม 1 เรียนกี่วิชา",
           "expect": {
             "type": "value",
-            "value": 8
+            "value": 7
           },
-          "sql": "SELECT n_courses FROM v_semester_credits WHERE year = 1 AND semester = 1 LIMIT 1",
-          "why": "ไม่พบค่า 8 (ได้ ['7'])"
+          "sql": "SELECT v.n_courses FROM v_semester_credits AS v JOIN study_plan AS sp ON sp.plan_id = v.plan_id WHERE v.program_id = 'DSBA' AND sp.plan_type = 'no_coop' AND v.year = 1 AND v.semester = 1 LIMIT 1",
+          "why": "ไม่พบค่า 7 (ได้ [])"
+        },
+        {
+          "question": "วิชา 90641003 มีกี่หน่วยกิต",
+          "expect": {
+            "type": "value",
+            "value": 1
+          },
+          "sql": "SELECT credits FROM course WHERE code = '90641003' LIMIT 1",
+          "why": "ไม่พบค่า 1 (ได้ ['3'])"
         },
         {
           "question": "ปี 2 เทอม 1 เรียนกี่หน่วยกิต",
           "expect": {
             "type": "value",
-            "value": 15
+            "value": 18
           },
-          "sql": "SELECT credits FROM v_semester_credits WHERE year = 2 AND semester = 1 LIMIT 1",
-          "why": "ไม่พบค่า 15 (ได้ ['18'])"
-        },
-        {
-          "question": "ปี 2 เทอม 2 เรียนกี่หน่วยกิต",
-          "expect": {
-            "type": "value",
-            "value": 21
-          },
-          "sql": "SELECT credits FROM v_semester_credits WHERE program_id = 'IT' AND year = 2 AND semester = 2 LIMIT 1",
-          "why": "ไม่พบค่า 21 (ได้ [])"
+          "sql": "SELECT v.credits FROM v_semester_credits AS v JOIN study_plan AS sp ON sp.plan_id = v.plan_id WHERE v.program_id = 'DSBA' AND sp.plan_type = 'no_coop' AND v.year = 2 AND v.semester = 1 LIMIT 1",
+          "why": "ไม่พบค่า 18 (ได้ [])"
         }
       ]
     },
     "AIT": {
       "total_questions": 45,
-      "correct_answers": 19,
-      "execution_accuracy": 42.22,
+      "correct_answers": 40,
+      "execution_accuracy": 88.89,
       "valid_sql_count": 45,
       "valid_sql_rate": 100.0,
       "error_distribution": {
         "syntax_error": 0,
-        "empty_rows": 26,
+        "empty_rows": 5,
         "wrong_value": 0,
         "other": 0
       },
       "wrong_cases_sample": [
-        {
-          "question": "หลักสูตร AIT มีทั้งหมดกี่หน่วยกิต",
-          "expect": {
-            "type": "value",
-            "value": 120
-          },
-          "sql": "SELECT total_credits FROM program WHERE program_id = 'AIT' LIMIT 1",
-          "why": "ไม่พบค่า 120 (ได้ ['137'])"
-        },
         {
           "question": "วิชา 06016401 ในหลักสูตร AIT มีกี่หน่วยกิต",
           "expect": {
@@ -185,17 +185,26 @@
             "type": "value",
             "value": 1
           },
-          "sql": "SELECT semester FROM plan_item WHERE program_id = 'AIT' AND code = '06016401' LIMIT 1",
+          "sql": "SELECT semester FROM plan_item WHERE code = '06016401' AND program_id = 'AIT' LIMIT 1",
           "why": "ไม่พบค่า 1 (ได้ [])"
         },
         {
-          "question": "วิชา 06046400 มีกี่หน่วยกิต",
+          "question": "หลักสูตร AIT ปี 1 เทอม 1 เรียนกี่หน่วยกิต",
           "expect": {
             "type": "value",
-            "value": 3
+            "value": 18
           },
-          "sql": "SELECT credits FROM course WHERE code = '06046400' LIMIT 1",
-          "why": "ไม่พบค่า 3 (ได้ [])"
+          "sql": "SELECT credits FROM v_semester_credits WHERE program_id = 'AIT' AND year = 1 AND semester = 1 LIMIT 1",
+          "why": "ไม่พบค่า 18 (ได้ ['15'])"
+        },
+        {
+          "question": "หลักสูตร AIT ปี 1 เทอม 2 เรียนกี่หน่วยกิต",
+          "expect": {
+            "type": "value",
+            "value": 16
+          },
+          "sql": "SELECT credits FROM v_semester_credits WHERE program_id = 'AIT' AND year = 1 AND semester = 2 LIMIT 1",
+          "why": "ไม่พบค่า 16 (ได้ ['19'])"
         }
       ]
     }

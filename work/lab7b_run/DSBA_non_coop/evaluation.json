@@ -25,12 +25,12 @@
       "name_th": {
         "label": "ชื่อวิชา (ไทย) ⭐",
         "n_items": 91,
-        "cer": 0.14187,
-        "wer": 0.214592,
-        "exact_match_acc": 0.747253,
-        "n_sub": 63,
-        "n_del": 301,
-        "n_ins": 26,
+        "cer": 0.145507,
+        "wer": 0.238197,
+        "exact_match_acc": 0.626374,
+        "n_sub": 64,
+        "n_del": 299,
+        "n_ins": 37,
         "n_missing": 1,
         "n_hallucinated": 0,
         "n_ref_chars": 2749,
@@ -43,12 +43,7 @@
           {
             "key": "90641001",
             "gt": "โรงเรียนสร้างเสน่าห์",
-            "pred": "โรงเรียนสร้างเส่นห์ 2"
-          },
-          {
-            "key": "90641003",
-            "gt": "กีฬาและนันทนาการ",
-            "pred": "กีฬาและนันทนาการ 1"
+            "pred": "โรงเรียนสร้างเส่นห์"
           },
           {
             "key": "06026205",
@@ -59,17 +54,22 @@
             "key": "90642033",
             "gt": "กฎหมายสำหรับคนรุ่นใหม่",
             "pred": "กลุ่มวิชาที่กำหนดโดยคณะ*"
+          },
+          {
+            "key": "06066304",
+            "gt": "การวิเคราะห์และอออกแบบระบบสารสนเทศ",
+            "pred": "การวิเคราะห์และออกแบบระบบสารสนเทศ"
           }
         ]
       },
       "name_en": {
         "label": "ชื่อวิชา (อังกฤษ) ⭐",
         "n_items": 91,
-        "cer": 0.103709,
-        "wer": 0.13217,
-        "exact_match_acc": 0.923077,
-        "n_sub": 30,
-        "n_del": 237,
+        "cer": 0.118849,
+        "wer": 0.149626,
+        "exact_match_acc": 0.912088,
+        "n_sub": 65,
+        "n_del": 242,
         "n_ins": 7,
         "n_missing": 1,
         "n_hallucinated": 0,
@@ -96,9 +96,9 @@
             "pred": "ELECTIVE IN STATISTICAL ANALYSIS 1"
           },
           {
-            "key": "06026xxx",
-            "gt": "ELECTIVE IN DATA SCIENCE 3\nELECTIVE IN STATISTICAL ANALYTICS 3\nELECTIVE IN DATA ENGINEERING 3",
-            "pred": "ELECTIVE IN DATA SCIENCE 3 หรือ"
+            "key": "90644042",
+            "gt": "PROFESSIONAL COMMUNICATION AND\nPRESENTATION",
+            "pred": "การสื่อสารและการนำเสนออย่างืมออาชีพ"
           }
         ]
       },
@@ -133,7 +133,7 @@
           {
             "key": "xxxxxxxx",
             "gt": "3(3-0-6) หรือ 3(2-2-5)",
-            "pred": "3(3-0-6)"
+            "pred": "3(2-2-5)"
           },
           {
             "key": "06026xxx",
@@ -190,25 +190,40 @@
       "ctype": {
         "label": "บังคับ/เลือก",
         "n_items": 91,
-        "cer": 0.02449,
+        "cer": 0.073469,
         "wer": null,
-        "exact_match_acc": 0.978022,
-        "n_sub": 5,
-        "n_del": 7,
+        "exact_match_acc": 0.934066,
+        "n_sub": 25,
+        "n_del": 11,
         "n_ins": 0,
         "n_missing": 1,
         "n_hallucinated": 0,
         "n_ref_chars": 490,
         "error_samples": [
           {
+            "key": "06026211",
+            "gt": "บังคับ",
+            "pred": "เลือก"
+          },
+          {
+            "key": "06026212",
+            "gt": "บังคับ",
+            "pred": "เลือก"
+          },
+          {
+            "key": "06026215",
+            "gt": "บังคับ",
+            "pred": "เลือก"
+          },
+          {
             "key": "90644042",
             "gt": "บังคับ",
             "pred": "เลือก"
           },
           {
-            "key": "06016401 [ตกแถว]",
+            "key": "90643021",
             "gt": "บังคับ",
-            "pred": ""
+            "pred": "เลือก"
           }
         ]
       },
@@ -241,16 +256,16 @@
         "error_samples": []
       }
     },
-    "overall_micro_cer": 0.084179,
+    "overall_micro_cer": 0.091612,
     "alignment": {
       "matched": 90,
       "missed": 1,
-      "spurious": 5,
-      "precision": 0.9474,
+      "spurious": 8,
+      "precision": 0.9184,
       "recall": 0.989,
-      "f1": 0.9677,
+      "f1": 0.9524,
       "gt_total": 91,
-      "pred_total": 95,
+      "pred_total": 98,
       "missed_codes": [
         "06016401"
       ],
@@ -259,7 +274,30 @@
         "06026xxx",
         "06026xxx",
         "06026xxx",
+        "06026xxx",
+        "06026xxx",
+        "06026xxx",
         "06026xxx"
+      ]
+    },
+    "internal_check": {
+      "ok": false,
+      "n_courses": 98,
+      "n_duplicate_keys": 0,
+      "credits_by_term": {
+        "1/1": 18,
+        "1/2": 21,
+        "2/1": 18,
+        "2/2": 21,
+        "3/1": 15,
+        "3/2": 15,
+        "4/1": 6,
+        "4/2": 6
+      },
+      "total_credits_fixed_terms": 120,
+      "issues": [
+        "ภาค 4/1 มีแค่ 6 หน่วยกิต — น่าจะอ่านตกวิชา",
+        "ภาค 4/2 มีแค่ 6 หน่วยกิต — น่าจะอ่านตกวิชา"
       ]
     }
   }

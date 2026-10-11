@@ -189,6 +189,18 @@
           "default": null,
           "title": "Credit Options"
         },
+        "alt_group": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Alt Group"
+        },
         "note": {
           "anyOf": [
             {

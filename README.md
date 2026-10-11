@@ -38,6 +38,9 @@
   ```bash
   ollama pull qwen3:4b
   ```
+  > 💡 **นโยบายการควบคุมความสุ่ม (Temperature Policy)**:
+  > - **`0.0` (Deterministic)**: ใช้ในงานที่ต้องการความแม่นยำระดับ 100% คือ **OCR**, **Text Pipeline Structuring**, และ **NL2SQL** เพื่อป้องกันโมเดลแต่งข้อมูล (Zero Hallucination) และให้คำสั่ง SQL รันผ่านแน่นอน
+  > - **`0.1` (Low Stochasticity)**: ใช้ใน **Answer Synthesis** (สรุปคำตอบภาษาไทย) และ **Regulation Structuring** เพื่อให้ภาษาไทยสละสลวยเป็นธรรมชาติ
 
 ---
 
@@ -50,7 +53,7 @@ pip install -r requirements.txt
 ---
 
 ### 3. การเตรียมฐานข้อมูลหลักสูตร (Database Setup)
-> **หมายเหตุ**: โปรเจกต์มีฐานข้อมูล SQLite สำเร็จรูปที่ผ่านการสกัดครบทั้ง 263 รายวิชา (262 แผนการเรียน, 59 elective slots, 11 regulations, 26 prerequisites) และผ่านการตรวจสอบความสอดคล้อง (Consistency Verification) ครบ 7 กฎ 100% บันทึกไว้ที่ `work/lab8b_run/curriculum.db` (รวมทั้งฐานข้อมูลเดี่ยว 4 สาขาที่ `work/lab8b_run/{DSBA,BIT,IT,AIT}/curriculum.db`) เรียบร้อยแล้ว **สามารถข้ามไปขั้นตอนที่ 4 เพื่อเปิดรันเว็บแอปพลิเคชันได้ทันที**
+> **หมายเหตุ**: โปรเจกต์มีฐานข้อมูล SQLite สำเร็จรูปที่ผ่านการสกัดครบทั้ง 504 รายวิชา (268 รายการในแผนการศึกษา, 71 elective slots, 11 regulations, 30 prerequisites) และผ่านการตรวจสอบความสอดคล้อง (Consistency Verification) ครบ 7 กฎ 100% บันทึกไว้ที่ `work/lab8b_run/curriculum.db` (รวมทั้งฐานข้อมูลเดี่ยว 4 สาขาที่ `work/lab8b_run/{DSBA,BIT,IT,AIT}/curriculum.db`) เรียบร้อยแล้ว **สามารถข้ามไปขั้นตอนที่ 4 เพื่อเปิดรันเว็บแอปพลิเคชันได้ทันที**
 
 หากต้องการสั่งรันกระบวนการสกัดใหม่จากเล่มหลักสูตร PDF ต้นฉบับ (Cold-Start Reproduction):
 
@@ -70,6 +73,7 @@ python src/ocr_system/lab7b_curriculum.py -i data/input/fulldoc_AIT.pdf --pages 
 | **IT** | `26-30, 39-45` | แผนการศึกษาปกติ (ปี 1–4) และแผนการศึกษาสหกิจศึกษา (ปี 1–4) | 1.6 วินาที | 110 วิชา | 104 วิชา | **96.3%** (P=0.946, R=0.981) |
 | **BIT** | `24-25, 31-35` | โครงสร้างกลุ่มวิชาเลือก และแผนการศึกษาสหกิจศึกษา (ปี 1–4) | 1.3 วินาที | 58 วิชา | 51 วิชา | **92.6%** (P=0.966, R=0.889) |
 | **AIT** | `21-26` | กลุ่มวิชาเลือกเฉพาะ (หน้า 21–22) และแผนการศึกษา ปี 1–4 (หน้า 23–26) | 1.1 วินาที | 57 วิชา | 50 วิชา | **96.5%** (P=0.965, R=0.965) |
+| **GenEd (หมวดศึกษาทั่วไป)** | `154-227` (74 หน้า) | หมวดวิชาศึกษาทั่วไป สจล. ฉบับปรับปรุง 2564 (ภาคผนวก ง) ใช้ร่วมกัน 4 หลักสูตร | 2,827 วินาที (~47 นาที) | **266 วิชา** | 266 วิชา | **100% Schema Valid** (รหัส 8 หลัก, หน่วยกิต, ชั่วโมง L-P-S ครบ 266/266) |
 
 ##### 🔬 การประเมินผลไฟล์สกัดย้อนหลัง (Offline Evaluation via `--eval-only`):
 หากมีไฟล์ `pred_text.json` อยู่แล้ว สามารถสั่งประเมินผลเทียบกับ Ground Truth ได้ทันทีโดยไม่ต้องสกัดใหม่:
@@ -108,6 +112,23 @@ python src/ocr_system/lab7b_curriculum.py --extract-regulations -i data/input/fu
 - `intermediate_regulations_vlm.md`: ข้อความภาษาไทยสมบูรณ์จากหน้าสแกน 94, 96, 97, 98, 99, 101 ถอดรหัสด้วย `scb10x/typhoon-ocr1.5-3b`
 - `regulations.json`: Structured Data ข้อบังคับ 11 รายการ (เกณฑ์การลงทะเบียน 9–22 หน่วยกิต, บทลงโทษการทุจริตสอบ, เกณฑ์ภาคทัณฑ์ GPA < 2.00, พ้นสภาพนักศึกษา, เกณฑ์เกียรตินิยมอันดับ 1 เหรียญทอง/อันดับ 1/อันดับ 2)
 
+#### ก.3 สกัดคำอธิบายรายวิชาหมวดวิชาศึกษาทั่วไป (GenEd) ด้วย Two-Stage Architecture (Typhoon-OCR 1.5 + Qwen3:4b):
+> **หมายเหตุ**: ในเล่มหลักสูตร เนื้อหาหมวดวิชาศึกษาทั่วไป (GenEd ฉบับปรับปรุง พ.ศ. 2564) หน้า 154–227 มีชั้น Text Layer ที่ Font Encoding เสียหายจนเกิดปัญหาข้อความต่างดาว (Mojibake) จึงใช้สถาปัตยกรรม **Two-Stage VLM + LLM Architecture** พร้อม **Batch Stage Execution**:
+> 1. **Stage 1 (Batch OCR)**: เรนเดอร์หน้า PDF เป็นภาพแบบ In-memory และให้ `scb10x/typhoon-ocr1.5-3b` สกัดเป็น Markdown ทีละหน้า พร้อมระบบ Page Caching ป้องกันการประมวลผลซ้ำ
+> 2. **Stage 2 (Batch LLM Schema)**: นำข้อความ Markdown เข้าสู่ `qwen3:4b` เพื่อแปลงเป็น JSON ตาม Schema ครบถ้วนทั้งชื่อวิชาภาษาไทย/อังกฤษ, หน่วยกิต, ชั่วโมงบรรยาย-ปฏิบัติ-ศึกษาด้วยตนเอง (lecture_h, lab_h, self_h) และคำอธิบายรายวิชา
+
+```bash
+# สกัดรายวิชาหมวด GenEd หน้า 154–227 (บันทึกผลลง work/lab7b_run/)
+python src/ocr_system/extract_gened.py -i data/input/fulldoc_dsba.pdf --pages 154-227 -o work/lab7b_run/gened_courses.json --out-md work/lab7b_run/gened_combined.md --md-dir work/lab7b_run/markdown_pages
+```
+*ผลลัพธ์ที่ได้จากการรันจริง (บันทึกใน `work/lab7b_run/`):*
+- `markdown_pages/`: ไฟล์แคช Markdown รายหน้า 74 หน้า (หน้า 154–227)
+- `gened_combined.md`: เอกสาร Markdown รวมคำอธิบายรายวิชาหมวดวิชาศึกษาทั่วไปทั้งหมด
+- `gened_courses.json`: ข้อมูล Structured Data รายวิชา GenEd ทั้งหมด **266 รายวิชา** (ใช้เวลา 2,827.4 วินาที)
+  - ความถูกต้องของรหัสวิชา 8 หลัก: **266/266 วิชา (100%)**
+  - ความสมบูรณ์ของโครงสร้างชั่วโมงเรียน (lecture_h, lab_h, self_h): **266/266 วิชา (100%)**
+  - ความสมบูรณ์ของชื่อวิชาและคำอธิบายภาษาไทย: **266/266 วิชา (100%)**
+
 ---
 
 #### ข. แปลงและนำเข้าฐานข้อมูล SQLite ด้วย Lab 8B (Option 2: Full Separation Architecture):
@@ -121,7 +142,7 @@ python src/ocr_system/lab8b_curriculum_db.py import-lab7b -i lab7_final/output/B
 python src/ocr_system/lab8b_curriculum_db.py import-lab7b -i lab7_final/output/IT/pred_text.json -o work/lab8b_run/IT/curriculum.json --program-id IT --program-name "เทคโนโลยีสารสนเทศ (สหกิจศึกษา)" --name-en "Information Technology (IT)" --total-credits 129 --years 4
 python src/ocr_system/lab8b_curriculum_db.py import-lab7b -i lab7_final/output/AIT/pred_text.json -o work/lab8b_run/AIT/curriculum.json --program-id AIT --program-name "เทคโนโลยีปัญญาประดิษฐ์" --name-en "Artificial Intelligence Technology (AIT)" --total-credits 120 --years 4
 
-# 3. โหลดข้อมูลรายวิชาเข้าฐานข้อมูลกลาง (Unified Database: 263 รายวิชา, 7 แผน)
+# 3. โหลดข้อมูลรายวิชาเข้าฐานข้อมูลกลาง (Unified Database: 504 รายวิชา, 7 แผน)
 python src/ocr_system/lab8b_curriculum_db.py load -i work/lab8b_run/DSBA/curriculum.json -d work/lab8b_run/curriculum.db --replace
 python src/ocr_system/lab8b_curriculum_db.py load -i work/lab8b_run/BIT/curriculum.json -d work/lab8b_run/curriculum.db
 python src/ocr_system/lab8b_curriculum_db.py load -i work/lab8b_run/IT/curriculum.json -d work/lab8b_run/curriculum.db
@@ -129,6 +150,9 @@ python src/ocr_system/lab8b_curriculum_db.py load -i work/lab8b_run/AIT/curricul
 
 # 4. โหลดข้อบังคับการศึกษา (Regulations) เข้าตาราง regulation
 python src/ocr_system/lab8b_curriculum_db.py load-regulations -i work/lab7b_run/regulations.json -d work/lab8b_run/curriculum.db
+
+# 5. โหลดคำอธิบายรายวิชาหมวด GenEd เข้าตาราง course (อัปเดตคำอธิบายและชั่วโมงเรียน L-P-S)
+python src/ocr_system/extract_gened.py -i data/input/fulldoc_dsba.pdf --pages 154-227 -o work/lab7b_run/gened_courses.json -d work/lab8b_run/curriculum.db
 
 # (ทางเลือก) โหลดฐานข้อมูลเดี่ยวแยกแต่ละสาขาวิชา (Isolated Program Databases)
 # python src/ocr_system/lab8b_curriculum_db.py load -i work/lab8b_run/DSBA/curriculum.json -d work/lab8b_run/DSBA/curriculum.db --replace
@@ -154,7 +178,7 @@ python src/ocr_system/lab8b_curriculum_db.py verify -d work/lab8b_run/curriculum
 ```text
   [ผ่าน  ] CHK1  หน่วยกิตรวมของแผน = หน่วยกิตที่หลักสูตรประกาศ
            AIT_SINGLE: 120/120 | BIT_COOP: 126/126 | BIT_NON_COOP: 126/126 | DSBA_COOP: 132/132 | DSBA_NON_COOP: 132/132 | IT_COOP: 129/129 | IT_NON_COOP: 129/129
-  [ผ่าน  ] CHK2  ทุกรหัสวิชาในแผน มีคำอธิบายรายวิชา (ครบทุกรหัส 263 วิชา)
+  [ผ่าน  ] CHK2  ทุกรหัสวิชาในแผน มีคำอธิบายรายวิชา (ครบทุกรหัส 504 วิชา)
   [ผ่าน  ] CHK3  รหัสวิชาเป็นตัวเลข 8 หลักทุกรายการ
   [ผ่าน  ] CHK4  หน่วยกิตในแผน ตรงกับคำอธิบายรายวิชา
   [ผ่าน  ] CHK5  วิชาบังคับก่อน อยู่ภาคเรียนก่อนวิชาที่อ้างถึง
@@ -193,10 +217,10 @@ python -m uvicorn lab10_fastapi.curriculum_app.main:app --host 127.0.0.1 --port 
 1. **หน้าถามตอบหลักสูตร AI (Assistant Chat UI)**:
    - URL: [http://127.0.0.1:8000/](http://127.0.0.1:8000/) หรือ [http://127.0.0.1:8000/static/index.html](http://127.0.0.1:8000/static/index.html)
    - ฟีเจอร์: ถามตอบภาษาธรรมชาติเกี่ยวกับโครงสร้างหลักสูตร แผนการเรียน และข้อบังคับการศึกษา พร้อมระบบแสดง SQL และตารางข้อมูล
-   - **ระบบ Grounded Citation Badge**: แสดงป้ายเลขหน้าอ้างอิงจริง `[อ้างอิงหน้า x]` วางเคียงข้างป้าย `[Success]` เหนือกล่องคำตอบอย่างเป็นระเบียบ (เช่น รายวิชาอ้างอิงหน้า 17, ข้อบังคับอ้างอิงหน้า 98 ข้อ 25.2.2, โครงสร้างหลักสูตรอ้างอิงหมวดที่ 3)
+   - **ระบบ Grounded Citation Badge**: แสดงป้ายเลขหน้าอ้างอิงจริง `[อ้างอิงหน้า x]` วางเคียงข้างป้าย `[Success]` เหนือกล่องคำตอบอย่างเป็นระเบียบ (เช่น รายวิชาอ้างอิงหน้า 17, ข้อบังคับอ้างอิงหน้า 98 ข้อ 25.2.2 โดยหากคำถามใดไม่มีเลขหน้าเฉพาะเจาะจงในเล่ม ระบบจะซ่อนป้ายอ้างอิงอัตโนมัติ เพื่อความถูกต้องตามหลัก Zero Hallucination)
 2. **หน้าโครงสร้างหลักสูตรและรายวิชาทั้งหมด (Course Catalog & Regulations)**:
    - URL: [http://127.0.0.1:8000/courses](http://127.0.0.1:8000/courses) หรือ [http://127.0.0.1:8000/static/courses.html](http://127.0.0.1:8000/static/courses.html)
-   - ฟีเจอร์: ตรวจสอบรายวิชาทั้งหมด 263 วิชา ค้นหารหัส/ชื่อวิชา ตรวจสอบวิชาบังคับก่อน (Prerequisites) และดูข้อบังคับการศึกษา สจล.
+   - ฟีเจอร์: ตรวจสอบรายวิชาทั้งหมด 504 วิชา (วิชาเฉพาะ 238 + GenEd 266) ค้นหารหัส/ชื่อวิชา ตรวจสอบวิชาบังคับก่อน (Prerequisites 30 รายการ) และดูข้อบังคับการศึกษา สจล.
 3. **หน้า Interactive API Documentation (Swagger UI)**:
    - URL: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
    - ฟีเจอร์: ทดสอบเรียกใช้งาน API Endpoint ทุกเส้นได้โดยตรง
@@ -205,11 +229,11 @@ python -m uvicorn lab10_fastapi.curriculum_app.main:app --host 127.0.0.1 --port 
 
 ### 6. ตัวอย่างคำถามทดสอบการทำงานของระบบ (Test Queries)
 - **คำถามเชิงโครงสร้าง**:
-  - `หลักสูตร DSBA มีกี่หน่วยกิต` $\rightarrow$ ตอบ `132` (`[อ้างอิง: หมวดที่ 3]`)
+  - `หลักสูตร DSBA มีกี่หน่วยกิต` $\rightarrow$ ตอบ `132`
   - `วิชา 06026216 คือวิชาอะไร` $\rightarrow$ ตอบ `ปัญญาประดิษฐ์` (`[อ้างอิงหน้า 17]`)
   - `วิชา 06026241 ต้องเรียนวิชาใดมาก่อน`
 - **คำถามเชิงความสัมพันธ์และแผนการศึกษา**:
-  - `ปี 1 เทอม 1 เรียนกี่หน่วยกิต` $\rightarrow$ ตอบ `18` (`[อ้างอิง: หมวดที่ 3]`)
+  - `ปี 1 เทอม 1 เรียนกี่หน่วยกิต` $\rightarrow$ ตอบ `18`
   - `ปี 2 เทอม 1 สาขา DSBA เรียนวิชาอะไรบ้าง`
   - `หลักสูตร IT มีวิชากี่ตัว`
 - **คำถามเชิงข้อบังคับการศึกษา (Regulations)**:
@@ -658,6 +682,9 @@ lab10_fastapi/curriculum_app/static/
 | `/api/elective-slots` | GET | `plan_id`, `year`, `semester` | `200` (List of ElectiveSlotResponse) | `503` (DB offline) |
 | `/api/plan` | GET | `program_id`, `plan_id`, `year`, `semester` | `200` (List of PlanItemResponse จาก `v_plan`) | `503` (DB offline) |
 | `/api/plan/summary` | GET | `program_id`, `plan_id`, `year`, `semester` | `200` (List of PlanSummaryResponse จาก `v_semester_credits`) | `503` (DB offline) |
+| `/api/program` | GET | - | `200` (ข้อมูลสรุปหลักสูตรแรกที่พบ) | `404` (ไม่พบหลักสูตร), `503` (DB offline) |
+| `/api/programs` | GET | - | `200` (List of ProgramResponse ครบทั้ง 4 หลักสูตร) | `503` (DB offline) |
+| `/api/stats` | GET | `program_id` | `200` (`total_courses`, `total_plans`, `total_slots`, `total_regulations`) | `503` (DB offline) |
 | `/api/regulations` | GET | `category`, `search`, `limit` | `200` (List of RegulationResponse) | `503` (DB offline) |
 | `/api/health` | GET | - | `200` (`status`, `database_ready`, `ollama_ready`, `model`) | `200` (Status degraded if not ready) |
 

@@ -1,10 +1,10 @@
 {
-  "source_courses": 95,
+  "source_courses": 98,
   "converted_courses": 79,
   "plan_items": 34,
-  "elective_slots": 17,
+  "elective_slots": 19,
   "prerequisites": 5,
-  "skipped_wildcards": 16,
+  "skipped_wildcards": 19,
   "skipped_flexible_plan_items": 45,
   "warnings": [
     "06026216: ไม่ใส่ในแผนเพราะปี/เทอม=0/0",
@@ -63,10 +63,13 @@
     "courses[84] ข้ามรหัสที่ไม่ใช่ตัวเลข 8 หลัก (บันทึกลง elective_slots): '06026xxx'",
     "courses[85] ข้ามรหัสที่ไม่ใช่ตัวเลข 8 หลัก (บันทึกลง elective_slots): '06026xxx'",
     "courses[86] ข้ามรหัสที่ไม่ใช่ตัวเลข 8 หลัก (บันทึกลง elective_slots): '06026xxx'",
-    "courses[90] ข้ามรหัสที่ไม่ใช่ตัวเลข 8 หลัก (บันทึกลง elective_slots): '06026xxx'",
-    "courses[91] ข้ามรหัสที่ไม่ใช่ตัวเลข 8 หลัก (บันทึกลง elective_slots): '06026xxx'",
-    "courses[92] ข้ามรหัสที่ไม่ใช่ตัวเลข 8 หลัก (บันทึกลง elective_slots): '9064xxxx'",
-    "courses[93] ข้ามรหัสที่ไม่ใช่ตัวเลข 8 หลัก (บันทึกลง elective_slots): 'xxxxxxxx'",
-    "courses[94] ข้ามรหัสที่ไม่ใช่ตัวเลข 8 หลัก (บันทึกลง elective_slots): 'xxxxxxxx'"
+    "courses[87] ข้ามรหัสที่ไม่ใช่ตัวเลข 8 หลัก (บันทึกลง elective_slots): '06026xxx'",
+    "courses[88] ข้ามรหัสที่ไม่ใช่ตัวเลข 8 หลัก (บันทึกลง elective_slots): '06026xxx'",
+    "courses[89] ข้ามรหัสที่ไม่ใช่ตัวเลข 8 หลัก (บันทึกลง elective_slots): '06026xxx'",
+    "courses[93] ข้ามรหัสที่ไม่ใช่ตัวเลข 8 หลัก (บันทึกลง elective_slots): '06026xxx'",
+    "courses[94] ข้ามรหัสที่ไม่ใช่ตัวเลข 8 หลัก (บันทึกลง elective_slots): '06026xxx'",
+    "courses[95] ข้ามรหัสที่ไม่ใช่ตัวเลข 8 หลัก (บันทึกลง elective_slots): '9064xxxx'",
+    "courses[96] ข้ามรหัสที่ไม่ใช่ตัวเลข 8 หลัก (บันทึกลง elective_slots): 'xxxxxxxx'",
+    "courses[97] ข้ามรหัสที่ไม่ใช่ตัวเลข 8 หลัก (บันทึกลง elective_slots): 'xxxxxxxx'"
   ]
 }

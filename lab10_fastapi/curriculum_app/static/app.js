@@ -48,7 +48,7 @@ function setAskState(state, payload = {}) {
       ? JSON.stringify(payload.rows, null, 2)
       : "-";
 
-    // แสดง Badge อ้างอิงเลขหน้าเดี่ยว ข้างๆ ปุ่ม Success
+    // แสดง Badge อ้างอิงเลขหน้าเดี่ยว ข้างๆ ปุ่ม Success (ถ้าไม่พบเลขหน้า ให้ซ่อนกล่องเหลืองไปเลย)
     if (citationBadge) {
       const sources = payload.sources || [];
       let pageText = "";
@@ -57,11 +57,12 @@ function setAskState(state, payload = {}) {
       for (const s of sources) {
         const raw = s.printed_pages || s.pdf_pages || "";
         if (raw) {
-          // ดึงเฉพาะเลขหน้าแรกเพียงตัวเดียวตามที่ผู้ใช้ต้องการ
+          // ดึงเฉพาะเลขหน้าแรกเพียงตัวเดียว
           const first = String(raw).split(";")[0].trim();
           const clean = first.replace(/^หน้า\s*/, "");
-          if (clean) {
-            pageText = clean.startsWith("หมวด") ? `อ้างอิง: ${clean}` : `อ้างอิงหน้า ${clean}`;
+          // ต้องเป็นเลขหน้าจริง (มีตัวเลข และไม่เป็นชื่อหมวด)
+          if (clean && !clean.startsWith("หมวด") && /\d/.test(clean)) {
+            pageText = `อ้างอิงหน้า ${clean}`;
             detailTooltip = `${s.title || s.code || ""} ${s.article_no ? `(${s.article_no})` : ""}`;
             break;
           }

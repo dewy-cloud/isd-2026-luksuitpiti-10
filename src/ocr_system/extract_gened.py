@@ -72,31 +72,35 @@ COURSE_SCHEMA = {
     "required": ["courses"]
 }
 
-SYSTEM_PROMPT = """You are an automated curriculum extractor. 
+SYSTEM_PROMPT = """You are an automated curriculum extractor for Thai university curriculum documents.
 Extract all course information from the provided Markdown into JSON adhering strictly to the schema.
 Do NOT think or reason. Immediately output the JSON object following the schema.
 
 Extraction Rules:
 1. code: 8-digit course code (starting with 90 or 96).
-2. name_th: Thai course name only. Strip any trailing credit numbers and brackets.
+2. name_th: Thai course name only. Strip any trailing credit numbers, digits, or parentheses.
 3. name_en: English course name (uppercase or title case).
-4. credits, lecture_h, lab_h, self_h: numbers from credit format X(lec-lab-self).
+4. credits, lecture_h, lab_h, self_h:
+   - If explicit credit format X(lec-lab-self) or X (lec-lab-self) is present (e.g. 1 (1-0-2), 3 (3-0-6), 1 (0-2-1)), extract them directly.
+   - If the credit breakdown is not explicitly printed in parentheses:
+     * Analyze the course title and description text (e.g., practical/skill training stating 15/30/45 hours -> 1/2/3 credits with (0-2-1), (0-4-2), (0-6-3), or standard lecture courses -> 3(3-0-6)).
+     * Fill in the accurate credits, lecture_h, lab_h, and self_h based on curriculum standards without inventing courses.
 5. description_th: Thai course description only. Do NOT include English description.
-6. Extract ONLY courses that appear in the text. Do not invent any courses."""
+6. Extract ONLY courses that appear in the document."""
 
-TYPHOON_OCR_PROMPT = """Extract all text from the image.
+TYPHOON_OCR_PROMPT = """Extract all text from the image into clean Markdown.
 
-Instructions:
-- Only return the clean Markdown.
-- Do not include any explanation or extra text.
-- You must include all information on the page.
-
-Formatting Rules:
-- Tables: Render tables using <table>...</table> in clean HTML format.
-- Equations: Render equations using LaTeX syntax with inline ($...$) and block ($$...$$).
-- Images/Charts/Diagrams: Wrap any clearly defined visual areas in <figure>
-- Page Numbers: Wrap page numbers in <page_number>...</page_number>.
-- Checkboxes: Use ☐ for unchecked and ☑ for checked boxes."""
+CRITICAL INSTRUCTIONS FOR CURRICULUM & COURSE DETAILS:
+1. Every course entry has:
+   - An 8-digit course code (e.g., 90642001)
+   - Thai course title
+   - Credit and hour breakdown format on the right side of the title line: X (L-P-S) such as 1 (0-2-1), 2 (0-4-2), 3 (0-6-3), 1 (1-0-2), 3 (3-0-6)
+   - English course title (e.g., PRACTICE UNDER PERSONAL AND PROFESSIONAL SKILLS 1)
+   - Prerequisite line (รายวิชาบังคับก่อน / PREREQUISITE)
+   - Course description paragraphs in Thai and English
+2. You MUST transcribe the credit and hours in parentheses X (L-P-S) for EVERY course.
+   Do NOT drop or omit the right-aligned credit hours, even when the Thai title ends with a number (e.g. "วิชาชีพ 1 1 (0-2-1)").
+3. Transcribe every line completely and faithfully. Return only the clean Markdown."""
 
 
 def parse_page_range(spec: str) -> list[int]:
@@ -203,6 +207,7 @@ def extract_courses_from_markdown_llm(
         ],
         "format": COURSE_SCHEMA,
         "stream": False,
+        "think": False,
         "options": {
             "temperature": 0.0,
             "num_ctx": 4096
@@ -274,10 +279,10 @@ def main() -> None:
     )
     parser.add_argument("-i", "--input", default="data/input/fulldoc_dsba.pdf",
                         help="พาธไฟล์นำเข้า: ไฟล์ PDF (เช่น data/input/fulldoc_dsba.pdf) หรือ JSON OCR เดิม")
-    parser.add_argument("-o", "--output", default="work/lab8b_run/gened_courses.json",
-                        help="พาธไฟล์ JSON ผลลัพธ์ (ค่าเริ่มต้น: work/lab8b_run/gened_courses.json)")
-    parser.add_argument("--out-md", default="work/lab8b_run/gened_combined.md",
-                        help="พาธไฟล์ Markdown รวมทุกหน้าเข้าเป็นไฟล์เดียว (ค่าเริ่มต้น: work/lab8b_run/gened_combined.md)")
+    parser.add_argument("-o", "--output", default="work/lab7b_run/gened_courses.json",
+                        help="พาธไฟล์ JSON ผลลัพธ์ (ค่าเริ่มต้น: work/lab7b_run/gened_courses.json)")
+    parser.add_argument("--out-md", default="work/lab7b_run/gened_combined.md",
+                        help="พาธไฟล์ Markdown รวมทุกหน้าเข้าเป็นไฟล์เดียว (ค่าเริ่มต้น: work/lab7b_run/gened_combined.md)")
     parser.add_argument("-d", "--database", default=None,
                         help="พาธ SQLite database (เช่น work/lab8b_run/curriculum.db)")
     parser.add_argument("--pages", default="153-227",
@@ -286,12 +291,30 @@ def main() -> None:
                         help="โมเดล Typhoon-OCR สำหรับ Stage 1 (ค่าเริ่มต้น: scb10x/typhoon-ocr1.5-3b:latest)")
     parser.add_argument("--model", default="qwen3:4b",
                         help="โมเดล LLM สำหรับ Stage 2 (ค่าเริ่มต้น: qwen3:4b หรือระบุ llama3.2:3b)")
-    parser.add_argument("--md-dir", default="work/lab8b_run/markdown_pages",
-                        help="โฟลเดอร์เก็บไฟล์แคช Markdown จาก Typhoon-OCR (ค่าเริ่มต้น: work/lab8b_run/markdown_pages)")
+    parser.add_argument("--md-dir", default="work/lab7b_run/markdown_pages",
+                        help="โฟลเดอร์เก็บไฟล์แคช Markdown จาก Typhoon-OCR (ค่าเริ่มต้น: work/lab7b_run/markdown_pages)")
     parser.add_argument("--ollama-url", default="http://127.0.0.1:11434",
                         help="URL ของ Ollama Service (ค่าเริ่มต้น: http://127.0.0.1:11434)")
+    parser.add_argument("--load-only", action="store_true",
+                        help="โหลดข้อมูลจาก JSON เข้า SQLite โดยตรงโดยไม่ต้องสกัดใหม่")
 
     args = parser.parse_args()
+
+    if args.load_only:
+        db_path = Path(args.database) if args.database else Path("work/lab8b_run/curriculum.db")
+        json_file = Path(args.output)
+        if not json_file.exists():
+            json_file = Path("work/lab7b_run/gened_courses.json")
+        if not json_file.exists() and Path(args.input).suffix.lower() == ".json":
+            json_file = Path(args.input)
+        if not json_file.exists():
+            print(f"❌ ไม่พบไฟล์ JSON สำหรับโหลด: {json_file}")
+            sys.exit(1)
+        courses = json.loads(json_file.read_text(encoding="utf-8"))
+        print(f"[*] กำลังนำเข้า {len(courses)} วิชาจาก {json_file} เข้าสู่ {db_path} ...")
+        inserted = save_to_database(db_path, courses)
+        print(f"✓ นำเข้าและอัปเดตตาราง 'course' สำเร็จ: {inserted} วิชา")
+        return
 
     in_path = Path(args.input)
     # ถ้าระบุค่าเริ่มต้นเป็น pdf แต่ไม่พบ ให้ลองหา outputs/fulldoc_dsba_ocr.json เป็นตัวสำรอง
@@ -338,18 +361,20 @@ def main() -> None:
 
     print(f"\n[*] เริ่มการสกัดข้อมูลจำนวน {len(target_pages_data)} หน้า ...\n")
 
-    all_courses: list[dict] = []
-    seen_codes: set[str] = set()
-    combined_md_sections: list[str] = []
     t_start = time.time()
+
+    # ==========================================================================
+    # ขั้นตอนที่ 1 (Stage 1): Batch OCR ด้วย Typhoon-OCR (โหลดโมเดลครั้งเดียว)
+    # ==========================================================================
+    print(f"[*] ขั้นตอนที่ 1/2: ถอดข้อความเป็น Markdown ด้วย {args.ocr_model} ...")
+    page_markdowns: list[dict] = []
+    combined_md_sections: list[str] = []
 
     for idx, p_info in enumerate(target_pages_data):
         page_num = p_info["page"]
-        print(f"  [{idx + 1:2d}/{len(target_pages_data)}] หน้า {page_num:3d} ... ", end="", flush=True)
+        print(f"  [OCR {idx + 1:2d}/{len(target_pages_data)}] หน้า {page_num:3d} ... ", end="", flush=True)
         t0 = time.time()
-
         try:
-            # 1. Stage 1: แปลงภาพเป็น bytes ในหน่วยความจำ แล้วส่งเข้า Typhoon-OCR
             if is_pdf:
                 md_text = get_page_markdown_via_typhoon(
                     pdf_or_img_path=in_path,
@@ -361,15 +386,49 @@ def main() -> None:
             else:
                 md_text = p_info.get("text", "")
 
+            elapsed = time.time() - t0
+            cached_note = " (จากแคช)" if elapsed < 0.2 else f" ({elapsed:.1f} วิ)"
+            print(f"✓ สำเร็จ{cached_note}")
+
             if md_text:
+                page_markdowns.append({"page": page_num, "text": md_text})
                 combined_md_sections.append(
                     f"<!-- ========================================== -->\n"
                     f"<!-- PDF Page {page_num} (หน้าที่พิมพ์ {max(1, page_num - 4)}) -->\n"
                     f"<!-- ========================================== -->\n\n"
                     f"{md_text.strip()}\n"
                 )
+        except Exception as e:
+            print(f"❌ ล้มเหลว: {e}")
 
-            # 2. Stage 2: ส่ง Markdown เข้า LLM แปลงเป็น JSON ตาม Schema
+    # บันทึกไฟล์ Markdown รวมทุกหน้าเป็นไฟล์เดียวทันทีที่ Stage 1 เสร็จสิ้น
+    if args.out_md and combined_md_sections:
+        out_md_path = Path(args.out_md)
+        out_md_path.parent.mkdir(parents=True, exist_ok=True)
+        header_text = (
+            f"# เอกสารหลักสูตรหมวดวิชาศึกษาทั่วไป (GenEd)\n"
+            f"# วันที่สกัด: {time.strftime('%Y-%m-%d %H:%M:%S')}\n"
+            f"# แหล่งข้อมูล: {in_path.name} (ช่วงหน้า: {args.pages})\n\n"
+        )
+        full_md_content = header_text + "\n\n---\n\n".join(combined_md_sections)
+        out_md_path.write_text(full_md_content, encoding="utf-8")
+        print(f"✓ บันทึกไฟล์ Markdown รวมเรียบร้อย: {out_md_path}")
+
+    # ==========================================================================
+    # ขั้นตอนที่ 2 (Stage 2): Batch JSON ด้วย LLM (โหลดโมเดลครั้งเดียว ไม่สลับไปมา)
+    # ==========================================================================
+    print(f"\n[*] ขั้นตอนที่ 2/2: สกัด JSON ตาม Schema ด้วย {args.model} ...")
+    all_courses: list[dict] = []
+    seen_codes: set[str] = set()
+    out_path = Path(args.output)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+
+    for idx, item in enumerate(page_markdowns):
+        page_num = item["page"]
+        md_text = item["text"]
+        print(f"  [JSON {idx + 1:2d}/{len(page_markdowns)}] หน้า {page_num:3d} ... ", end="", flush=True)
+        t0 = time.time()
+        try:
             page_courses = extract_courses_from_markdown_llm(
                 md_text=md_text,
                 model=args.model,
@@ -390,22 +449,8 @@ def main() -> None:
                 seen_codes.add(code)
                 all_courses.append(c)
 
-    # บันทึกไฟล์ Markdown รวมทุกหน้าเป็นไฟล์เดียว
-    if args.out_md and combined_md_sections:
-        out_md_path = Path(args.out_md)
-        out_md_path.parent.mkdir(parents=True, exist_ok=True)
-        header_text = (
-            f"# เอกสารหลักสูตรหมวดวิชาศึกษาทั่วไป (GenEd)\n"
-            f"# วันที่สกัด: {time.strftime('%Y-%m-%d %H:%M:%S')}\n"
-            f"# แหล่งข้อมูล: {in_path.name} (ช่วงหน้า: {args.pages})\n\n"
-        )
-        full_md_content = header_text + "\n\n---\n\n".join(combined_md_sections)
-        out_md_path.write_text(full_md_content, encoding="utf-8")
-
-    # บันทึกไฟล์ JSON
-    out_path = Path(args.output)
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    out_path.write_text(json.dumps(all_courses, ensure_ascii=False, indent=2), encoding="utf-8")
+        # บันทึก JSON สะสมแบบต่อเนื่อง (Incremental Save)
+        out_path.write_text(json.dumps(all_courses, ensure_ascii=False, indent=2), encoding="utf-8")
 
     total_time = time.time() - t_start
     print("\n" + "=" * 70)

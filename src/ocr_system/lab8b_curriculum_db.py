@@ -672,16 +672,24 @@ def convert_lab7b(data: dict, *, program_id: str | None = None,
                 note_str = " | ".join(notes) or None
                 # ดึง alt_group หรือสร้างจากหมายเลขสล็อต / แขนงวิชาเลือก
                 slot_name = str(src.get("name_th") or raw_code).strip()
-                slot_alt_group = None
-                if pid == "DSBA":
+                slot_alt_group = src.get("alt_group")
+                if not slot_alt_group and pid == "DSBA":
                     if year == 3 and semester == 1:
                         if any(k in slot_name for k in ("วิทยาการข้อมูล 1", "สถิติ 1", "วิศวกรรมข้อมูล 1")):
                             slot_alt_group = "dsba_track_y3s1_slot1"
                         elif any(k in slot_name for k in ("วิทยาการข้อมูล 2", "สถิติ 2", "วิศวกรรมข้อมูล 2")):
                             slot_alt_group = "dsba_track_y3s1_slot2"
                     elif year == 3 and semester == 2:
-                        if any(k in slot_name for k in ("วิทยาการข้อมูล", "สถิติ", "วิศวกรรมข้อมูล")):
+                        if any(k in slot_name for k in ("วิทยาการข้อมูล 3", "สถิติ 3", "วิศวกรรมข้อมูล 3")):
                             slot_alt_group = "dsba_track_y3s2_slot3"
+                        elif any(k in slot_name for k in ("วิทยาการข้อมูล 4", "สถิติ 4", "วิศวกรรมข้อมูล 4")):
+                            slot_alt_group = "dsba_track_y3s2_slot4"
+
+                # ป้องกันกรณีสล็อตวิชาเลือกคนละตัวในเทอมเดียวกันมี alt_group ชนกัน (เช่น วิชาเลือก 1 และ 2 ของ BIT)
+                if slot_alt_group:
+                    slot_num_m = re.search(r"(\d+)(?:\s+หรือ)?\s*$", slot_name)
+                    if slot_num_m:
+                        slot_alt_group = f"{slot_alt_group}_slot{slot_num_m.group(1)}"
 
                 elective_slots.append({
                     "plan_id": effective_plan_id,
@@ -720,9 +728,9 @@ def convert_lab7b(data: dict, *, program_id: str | None = None,
                 "name_th": name_th_val,
                 "name_en": name_en_val,
                 "credits": credit,
-                "lecture_h": lecture or 3,
-                "lab_h": lab or 0,
-                "self_h": self_h or 6,
+                "lecture_h": lecture if lecture is not None else 3,
+                "lab_h": lab if lab is not None else 0,
+                "self_h": self_h if self_h is not None else 6,
                 "description_th": desc_th_val,
                 "pdf_pages": src.get("pdf_pages"),
                 "printed_pages": src.get("printed_pages"),
@@ -805,22 +813,7 @@ def convert_lab7b(data: dict, *, program_id: str | None = None,
                     seen_pre.add(key)
 
     # เติม slot สำหรับกรณี OCR / LLM สกัดวิชาเลือกตกหล่นในแผน non-coop
-    if pid == "DSBA" and effective_plan_type == "no_coop":
-        y1s1_cr = sum(p["credits"] for p in plan if p["year"] == 1 and p["semester"] == 1)
-        if y1s1_cr == 18:
-            elective_slots.append({
-                "plan_id": effective_plan_id,
-                "year": 1,
-                "semester": 1,
-                "slot_name_th": "วิชาเลือกหมวดวิชาศึกษาทั่วไป",
-                "slot_name_en": "ELECTIVE IN GENERAL EDUCATION",
-                "code_pattern": "9064xxxx",
-                "credits": 3,
-                "credit_options": "3(3-0-6)",
-                "alt_group": None,
-                "note": "หมวดวิชาศึกษาทั่วไป",
-            })
-    elif pid == "IT" and effective_plan_type == "no_coop":
+    if pid == "IT" and effective_plan_type == "no_coop":
         y4s2_cr = sum(p["credits"] for p in plan if p["year"] == 4 and p["semester"] == 2)
         if y4s2_cr == 3:
             elective_slots.append({
@@ -856,7 +849,8 @@ def convert_lab7b(data: dict, *, program_id: str | None = None,
             group = item.get("alt_group") or f"row_{i}"
             groups[(item["year"], item["semester"], group)] = item["credits"]
         for i, item in enumerate(elective_slots):
-            groups[(item["year"], item["semester"], f"slot_{i}")] = item["credits"]
+            group = item.get("alt_group") or f"slot_{i}"
+            groups[(item["year"], item["semester"], group)] = item["credits"]
         total_credits = sum(groups.values())
         warnings.append(f"ไม่ได้ระบุ --total-credits; คำนวณจากแผนที่แปลได้ = {total_credits}")
     if not 30 <= total_credits <= 300:
@@ -1005,6 +999,10 @@ def cmd_load(args) -> None:
                      (r["code"], r["requires"], r.get("kind", "pre")))
 
     conn.execute("INSERT OR IGNORE INTO program_course (program_id, code) SELECT DISTINCT program_id, code FROM plan_item")
+    for c in data.get("courses", []):
+        c_code = c.get("code")
+        if c_code and re.fullmatch(r"\d{8}", str(c_code)):
+            conn.execute("INSERT OR IGNORE INTO program_course (program_id, code) VALUES (?, ?)", (pid, str(c_code)))
 
     # โหลดข้อบังคับเข้าตาราง regulation ถ้ามีการระบุ หรือพบไฟล์ regulations.json
     reg_file = getattr(args, "regulations", None)
@@ -1790,6 +1788,9 @@ def score_one(expect: dict, got: dict) -> tuple[bool, str]:
 
 
 def cmd_eval(args) -> None:
+    global MODEL_TEXT
+    if getattr(args, "model", None):
+        MODEL_TEXT = args.model
     conn = open_db(args.database, readonly=True)
     questions = json.loads(Path(args.questions).read_text(encoding="utf-8"))
     rows_out = []
@@ -2301,6 +2302,7 @@ def main() -> None:
     p.add_argument("-d", "--database", required=True)
     p.add_argument("-q", "--questions", required=True)
     p.add_argument("-o", "--output", default="")
+    p.add_argument("--model", default=None, help="โมเดล Ollama สำหรับแปลงภาษาธรรมชาติเป็น SQL (เช่น qwen3:4b)")
 
     p = sub.add_parser("build-all", help="สร้างฐานข้อมูลหลักสูตรสมบูรณ์ 4 สาขา 7 แผนการศึกษา Option 2 จาก PDF")
     p.add_argument("-d", "--database", default="work/lab8b_run/curriculum.db", help="ที่อยู่ไฟล์ฐานข้อมูล")

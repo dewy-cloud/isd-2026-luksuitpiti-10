@@ -2,35 +2,53 @@
   "DSBA": {
     "name": "Data Science and Business Analytics",
     "gt_total": 90,
-    "pred_total": 89,
-    "matched": 89,
-    "missed": 1,
-    "spurious": 0,
-    "precision": 1.0,
-    "recall": 0.9889,
-    "f1": 0.9944,
+    "pred_total": 96,
+    "matched": 86,
+    "missed": 4,
+    "spurious": 10,
+    "precision": 0.8958,
+    "recall": 0.9556,
+    "f1": 0.9247,
     "missed_codes": [
-      "06016401"
+      "06016401",
+      "06026259 หรือ 06026260",
+      "06026259",
+      "06026260"
     ],
-    "spurious_codes": []
+    "spurious_codes": [
+      "06026xxx",
+      "06026xxx",
+      "06026xxx",
+      "06026xxx",
+      "06026xxx",
+      "06026xxx",
+      "06026xxx",
+      "06026xxx",
+      "06026259",
+      "06026260"
+    ]
   },
   "IT": {
     "name": "Information Technology",
     "gt_total": 106,
-    "pred_total": 110,
-    "matched": 105,
-    "missed": 1,
-    "spurious": 5,
-    "precision": 0.9545,
-    "recall": 0.9906,
-    "f1": 0.9722,
+    "pred_total": 108,
+    "matched": 102,
+    "missed": 4,
+    "spurious": 6,
+    "precision": 0.9444,
+    "recall": 0.9623,
+    "f1": 0.9533,
     "missed_codes": [
-      "06016418"
+      "06016418",
+      "06016481\nหรือ\n06016482",
+      "06016467",
+      "06016480"
     ],
     "spurious_codes": [
       "06016428",
       "06016430",
       "06016447",
+      "06016315",
       "06016481",
       "06016482"
     ]
@@ -38,14 +56,16 @@
   "BIT": {
     "name": "Business Information Technology",
     "gt_total": 63,
-    "pred_total": 65,
-    "matched": 63,
-    "missed": 0,
+    "pred_total": 64,
+    "matched": 62,
+    "missed": 1,
     "spurious": 2,
-    "precision": 0.9692,
-    "recall": 1.0,
-    "f1": 0.9844,
-    "missed_codes": [],
+    "precision": 0.9688,
+    "recall": 0.9841,
+    "f1": 0.9764,
+    "missed_codes": [
+      "06036147\nหรือ\n06036148"
+    ],
     "spurious_codes": [
       "06036147",
       "06036148"
@@ -54,15 +74,32 @@
   "AIT": {
     "name": "Artificial Intelligence Technology",
     "gt_total": 57,
-    "pred_total": 58,
-    "matched": 56,
-    "missed": 1,
+    "pred_total": 41,
+    "matched": 39,
+    "missed": 18,
     "spurious": 2,
-    "precision": 0.9655,
-    "recall": 0.9825,
-    "f1": 0.9739,
+    "precision": 0.9512,
+    "recall": 0.6842,
+    "f1": 0.7959,
     "missed_codes": [
-      "06016401"
+      "06016401",
+      "06046443 หรือ 06046444",
+      "06046416",
+      "06046417",
+      "06046418",
+      "06046419",
+      "06046420",
+      "06046421",
+      "06046422",
+      "06046423",
+      "06046424",
+      "06046425",
+      "06046430",
+      "06046431",
+      "06046432",
+      "06046433",
+      "06046434",
+      "06046435"
     ],
     "spurious_codes": [
       "06046443",
