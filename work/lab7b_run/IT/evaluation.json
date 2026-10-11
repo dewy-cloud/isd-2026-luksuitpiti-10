@@ -5,13 +5,13 @@
       "code": {
         "label": "รหัสวิชา",
         "n_items": 106,
-        "cer": 0.009302,
+        "cer": 0.051163,
         "wer": null,
-        "exact_match_acc": 0.990566,
+        "exact_match_acc": 0.962264,
         "n_sub": 0,
-        "n_del": 8,
+        "n_del": 44,
         "n_ins": 0,
-        "n_missing": 1,
+        "n_missing": 4,
         "n_hallucinated": 0,
         "n_ref_chars": 860,
         "error_samples": [
@@ -19,19 +19,34 @@
             "key": "06016418 [ตกแถว]",
             "gt": "06016418",
             "pred": ""
+          },
+          {
+            "key": "06016481\nหรือ\n06016482 [ตกแถว]",
+            "gt": "06016481\nหรือ\n06016482",
+            "pred": ""
+          },
+          {
+            "key": "06016467 [ตกแถว]",
+            "gt": "06016467",
+            "pred": ""
+          },
+          {
+            "key": "06016480 [ตกแถว]",
+            "gt": "06016480",
+            "pred": ""
           }
         ]
       },
       "name_th": {
         "label": "ชื่อวิชา (ไทย) ⭐",
         "n_items": 106,
-        "cer": 0.032728,
-        "wer": 0.246939,
-        "exact_match_acc": 0.669811,
-        "n_sub": 59,
-        "n_del": 37,
-        "n_ins": 5,
-        "n_missing": 1,
+        "cer": 0.07453,
+        "wer": 0.263265,
+        "exact_match_acc": 0.660377,
+        "n_sub": 71,
+        "n_del": 156,
+        "n_ins": 3,
+        "n_missing": 4,
         "n_hallucinated": 0,
         "n_ref_chars": 3086,
         "error_samples": [
@@ -65,53 +80,53 @@
       "name_en": {
         "label": "ชื่อวิชา (อังกฤษ) ⭐",
         "n_items": 106,
-        "cer": 0.370952,
-        "wer": 0.359223,
-        "exact_match_acc": 0.933962,
-        "n_sub": 3,
-        "n_del": 85,
-        "n_ins": 1023,
-        "n_missing": 2,
+        "cer": 0.051419,
+        "wer": 0.048544,
+        "exact_match_acc": 0.95283,
+        "n_sub": 0,
+        "n_del": 154,
+        "n_ins": 0,
+        "n_missing": 4,
         "n_hallucinated": 0,
         "n_ref_chars": 2995,
         "error_samples": [
           {
-            "key": "06016481\nหรือ\n06016482",
+            "key": "06016454",
+            "gt": "UX TOOLS AND SOFTWARE DEVELOPMENT FOR DIGITAL\nBUSINESS",
+            "pred": "UX TOOLS AND SOFTWARE DEVELOPMENT FOR DIGITAL"
+          },
+          {
+            "key": "06016418 [ตกแถว]",
+            "gt": "SERVER-SIDE WEB DEVELOPMENT",
+            "pred": ""
+          },
+          {
+            "key": "06016481\nหรือ\n06016482 [ตกแถว]",
             "gt": "COOPERATIVE EDUCATION\nOR\nOVERSEA COOPERATIVE EDUCATION",
-            "pred": "OVERSEA COOPERATIVE EDUCATION"
+            "pred": ""
           },
           {
-            "key": "060164xx",
-            "gt": "ELECTIVE COURSE IN INFORMATION TECHNOLOGY 1",
-            "pred": "None"
+            "key": "06016467 [ตกแถว]",
+            "gt": "IMAGE TRANSFORMATION AND RECOGNITION",
+            "pred": ""
           },
           {
-            "key": "06016428",
-            "gt": "MICROSERVICE DESIGN AND DEVELOPMENT",
-            "pred": "MICROSERVICE DESIGN AND DEVELOPMENT Introduction to microservices, evolutionary architect, monolith, service-oriented architecture and microservice, decomposition strategies and design, inter-process communication, queueing and routing, command query responsibility segregation, service discovery, application metrics, circuit breaker, observability, Microservice Development"
-          },
-          {
-            "key": "06016431",
-            "gt": "MOBILE DEVICE PROGRAMMING",
-            "pred": "MOBILE DEVICE PROGRAMMING Introduction to technology and the programming of applications for mobile computing including devices i.e. smart phones, pads, and tablets, developing mobile applications and using device emulators for coding and testing."
-          },
-          {
-            "key": "06016447",
-            "gt": "FUNDAMENTAL GAME DEVELOPMENT WITH GAME ENGINE",
-            "pred": "DEVELOPMENT WITH GAME ENGINE Fundamental of Augmented Reality, Virtual Reality and Mixed Reality, Mathematical of Motion and Physics in Extended Reality Worlds, Human Visual Perception, Game Engine, VR Programming, Tracking Techniques, Interaction Techniques"
+            "key": "06016480 [ตกแถว]",
+            "gt": "SPECIAL WORKSHOP IN INFORMATION TECHNOLOGY 4",
+            "pred": ""
           }
         ]
       },
       "credits": {
         "label": "หน่วยกิต",
         "n_items": 106,
-        "cer": 0.036655,
+        "cer": 0.065292,
         "wer": null,
-        "exact_match_acc": 0.943396,
+        "exact_match_acc": 0.915094,
         "n_sub": 12,
-        "n_del": 20,
+        "n_del": 45,
         "n_ins": 0,
-        "n_missing": 1,
+        "n_missing": 4,
         "n_hallucinated": 0,
         "n_ref_chars": 873,
         "error_samples": [
@@ -145,13 +160,13 @@
       "year_sem": {
         "label": "ปี/ภาค",
         "n_items": 106,
-        "cer": 0.009434,
+        "cer": 0.037736,
         "wer": null,
-        "exact_match_acc": 0.990566,
+        "exact_match_acc": 0.962264,
         "n_sub": 0,
-        "n_del": 3,
+        "n_del": 12,
         "n_ins": 0,
-        "n_missing": 1,
+        "n_missing": 4,
         "n_hallucinated": 0,
         "n_ref_chars": 318,
         "error_samples": [
@@ -159,24 +174,54 @@
             "key": "06016418 [ตกแถว]",
             "gt": "3/1",
             "pred": ""
+          },
+          {
+            "key": "06016481\nหรือ\n06016482 [ตกแถว]",
+            "gt": "3/2",
+            "pred": ""
+          },
+          {
+            "key": "06016467 [ตกแถว]",
+            "gt": "0/0",
+            "pred": ""
+          },
+          {
+            "key": "06016480 [ตกแถว]",
+            "gt": "0/0",
+            "pred": ""
           }
         ]
       },
       "category": {
         "label": "หมวดวิชา",
         "n_items": 106,
-        "cer": 0.008953,
+        "cer": 0.035813,
         "wer": null,
-        "exact_match_acc": 0.990566,
+        "exact_match_acc": 0.962264,
         "n_sub": 0,
-        "n_del": 13,
+        "n_del": 52,
         "n_ins": 0,
-        "n_missing": 1,
+        "n_missing": 4,
         "n_hallucinated": 0,
         "n_ref_chars": 1452,
         "error_samples": [
           {
             "key": "06016418 [ตกแถว]",
+            "gt": "หมวดวิชาเฉพาะ",
+            "pred": ""
+          },
+          {
+            "key": "06016481\nหรือ\n06016482 [ตกแถว]",
+            "gt": "หมวดวิชาเฉพาะ",
+            "pred": ""
+          },
+          {
+            "key": "06016467 [ตกแถว]",
+            "gt": "หมวดวิชาเฉพาะ",
+            "pred": ""
+          },
+          {
+            "key": "06016480 [ตกแถว]",
             "gt": "หมวดวิชาเฉพาะ",
             "pred": ""
           }
@@ -185,35 +230,55 @@
       "ctype": {
         "label": "บังคับ/เลือก",
         "n_items": 106,
-        "cer": 0.010399,
+        "cer": 0.048527,
         "wer": null,
-        "exact_match_acc": 0.990566,
-        "n_sub": 0,
-        "n_del": 6,
-        "n_ins": 0,
-        "n_missing": 1,
+        "exact_match_acc": 0.95283,
+        "n_sub": 5,
+        "n_del": 22,
+        "n_ins": 1,
+        "n_missing": 4,
         "n_hallucinated": 0,
         "n_ref_chars": 577,
         "error_samples": [
           {
+            "key": "90644xxx",
+            "gt": "เลือก",
+            "pred": "บังคับ"
+          },
+          {
             "key": "06016418 [ตกแถว]",
             "gt": "บังคับ",
+            "pred": ""
+          },
+          {
+            "key": "06016481\nหรือ\n06016482 [ตกแถว]",
+            "gt": "บังคับ",
+            "pred": ""
+          },
+          {
+            "key": "06016467 [ตกแถว]",
+            "gt": "เลือก",
+            "pred": ""
+          },
+          {
+            "key": "06016480 [ตกแถว]",
+            "gt": "เลือก",
             "pred": ""
           }
         ]
       },
       "prereq": {
         "label": "วิชาบังคับก่อน",
-        "n_items": 105,
-        "cer": 0.035088,
+        "n_items": 102,
+        "cer": 0.036036,
         "wer": null,
-        "exact_match_acc": 0.971429,
+        "exact_match_acc": 0.970588,
         "n_sub": 14,
         "n_del": 0,
         "n_ins": 6,
         "n_missing": 0,
         "n_hallucinated": 0,
-        "n_ref_chars": 570,
+        "n_ref_chars": 555,
         "error_samples": [
           {
             "key": "06016418",
@@ -234,16 +299,16 @@
       },
       "flexible": {
         "label": "ปี/ภาคยืดหยุ่น",
-        "n_items": 105,
+        "n_items": 102,
         "cer": 2.666667,
         "wer": null,
-        "exact_match_acc": 0.495238,
+        "exact_match_acc": 0.5,
         "n_sub": 0,
         "n_del": 0,
-        "n_ins": 424,
+        "n_ins": 408,
         "n_missing": 0,
         "n_hallucinated": 0,
-        "n_ref_chars": 159,
+        "n_ref_chars": 153,
         "error_samples": [
           {
             "key": "06016428",
@@ -273,43 +338,30 @@
         ]
       }
     },
-    "overall_micro_cer": 0.157759,
+    "overall_micro_cer": 0.092465,
     "alignment": {
-      "matched": 105,
-      "missed": 1,
-      "spurious": 5,
-      "precision": 0.9545,
-      "recall": 0.9906,
-      "f1": 0.9722,
+      "matched": 102,
+      "missed": 4,
+      "spurious": 6,
+      "precision": 0.9444,
+      "recall": 0.9623,
+      "f1": 0.9533,
       "gt_total": 106,
-      "pred_total": 110,
+      "pred_total": 108,
       "missed_codes": [
-        "06016418"
+        "06016418",
+        "06016481\nหรือ\n06016482",
+        "06016467",
+        "06016480"
       ],
       "spurious_codes": [
         "06016428",
         "06016430",
         "06016447",
+        "06016315",
         "06016481",
         "06016482"
       ]
-    },
-    "internal_check": {
-      "ok": true,
-      "n_courses": 110,
-      "n_duplicate_keys": 0,
-      "credits_by_term": {
-        "1/1": 18,
-        "1/2": 18,
-        "2/1": 18,
-        "2/2": 18,
-        "3/1": 18,
-        "3/2": 6,
-        "4/1": 15,
-        "4/2": 15
-      },
-      "total_credits_fixed_terms": 126,
-      "issues": []
     }
   }
 }

@@ -25,12 +25,12 @@
       "name_th": {
         "label": "ชื่อวิชา (ไทย) ⭐",
         "n_items": 91,
-        "cer": 0.148418,
-        "wer": 0.22103,
-        "exact_match_acc": 0.758242,
-        "n_sub": 62,
-        "n_del": 323,
-        "n_ins": 23,
+        "cer": 0.145507,
+        "wer": 0.238197,
+        "exact_match_acc": 0.626374,
+        "n_sub": 64,
+        "n_del": 299,
+        "n_ins": 37,
         "n_missing": 1,
         "n_hallucinated": 0,
         "n_ref_chars": 2749,
@@ -65,40 +65,40 @@
       "name_en": {
         "label": "ชื่อวิชา (อังกฤษ) ⭐",
         "n_items": 91,
-        "cer": 0.310749,
-        "wer": 0.349127,
-        "exact_match_acc": 0.868132,
-        "n_sub": 0,
-        "n_del": 535,
-        "n_ins": 286,
-        "n_missing": 11,
+        "cer": 0.118849,
+        "wer": 0.149626,
+        "exact_match_acc": 0.912088,
+        "n_sub": 65,
+        "n_del": 242,
+        "n_ins": 7,
+        "n_missing": 1,
         "n_hallucinated": 0,
         "n_ref_chars": 2642,
         "error_samples": [
           {
             "key": "9064xxxx",
             "gt": "ELECTIVE IN GENERAL EDUCATION",
-            "pred": "None"
+            "pred": "ELECTIVE IN GENERAL EDUCATION หรือ"
           },
           {
-            "key": "9064xxxx",
-            "gt": "ELECTIVE IN GENERAL EDUCATION",
-            "pred": "None"
-          },
-          {
-            "key": "xxxxxxxx",
-            "gt": "FREE ELECTIVE COURSE 1",
-            "pred": "None"
-          },
-          {
-            "key": "xxxxxxxx",
-            "gt": "FREE ELECTIVE COURSE 2",
-            "pred": "None"
+            "key": "90642033",
+            "gt": "LAW FOR NEW GENERATION",
+            "pred": "กฎหมายสำหรับคนรุ่นให่ม"
           },
           {
             "key": "06026xxx",
             "gt": "ELECTIVE IN DATA SCIENCE\nELECTIVE IN STATISTICAL ANALYSIS 1\nELECTIVE IN DATA ENGINEERING 1",
-            "pred": "None"
+            "pred": "ELECTIVE IN DATA SCIENCE หรือ"
+          },
+          {
+            "key": "06026xxx",
+            "gt": "ELECTIVE IN DATA SCIENCE 2\nELECTIVE IN STATISTICAL ANALYTICS 2\nELECTIVE IN DATA ENGINEERING 2",
+            "pred": "ELECTIVE IN STATISTICAL ANALYSIS 1"
+          },
+          {
+            "key": "90644042",
+            "gt": "PROFESSIONAL COMMUNICATION AND\nPRESENTATION",
+            "pred": "การสื่อสารและการนำเสนออย่างืมออาชีพ"
           }
         ]
       },
@@ -133,7 +133,7 @@
           {
             "key": "xxxxxxxx",
             "gt": "3(3-0-6) หรือ 3(2-2-5)",
-            "pred": "3(3-0-6)"
+            "pred": "3(2-2-5)"
           },
           {
             "key": "06026xxx",
@@ -190,20 +190,40 @@
       "ctype": {
         "label": "บังคับ/เลือก",
         "n_items": 91,
-        "cer": 0.012245,
+        "cer": 0.073469,
         "wer": null,
-        "exact_match_acc": 0.989011,
-        "n_sub": 0,
-        "n_del": 6,
+        "exact_match_acc": 0.934066,
+        "n_sub": 25,
+        "n_del": 11,
         "n_ins": 0,
         "n_missing": 1,
         "n_hallucinated": 0,
         "n_ref_chars": 490,
         "error_samples": [
           {
-            "key": "06016401 [ตกแถว]",
+            "key": "06026211",
             "gt": "บังคับ",
-            "pred": ""
+            "pred": "เลือก"
+          },
+          {
+            "key": "06026212",
+            "gt": "บังคับ",
+            "pred": "เลือก"
+          },
+          {
+            "key": "06026215",
+            "gt": "บังคับ",
+            "pred": "เลือก"
+          },
+          {
+            "key": "90644042",
+            "gt": "บังคับ",
+            "pred": "เลือก"
+          },
+          {
+            "key": "90643021",
+            "gt": "บังคับ",
+            "pred": "เลือก"
           }
         ]
       },
@@ -236,24 +256,33 @@
         "error_samples": []
       }
     },
-    "overall_micro_cer": 0.140331,
+    "overall_micro_cer": 0.091612,
     "alignment": {
       "matched": 90,
       "missed": 1,
-      "spurious": 0,
-      "precision": 1.0,
+      "spurious": 8,
+      "precision": 0.9184,
       "recall": 0.989,
-      "f1": 0.9945,
+      "f1": 0.9524,
       "gt_total": 91,
-      "pred_total": 90,
+      "pred_total": 98,
       "missed_codes": [
         "06016401"
       ],
-      "spurious_codes": []
+      "spurious_codes": [
+        "06026xxx",
+        "06026xxx",
+        "06026xxx",
+        "06026xxx",
+        "06026xxx",
+        "06026xxx",
+        "06026xxx",
+        "06026xxx"
+      ]
     },
     "internal_check": {
       "ok": false,
-      "n_courses": 90,
+      "n_courses": 98,
       "n_duplicate_keys": 0,
       "credits_by_term": {
         "1/1": 18,

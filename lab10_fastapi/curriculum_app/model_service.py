@@ -210,15 +210,7 @@ SQL: SELECT min_gpa, article_no, source_page FROM regulation WHERE category = '�
             except Exception:
                 pass
 
-        # 3. คำถามเกี่ยวกับโครงสร้างหลักสูตร (program) หรือแผนการเรียน (plan)
-        if not sources and any(t in sql.lower() for t in ("from program", "total_credits", "degree", "v_semester_credits", "v_plan", "plan_item")):
-            sources.append({
-                "type": "program",
-                "title": "เล่มหลักสูตร",
-                "printed_pages": "หมวดที่ 3",
-                "pdf_pages": None,
-            })
-
+        # 3. หากไม่พบแหล่งอ้างอิงที่มีเลขหน้าจริง ไม่ต้องใส่ fallback หมวดที่ฮาร์ดโค้ด
         return sources
 
     def ask(self, database: CurriculumDatabase, question: str) -> dict:

@@ -86,25 +86,25 @@ SKIP_BASELINE = os.getenv("LAB7_SKIP_BASELINE", "").strip() in ("1", "true", "ye
 # ตารางเลขหน้าจริงในไฟล์ PDF สำหรับตารางแผนการศึกษาแต่ละหลักสูตร (ยืนยันตรงกับเล่ม 100%)
 PLAN_PAGE_SPECS: dict[str, dict[str, str]] = {
     "DSBA": {
-        "no_coop": "26-32",
-        "coop": "33-39",
+        "no_coop": "22-32",
+        "coop": "22-25,33-39",
     },
     "BIT": {
-        "no_coop": "26-30",
-        "coop": "31-35",
+        "no_coop": "22-30",
+        "coop": "22-25,31-35",
     },
     "IT": {
-        "no_coop": "32-38",
-        "coop": "39-45",
+        "no_coop": "24-38",
+        "coop": "24-31,39-45",
     },
     "AIT": {
-        "single": "23-26",
-        "no_coop": "23-26",
-        "coop": "23-26",
+        "single": "21-26",
+        "no_coop": "21-26",
+        "coop": "21-26",
     },
 }
 
-# เลขหน้าจริงสำหรับดึงโครงสร้างหลักสูตรแบบสมบูรณ์ (รวมวิชาเฉพาะเลือก/แขนงวิชา) สำหรับ pipeline text
+# เลขหน้าจริงสำหรับตารางแผนการศึกษาสำหรับ pipeline text (แยก coop และ no_coop ชัดเจน)
 TEXT_PLAN_PAGE_SPECS: dict[str, dict[str, str]] = {
     "DSBA": {
         "no_coop": "22-32",
@@ -372,20 +372,20 @@ def extract_pdf_text(path: str, page_spec: str | None = None) -> str:
     return "\n".join(out)
 
 
-def extract_pdf_course_descriptions(pdf_path: str) -> tuple[dict[str, str], dict[str, str], dict[str, list[int]], dict[str, str], dict[str, str]]:
+def extract_pdf_course_descriptions(pdf_path: str) -> tuple[dict[str, str], dict[str, str], dict[str, list[int]], dict[str, str], dict[str, str], dict[str, str]]:
     """
     สกัดวิชาบังคับก่อน (Prerequisite), ชื่อภาษาอังกฤษเต็ม (name_en), ชื่อภาษาไทยเต็ม (name_th),
-    หน่วยกิต (credits) และเลขหน้าที่พบในเล่ม (course_pages) จากหมวดคำอธิบายรายวิชาของเล่มหลักสูตร PDF โดยตรง
+    หน่วยกิต (credits), เลขหน้าที่พบในเล่ม (course_pages) และคำอธิบายรายวิชาภาษาไทย (descriptions_th) จากหมวดคำอธิบายรายวิชาของเล่มหลักสูตร PDF โดยตรง
     """
     p = Path(pdf_path)
     if not p.exists():
-        return {}, {}, {}, {}, {}
+        return {}, {}, {}, {}, {}, {}
     if p.is_dir() or p.suffix.lower() != ".pdf":
         candidates = list(p.glob("*.pdf")) + list(p.parent.glob("*.pdf")) + list(p.parent.glob("data/*.pdf"))
         if candidates:
             p = candidates[0]
         else:
-            return {}, {}, {}, {}, {}
+            return {}, {}, {}, {}, {}, {}
 
     fitz = _need("fitz")
     prereqs: dict[str, str] = {}
@@ -393,6 +393,7 @@ def extract_pdf_course_descriptions(pdf_path: str) -> tuple[dict[str, str], dict
     th_names: dict[str, str] = {}
     credits_map: dict[str, str] = {}
     course_pages: dict[str, list[int]] = {}
+    descriptions_th: dict[str, str] = {}
 
     try:
         doc = fitz.open(str(p))
@@ -520,9 +521,29 @@ def extract_pdf_course_descriptions(pdf_path: str) -> tuple[dict[str, str], dict
                         if code not in th_names or len(full_th) > len(th_names[code]):
                             th_names[code] = full_th
 
+                desc_lines = []
+                in_desc = False
+                for cur in lines[i + 1:min(len(lines), i + 40)]:
+                    if re.match(r"^\d{8}$", cur):
+                        break
+                    if re.search(r"\d\s*\([\d\s\-xX]+\)", cur):
+                        in_desc = True
+                        continue
+                    if in_desc:
+                        if re.search(r"[\u0e00-\u0e7f]", cur):
+                            if not any(cur.startswith(k) for k in ["มคอ.", "วท.บ", "คณะเทคโนโลยี", "คำอธิบายรายวิชา", "กลุ่มวิชา", "วิชาบังคับก่อน", "PREREQUISITE", "หน่วยกิต"]):
+                                desc_lines.append(cur)
+                        elif desc_lines and (re.search(r"^[A-Z][a-z]", cur) or re.search(r"^[A-Za-z\s\,]+$", cur)):
+                            break
+                if desc_lines:
+                    d_text = clean_thai(" ".join(desc_lines).strip())
+                    if len(d_text) >= 40:
+                        if code not in descriptions_th or len(d_text) > len(descriptions_th[code]):
+                            descriptions_th[code] = d_text
+
     except Exception as e:
         print(f"    ⚠ ไม่สามารถสกัดคำอธิบายรายวิชาจาก PDF: {e}")
-    return prereqs, en_names, course_pages, th_names, credits_map
+    return prereqs, en_names, course_pages, th_names, credits_map, descriptions_th
 
 # ==============================================================================
 #  ส่วนที่ 3 — JSON SCHEMA
@@ -603,7 +624,8 @@ COURSE_SCHEMA: dict = {
 
 SYSTEM_PROMPT = """You are a precise document extraction system for Thai university curriculum documents.
 You transcribe exactly what is printed. You never invent courses that are not in the document.
-You never stop early. When a field is absent you output null."""
+You never stop early. When a field is absent you output null.
+Do NOT think or output reasoning. Output strictly the JSON object according to the schema."""
 
 EXTRACT_PROMPT = """ต่อไปนี้คือข้อความจากเล่มหลักสูตรของสถาบันในประเทศไทย
 จงสกัดรายวิชาทั้งหมดออกมาเป็น JSON ตาม schema ที่กำหนดอย่างถูกต้องและครบถ้วน
@@ -616,15 +638,29 @@ EXTRACT_PROMPT = """ต่อไปนี้คือข้อความจา
     - หมวดวิชาเลือกเสรี
     - รายวิชาสหกิจศึกษา
 
-[2] ปี/ภาคการศึกษา (year / semester):
-    - วิชาบังคับที่ระบุปีและภาคชัดเจน -> year = 1..4, semester = 1..3, flexible_year_semester = null
-    - วิชาเลือก ที่ลงได้หลายภาค หรือไม่ระบุปี/ภาค -> year = 0, semester = 0 และระบุใน flexible_year_semester เช่น "3/1, 3/2, 4/1"
+[2] ปี/ภาคการศึกษา (year / semester) และวิชานอกตาราง (กฎเหล็กสำคัญที่สุด):
+    - วิชาในตารางแผนการศึกษาที่มีหัวข้อระบุ "ปีที่ X ภาคการศึกษาที่ Y" ชัดเจน -> year = 1..4, semester = 1..3, flexible_year_semester = null
+    - 🛑 กฎเหล็กสำหรับวิชานอกตาราง (หน้ารายชื่อวิชาเลือก / หมวดวิชาเฉพาะเลือก 3.1.3):
+      หากในหน้าหรือข้อความส่วนนั้น ไม่มีหัวข้อตาราง "ปีที่ X ภาคการศึกษาที่ Y" อยู่เหนือรายวิชา:
+      * ห้ามเดาหรือกำหนดเลขปี (1..4) หรือภาค (1..3) ให้กับวิชาเหล่านั้นโดยเด็ดขาด!
+      * ต้องกำหนด year = 0 และ semester = 0 ทุกวิชาในหน้านั้น
+      * ต้องกำหนด type = "เลือก"
+      * ต้องกำหนด flexible_year_semester = "3/1, 3/2, 4/1"
 
 [3] prerequisite (วิชาบังคับก่อน):
     - ถ้ามี ให้ใส่รหัสวิชา 8 หลัก เช่น "06026200"
     - ถ้าไม่มี ให้ใส่คำว่า "ไม่มี" (ห้ามใส่ null, ห้ามใส่ [])
 
-[4] credits: คัดลอกรูปแบบหน่วยกิต เช่น "3(3-0-6)" หรือ "3(2-2-5)" หรือ "3(3-0-6) หรือ 3(2-2-5)"
+[4] credits (หน่วยกิตและชั่วโมงเรียน):
+    - ต้องคัดลอกตัวเลขจำนวนหน่วยกิตจริงและชั่วโมงเรียนจากคอลัมน์หน่วยกิต ซึ่งอยู่หน้าวงเล็บชั่วโมงเรียนเสมอ เช่น "1(0-3-2)", "2(1-2-3)", "3(3-0-6)", "3(2-2-5)", "3(0-9-0)", "6(0-35-0)" หรือ "3(3-0-6) หรือ 3(2-2-5)"
+    - 🛑 ตัวเลขหน่วยกิตคือตัวเลขที่อยู่ติดหรืออยู่หน้าวงเล็บ (L-P-S) เสมอ เช่น:
+      "3 (3-0-6)" -> "3(3-0-6)"
+      "3 (2-2-5)" -> "3(2-2-5)"
+      "2 (1-2-3)" -> "2(1-2-3)"
+      "1 (0-3-2)" -> "1(0-3-2)"
+      "3 (0-9-0)" -> "3(0-9-0)"
+      "6 (0-35-0)" -> "6(0-35-0)"
+    - 🛑 ห้ามนำตัวเลขลำดับวิชาที่อยู่ในบรรทัดชื่อวิชา (เช่น เลข 1 หรือ 2 ใน "แคลคูลัส 2", "ภาษาอังกฤษพื้นฐาน 2", "โครงงาน... 2") มาเปลี่ยนเป็นจำนวนหน่วยกิต! ตัวเลขลำดับเหล่านั้นเป็นชื่อวิชา ไม่ใช่หน่วยกิต! หน่วยกิตจริงของวิชาเหล่านั้นให้ดูที่หน้าวงเล็บชั่วโมงเรียน
 
 [5] category: ต้องระบุในฟิลด์ "category" เสมอ โดยเป็น 1 ใน 3 ค่านี้เท่านั้น:
     - "หมวดวิชาศึกษาทั่วไป" (รหัสขึ้นต้นด้วย 90 หรือ 96 เช่น 9064xxxx)
@@ -635,12 +671,13 @@ EXTRACT_PROMPT = """ต่อไปนี้คือข้อความจา
 
 [7] name_en (ชื่อวิชาภาษาอังกฤษ) และ name_th (ชื่อวิชาภาษาไทย):
     - คัดลอกชื่อวิชาภาษาไทยใส่ "name_th" และชื่อภาษาอังกฤษใส่ "name_en"
+    - ตัวเลขลำดับวิชา เช่น เลข 1 หรือ 2 ใน "แคลคูลัส 1", "แคลคูลัส 2", "ภาษาอังกฤษพื้นฐาน 1", "ภาษาอังกฤษพื้นฐาน 2", "โครงงาน... 2" เป็นส่วนหนึ่งของชื่อวิชา ให้คงไว้ใน name_th และ name_en เสมอ
     - หากชื่อวิชาไทยและอังกฤษอยู่ในบรรทัดเดียวกัน เช่น "แคลคูลัส 1 CALCULUS 1" ให้แยก:
       name_th = "แคลคูลัส 1"
       name_en = "CALCULUS 1"
     - ถ้าชื่อถูกตัดขึ้นบรรทัดใหม่ ให้ต่อเป็นบรรทัดเดียวโดยเว้นวรรค 1 ครั้ง (ถ้าไม่มีภาษาอังกฤษให้ใส่ null)
 
-[8] ⭐ แถว "ช่องวิชาเลือก" (Placeholder) เช่น "06026xxx", "060464xx", "9064xxxx", "xxxxxxxx" ถือเป็นข้อมูลจริง ต้องสกัดออกมาด้วย
+[8]  แถว "ช่องวิชาเลือก" (Placeholder) เช่น "06026xxx", "060464xx", "9064xxxx", "xxxxxxxx" ถือเป็นข้อมูลจริง ต้องสกัดออกมาด้วย
 
 [9] ⭐ alt_group (กลุ่มวิชาทางเลือก/แขนง/สหกิจ):
     - เมื่อพบหัวข้อกลุ่มวิชาหรือแขนง เช่น "กลุ่มวิชาด้านการพัฒนาซอฟต์แวร์" ให้สกัด alt_group ตามช่องทางเลือก เช่น "alt_track_y2s2_slot0"
@@ -648,7 +685,7 @@ EXTRACT_PROMPT = """ต่อไปนี้คือข้อความจา
     - ถ้าเป็นวิชาสหกิจศึกษา ให้ใส่ alt_group เช่น "alt_coop_y4s1"
     - ถ้าไม่มีทางเลือก ให้ใส่ null
 
-[10] ⭐ รูปแบบข้อความและการสกัด:
+[10]  รูปแบบข้อความและการสกัด:
     - ข้อความจากเอกสารอาจเป็นข้อความปกติ, ตาราง Markdown หรือตาราง HTML (<table><tr><td>...</td></tr></table>)
     - ให้อ่านและสกัดรายวิชาตามโครงสร้างแถว (<tr>) ของตารางอย่างละเอียด:
       * คอลัมน์แรกคือรหัสวิชา (code) เช่น "06046400", "9064xxxx", "xxxxxxxx"
@@ -656,10 +693,10 @@ EXTRACT_PROMPT = """ต่อไปนี้คือข้อความจา
       * หากเซลล์รหัสวิชามีหลายรหัสคั่นด้วย <br/> หรือเว้นวรรค (เช่น <td rowspan="3">06036106<br/>06036116<br/>96643021</td>):
         รหัสแต่ละตัวจะตรงกับวิชาในแต่ละแถวตามลำดับ ให้แยกสกัดเป็นรายวิชาละ 1 รหัสวิชา (ห้ามนำหลายรหัสมาใส่รวมกันในฟิลด์เดียว)
       * คอลัมน์ถัดไปคือชื่อวิชา ให้แยก name_th และ name_en
-      * คอลัมน์ถัดไปคือหน่วยกิต (credits) เช่น "3(3-0-6)" (ตัดวรรคออก)
+      * คอลัมน์ถัดไปคือหน่วยกิต (credits) เช่น "2(1-2-3)", "1(0-3-2)", "3(3-0-6)" (ตัดวรรคออก ห้ามเดาเป็น 3 ทุกวิชา)
       * ปีและภาคการศึกษา ดูจากหัวข้อตาราง เช่น "ปีที่ 1 ภาคการศึกษาที่ 1" -> year = 1, semester = 1
     - ในแต่ละหน้าอาจมีหลายตาราง (เช่น ตารางภาค 1 และตารางภาค 2 หรือตารางวิชาสหกิจศึกษา) ต้องสกัดทุกตารางจนครบถ้วน ห้ามหยุดเมื่อจบตารางแรก
-    - ⚠️ สกัดรายวิชาทุกวิชาที่ปรากฏใน "ข้อความจากเอกสาร" ด้านล่าง ห้ามข้ามวิชาใดเด็ดขาด ห้ามหยุดก่อนครบทุกวิชา
+    -  สกัดรายวิชาทุกวิชาที่ปรากฏใน "ข้อความจากเอกสาร" ด้านล่าง ห้ามข้ามวิชาใดเด็ดขาด ห้ามหยุดก่อนครบทุกวิชา
 
 === รูปแบบโครงสร้าง JSON ที่ต้องส่งกลับ (JSON Format) ===
 ```json
@@ -668,16 +705,44 @@ EXTRACT_PROMPT = """ต่อไปนี้คือข้อความจา
   "plan": "<แผนการศึกษา เช่น normal หรือ coop หรือ null>",
   "courses": [
     {{
-      "code": "<รหัสวิชา 8 หลักที่พบในเอกสาร>",
-      "name_th": "<ชื่อวิชาภาษาไทยจากเอกสาร>",
-      "name_en": "<ชื่อวิชาภาษาอังกฤษจากเอกสาร หรือ null>",
+      "code": "<รหัสวิชาในตาราง เช่น 06016315>",
+      "name_th": "<ชื่อวิชาภาษาไทย>",
+      "name_en": "<ชื่อวิชาภาษาอังกฤษ หรือ null>",
       "credits": "<หน่วยกิต เช่น 3(3-0-6)>",
       "year": 1,
       "semester": 1,
-      "category": "<หมวดวิชาศึกษาทั่วไป หรือ หมวดวิชาเฉพาะ หรือ หมวดวิชาเลือกเสรี>",
-      "type": "<บังคับ หรือ เลือก>",
-      "prerequisite": "<รหัสวิชา หรือ 'ไม่มี'>",
+      "category": "หมวดวิชาเฉพาะ",
+      "type": "บังคับ",
+      "prerequisite": "ไม่มี",
       "flexible_year_semester": null,
+      "note": null,
+      "alt_group": null
+    }},
+    {{
+      "code": "<รหัสวิชา เช่น 90641001>",
+      "name_th": "<ชื่อวิชา เช่น โรงเรียนสร้างเสน่ห์>",
+      "name_en": "<ชื่อวิชาภาษาอังกฤษ เช่น CHARM SCHOOL>",
+      "credits": "2(1-2-3)",
+      "year": 1,
+      "semester": 1,
+      "category": "หมวดวิชาศึกษาทั่วไป",
+      "type": "บังคับ",
+      "prerequisite": "ไม่มี",
+      "flexible_year_semester": null,
+      "note": null,
+      "alt_group": null
+    }},
+    {{
+      "code": "<รหัสวิชาเลือกนอกตาราง เช่น 06026216>",
+      "name_th": "<ชื่อวิชาเลือกนอกตาราง>",
+      "name_en": "<ชื่อวิชาภาษาอังกฤษ หรือ null>",
+      "credits": "<หน่วยกิต เช่น 3(3-0-6)>",
+      "year": 0,
+      "semester": 0,
+      "category": "หมวดวิชาเฉพาะ",
+      "type": "เลือก",
+      "prerequisite": "ไม่มี",
+      "flexible_year_semester": "3/1, 3/2, 4/1",
       "note": null,
       "alt_group": null
     }}
@@ -721,7 +786,7 @@ def ollama_chat(model: str, messages: list[dict], *, fmt: dict | None = None,
         },
     }
     if fmt is not None:
-        payload["format"] = "json"
+        payload["format"] = fmt if isinstance(fmt, dict) else "json"
 
     last: Exception | None = None
     for attempt in range(retries + 1):
@@ -842,15 +907,17 @@ def clean_and_normalize_course(c: dict) -> dict:
         sem = None
 
     # 4. จัดการ type
-    if not ctype or ctype in ("None", "null", ""):
+    if str(year) == "0":
+        ctype = "เลือก"
+    elif not ctype or ctype in ("None", "null", ""):
         if note in ("บังคับ", "เลือก"):
             ctype = note
-        elif str(year) == "0" or (name_th and "เลือก" in name_th) or "xxx" in code_raw:
+        elif (name_th and "เลือก" in name_th) or "xxx" in code_raw:
             ctype = "เลือก"
         else:
             ctype = "บังคับ"
     elif ctype not in VALID_TYPES:
-        if "เลือก" in str(ctype) or str(year) == "0":
+        if "เลือก" in str(ctype):
             ctype = "เลือก"
         else:
             ctype = "บังคับ"
@@ -874,7 +941,10 @@ def clean_and_normalize_course(c: dict) -> dict:
         prereq = str(prereq).strip()
 
     # 7. จัดการ flexible_year_semester
-    if str(year) not in ("0", "None") and flex:
+    if str(year) == "0":
+        if not flex or flex in ("None", "null", ""):
+            flex = "3/1, 3/2, 4/1"
+    elif flex:
         flex = None
 
     # 8. จัดการ alt_group (กลุ่มวิชาทางเลือก/แขนง/สหกิจ รับค่าที่สกัดจากเอกสารโดยตรง)
@@ -1061,407 +1131,6 @@ def pipeline_vlm(pages: list[bytes], outdir: Path) -> dict:
     return _text_to_json_chunked(md_pages)
 
 
-def parse_curriculum_text(text: str, prog_name: str = "DSBA") -> dict:
-    """สกัดรายวิชาจากข้อความดิบของ PDF แผนการศึกษาด้วย Table/Text Parser ที่แม่นยำสูง รองรับทุกหลักสูตร"""
-    lines = [clean_thai(line.strip()) for line in text.splitlines() if line.strip()]
-    courses = []
-    current_year = 0
-    current_sem = 0
-    current_cat = "หมวดวิชาเฉพาะ"
-    in_academic_plan = False
-    current_track = None
-    course_index_in_track = 0
-
-    code_pattern = r"^(\d{8}(?:\s*(?:หรือ|\n)\s*\d{8})?|\d{4}[xX]{4}|\d{5}[xX]{3}|\d{6}[xX]{2}|[xX]{8})"
-
-    i = 0
-    while i < len(lines):
-        line = lines[i]
-
-        if "3.1.4" in line or "3.3" in line or "แผนการศึกษา" in line:
-            in_academic_plan = True
-
-        m_ys = re.search(r"ป[ีิ]ท[ีิ่\s]*(\d+)\s*ภาคการศึกษาท[ีิ่\s]*(\d+)", line)
-        if m_ys:
-            current_year = int(m_ys.group(1))
-            current_sem = int(m_ys.group(2))
-            in_academic_plan = True
-            current_track = None
-            course_index_in_track = 0
-            i += 1
-            continue
-
-        if "หมวดวิชาศึกษาทั่วไป" in line:
-            current_cat = "หมวดวิชาศึกษาทั่วไป"
-            current_track = None
-            course_index_in_track = 0
-        elif "หมวดวิชาเฉพาะ" in line:
-            current_cat = "หมวดวิชาเฉพาะ"
-            current_track = None
-            course_index_in_track = 0
-        elif "หมวดวิชาเลือกเสรี" in line or "หมวดวิชาเสรี" in line:
-            current_cat = "หมวดวิชาเลือกเสรี"
-            current_track = None
-            course_index_in_track = 0
-        elif line.startswith("รวม") or "รวมหน่วยกิต" in line:
-            current_track = None
-            course_index_in_track = 0
-
-        # ตรวจจับหัวข้อกลุ่มวิชา/แขนง (Track / Alternative Group) จากเอกสารโดยตรง
-        m_trk = re.search(r"^(กลุ[่]มวิชาด[้]าน|แขนงวิชา|กลุ[่]มวิชาเลือก|กลุ[่]มวิชาชีพ)\s*(.+)", line)
-        if m_trk:
-            current_track = m_trk.group(0).strip()
-            course_index_in_track = 0
-            i += 1
-            continue
-
-        # ข้ามหัวข้อหรือแถวที่ไม่ใช่รหัสวิชา
-        if line.startswith(("ELECTIVE", "รหัสวิชา", "หน่วยกิต", "=== หน้า")):
-            i += 1
-            continue
-
-        # Case 1: Standard single line: code + name_th + credits (DSBA, IT, AIT)
-        m_course = re.match(r"^(\d{8}(?:\s*(?:หรือ|\n)\s*\d{8})?|\d{4}[xX]{4}|\d{5}[xX]{3}|\d{6}[xX]{2}|[xX]{8})\s+(.+?)\s+(\d+\s*\([\d\-xX\s]+\)(?:\s*(?:หรือ|,)\s*\d+\s*\([\d\-xX\s]+\))*)$", line)
-        if m_course:
-            code = m_course.group(1).replace("\n", " ").strip()
-            name_th = m_course.group(2).strip()
-            credits_val = m_course.group(3).strip()
-
-            en_lines = []
-            if re.search(r"\d+\s*\([\d\-xX\s]+\)", name_th):
-                # The captured name_th is actually part of credits (e.g. '3(3-0-6) หรือ' in IT)
-                credits_val = f"{name_th} {credits_val}".strip()
-                name_th = ""
-                i += 1
-                while i < len(lines):
-                    nxt = lines[i]
-                    if re.match(code_pattern, nxt) or re.search(r"ป[ีิ]ท[ีิ่\s]*\d+|หมวดวิชา|รหัสวิชา|หน่วยกิต|รวม\s+\d+|คณะเทคโนโลยี|วท\.บ", nxt):
-                        i -= 1
-                        break
-                    m_cr_ext = re.match(r"^(?:(?:หรือ|,)\s*)?(\d+\s*\([\d\-xX\s]+\))$", nxt.strip())
-                    if m_cr_ext or nxt.strip().startswith("หรือ 3("):
-                        credits_val = f"{credits_val} {nxt.strip()}".strip()
-                        i += 1
-                    elif re.search(r"[\u0e00-\u0e7f]", nxt) and not re.search(r"^(?:หมวดวิชา|รหัสวิชา|ชื่อวิชา|หน่วยกิต|รวม|ป[ีิ]ท[ีิ่\s]*\d+|วท\.บ|คณะเทคโนโลยี|ด้วยตนเอง)", nxt):
-                        name_th = (name_th + " " + nxt.strip()).strip() if name_th else nxt.strip()
-                        i += 1
-                    elif re.search(r"^[A-Za-z0-9\s\(\)\,\.\/\-\&]+$", nxt) and re.search(r"[A-Za-z]", nxt):
-                        en_lines.append(nxt.strip())
-                        i += 1
-                    else:
-                        break
-            else:
-                i += 1
-                while i < len(lines):
-                    nxt = lines[i]
-                    if re.match(code_pattern, nxt):
-                        break
-                    if re.search(r"ป[ีิ]ท[ีิ่\s]*\d+|หมวดวิชา|รหัสวิชา|หน่วยกิต|รวม\s+\d+|คณะเทคโนโลยี|วท\.บ", nxt):
-                        break
-                    if re.search(r"^[A-Za-z0-9\s\(\)\,\.\/\-\&]+$", nxt) and re.search(r"[A-Za-z]", nxt):
-                        en_lines.append(nxt)
-                        i += 1
-                    else:
-                        break
-
-            name_en = " ".join(en_lines).strip() if en_lines else None
-            y = current_year if in_academic_plan else 0
-            s = current_sem if in_academic_plan else 0
-
-            course_type = "เลือก" if ("xxx" in code.lower() or "เลือก" in name_th or (y == 0 and s == 0)) else "บังคับ"
-            category = current_cat
-            if code.startswith(("9064", "9664")):
-                category = "หมวดวิชาศึกษาทั่วไป"
-            elif code.startswith(("0601", "0602", "0603", "0604", "0606", "060")):
-                category = "หมวดวิชาเฉพาะ"
-            elif code.lower().startswith("xxxx") or "เสรี" in name_th:
-                category = "หมวดวิชาเลือกเสรี"
-
-            alt_group = None
-            if current_track:
-                alt_group = f"alt_track_y{y}s{s}_slot{course_index_in_track}"
-                course_index_in_track += 1
-            elif "หรือ" in code:
-                alt_group = f"alt_choice_{y}_{s}_{code[:8]}"
-            elif "สหกิจ" in str(name_th or "") or "coop" in str(name_en or "").lower():
-                alt_group = f"alt_coop_{y}_{s}"
-
-            c_dict = {
-                "code": code,
-                "name_th": name_th,
-                "name_en": name_en,
-                "credits": credits_val,
-                "year": y,
-                "semester": s,
-                "category": category,
-                "type": course_type,
-                "prerequisite": "ไม่มี",
-                "flexible_year_semester": None if (y > 0 and s > 0) else "3/1, 3/2, 4/1",
-                "note": None,
-                "alt_group": alt_group,
-            }
-            courses.append(clean_and_normalize_course(c_dict))
-            continue
-
-        # Case 2: BIT table layout (name_th on line i-1 or i-2, line i is '<code> <credits>')
-        m_code_cr = re.match(r"^(\d{8}(?:\s*(?:หรือ|\n)\s*\d{8})?|\d{4}[xX]{4}|\d{5}[xX]{3}|\d{6}[xX]{2}|[xX]{8})\s+(\d+\s*\([\d\-xX\s]+\)(?:\s*(?:หรือ|,)\s*\d+\s*\([\d\-xX\s]+\))*)$", line)
-        if m_code_cr and i > 0:
-            name_th = ""
-            for b in range(1, 4):
-                if i - b >= 0:
-                    prev_line = lines[i - b]
-                    if prev_line.strip() in ("หรือ", "และ"):
-                        continue
-                    if re.search(r"[\u0e00-\u0e7f]", prev_line) and not re.search(r"^(?:หมวดวิชา(?:ศึกษาทั่วไป|เฉพาะ|เลือกเสรี|เสรี)$|รหัสวิชา|ชื่อวิชา|หน่วยกิต|รวม|ป[ีิ]ท[ีิ่\s]*\d+|มคอ\.|วท\.บ|คณะเทคโนโลยี)|บรรยาย-ปฏิบัต|ศึกษาด้วยตนเอง", prev_line):
-                        name_th = prev_line.strip()
-                        break
-            if name_th:
-                code = m_code_cr.group(1).replace("\n", " ").strip()
-                credits_val = m_code_cr.group(2).strip()
-
-                en_lines = []
-                i += 1
-                while i < len(lines):
-                    nxt = lines[i]
-                    if re.match(code_pattern, nxt) or re.search(r"ป[ีิ]ท[ีิ่\s]*\d+|หมวดวิชา|รหัสวิชา|หน่วยกิต|รวม\s+\d+|คณะเทคโนโลยี|วท\.บ", nxt):
-                        break
-                    if re.search(r"[A-Za-z]", nxt) and not re.search(r"[\u0e00-\u0e7f]", nxt):
-                        en_lines.append(nxt)
-                        i += 1
-                    else:
-                        break
-                name_en = " ".join(en_lines).strip() if en_lines else None
-                y = current_year if in_academic_plan else 0
-                s = current_sem if in_academic_plan else 0
-                course_type = "เลือก" if ("xxx" in code.lower() or "เลือก" in name_th or (y == 0 and s == 0)) else "บังคับ"
-                category = current_cat
-                if code.startswith(("9064", "9664")):
-                    category = "หมวดวิชาศึกษาทั่วไป"
-                elif code.startswith(("0601", "0602", "0603", "0604", "0606", "060")):
-                    category = "หมวดวิชาเฉพาะ"
-                elif code.lower().startswith("xxxx") or "เสรี" in name_th:
-                    category = "หมวดวิชาเลือกเสรี"
-
-                alt_group = None
-                if current_track:
-                    alt_group = f"alt_track_y{y}s{s}_slot{course_index_in_track}"
-                    course_index_in_track += 1
-                elif "หรือ" in code:
-                    alt_group = f"alt_choice_{y}_{s}_{code[:8]}"
-                elif "สหกิจ" in str(name_th or "") or "coop" in str(name_en or "").lower():
-                    alt_group = f"alt_coop_{y}_{s}"
-
-                c_dict = {
-                    "code": code,
-                    "name_th": name_th,
-                    "name_en": name_en,
-                    "credits": credits_val,
-                    "year": y,
-                    "semester": s,
-                    "category": category,
-                    "type": course_type,
-                    "prerequisite": "ไม่มี",
-                    "flexible_year_semester": None if (y > 0 and s > 0) else "3/1, 3/2, 4/1",
-                    "note": None,
-                    "alt_group": alt_group,
-                }
-                courses.append(clean_and_normalize_course(c_dict))
-                continue
-
-        # Case 3: Electives: '<code> <name_th>' on line i, next lines name_en, next credits
-        m_code_th = re.match(r"^(\d{8}|\d{4}[xX]{4}|\d{5}[xX]{3}|\d{6}[xX]{2}|[xX]{8})\s+(.+)$", line)
-        if m_code_th:
-            code = m_code_th.group(1)
-            rem = m_code_th.group(2).strip()
-            name_th = ""
-            name_en = None
-            credits_val = "3(3-0-6)"
-            matched_case3 = False
-
-            if rem in ("หรือ", "และ"):
-                th_lines = []
-                cr_before = None
-                for b in range(1, 6):
-                    if i - b >= 0:
-                        pl = lines[i - b]
-                        if re.match(code_pattern, pl):
-                            break
-                        m_cr_pre = re.match(r"^(\d+\s*\([\d\-xX\s]+\))$", pl.strip())
-                        if m_cr_pre and not cr_before:
-                            cr_before = m_cr_pre.group(1)
-                        elif re.search(r"[\u0e00-\u0e7f]", pl) and not re.search(r"^(?:หมวดวิชา|รหัสวิชา|ชื่อวิชา|หน่วยกิต|รวม|ป[ีิ]ท[ีิ่\s]*\d+|วท\.บ|คณะเทคโนโลยี|ด้วยตนเอง)", pl):
-                            th_lines.insert(0, pl.strip())
-                name_th = " ".join(th_lines)
-
-                en_lines = []
-                cr_after = None
-                nxt_idx = i + 1
-                while nxt_idx < len(lines):
-                    nxt = lines[nxt_idx]
-                    if re.match(code_pattern, nxt) or re.search(r"วิชาเลือกเสรี|รหัสวิชา|หมวดวิชา|ป[ีิ]ท[ีิ่\s]*\d+", nxt):
-                        break
-                    m_cr_post = re.match(r"^(\d+\s*\([\d\-xX\s]+\))$", nxt.strip())
-                    if m_cr_post and not cr_after:
-                        cr_after = m_cr_post.group(1)
-                    elif re.search(r"^[A-Za-z0-9\s\(\)\,\.\/\-\&]+$", nxt) and re.search(r"[A-Za-z]", nxt):
-                        en_lines.append(nxt.strip())
-                    nxt_idx += 1
-                name_en = " ".join(en_lines) if en_lines else None
-                credits_val = f"{cr_before} {rem} {cr_after}".strip() if cr_before and cr_after else "3(3-0-6)"
-                i = nxt_idx - 1
-                matched_case3 = bool(name_th)
-            elif not re.search(r"\d+\s*\([\d\-xX\s]+\)$", rem) and re.search(r"[\u0e00-\u0e7f]", rem):
-                name_th = rem
-                en_lines = []
-                credits_val = "3(3-0-6)"
-                i += 1
-                while i < len(lines):
-                    nxt = lines[i]
-                    m_cr = re.match(r"^(\d+\s*\([\d\-xX\s]+\)(?:\s*(?:หรือ|,)\s*\d+\s*\([\d\-xX\s]+\))*)$", nxt)
-                    if m_cr:
-                        credits_val = m_cr.group(1).strip()
-                        i += 1
-                        break
-                    if re.match(code_pattern, nxt) or re.search(r"ป[ีิ]ท[ีิ่\s]*\d+|หมวดวิชา|รหัสวิชา|หน่วยกิต|รวม\s+\d+|คณะเทคโนโลยี|วท\.บ", nxt):
-                        break
-                    if re.search(r"^[A-Z0-9\s\(\)\,\.\/\-\&]+$", nxt) and re.search(r"[A-Za-z]", nxt):
-                        en_lines.append(nxt)
-                        i += 1
-                    else:
-                        break
-                name_en = " ".join(en_lines).strip() if en_lines else None
-                matched_case3 = True
-
-            if matched_case3:
-                y = current_year if in_academic_plan else 0
-                s = current_sem if in_academic_plan else 0
-                course_type = "เลือก" if ("xxx" in code.lower() or "เลือก" in name_th or (y == 0 and s == 0)) else "บังคับ"
-                category = current_cat
-                if code.startswith(("9064", "9664")):
-                    category = "หมวดวิชาศึกษาทั่วไป"
-                elif code.startswith(("0601", "0602", "0603", "0604", "0606", "060")):
-                    category = "หมวดวิชาเฉพาะ"
-                elif code.lower().startswith("xxxx") or "เสรี" in name_th:
-                    category = "หมวดวิชาเลือกเสรี"
-
-                alt_group = None
-                if current_track:
-                    alt_group = f"alt_track_y{y}s{s}_slot{course_index_in_track}"
-                    course_index_in_track += 1
-                elif "หรือ" in code:
-                    alt_group = f"alt_choice_{y}_{s}_{code[:8]}"
-                elif "สหกิจ" in str(name_th or "") or "coop" in str(name_en or "").lower():
-                    alt_group = f"alt_coop_{y}_{s}"
-
-                c_dict = {
-                    "code": code,
-                    "name_th": name_th,
-                    "name_en": name_en,
-                    "credits": credits_val,
-                    "year": y,
-                    "semester": s,
-                    "category": category,
-                    "type": course_type,
-                    "prerequisite": "ไม่มี",
-                    "flexible_year_semester": None if (y > 0 and s > 0) else "3/1, 3/2, 4/1",
-                    "note": None,
-                    "alt_group": alt_group,
-                }
-                courses.append(clean_and_normalize_course(c_dict))
-                continue
-
-        # Case 4: Code alone on line (IT format): <code>, next line is name_th, etc.
-        m_code_only = re.match(r"^(\d{8}(?:\s*(?:หรือ|\n)\s*\d{8})?|\d{4}[xX]{4}|\d{5}[xX]{3}|\d{6}[xX]{2}|[xX]{8})$", line)
-        if m_code_only:
-            code = m_code_only.group(1).replace("\n", " ").strip()
-            name_th = ""
-            en_lines = []
-            credits_val = "3(3-0-6)"
-            i += 1
-            while i < len(lines):
-                nxt = lines[i]
-                m_cr = re.match(r"^(\d+\s*\([\d\-xX\s]+\)(?:\s*(?:หรือ|,)\s*\d+\s*\([\d\-xX\s]+\))*)$", nxt)
-                if m_cr:
-                    credits_val = m_cr.group(1).strip()
-                    i += 1
-                    break
-                if re.match(code_pattern, nxt) or re.search(r"ปีท\s*ี่\s*\d+|หมวดวิชา|รหัสวิชา|หน่วยกิต|รวม\s+\d+|คณะเทคโนโลยี|วท\.บ", nxt):
-                    break
-                if re.search(r"[\u0e00-\u0e7f]", nxt):
-                    name_th = (name_th + " " + nxt).strip() if name_th else nxt
-                    i += 1
-                elif re.search(r"[A-Za-z]", nxt):
-                    en_lines.append(nxt)
-                    i += 1
-                else:
-                    i += 1
-            if name_th:
-                name_en = " ".join(en_lines).strip() if en_lines else None
-                y = current_year if in_academic_plan else 0
-                s = current_sem if in_academic_plan else 0
-                course_type = "เลือก" if ("xxx" in code or "เลือก" in name_th or (y == 0 and s == 0)) else "บังคับ"
-                category = current_cat
-                if code.startswith(("9064", "9664")):
-                    category = "หมวดวิชาศึกษาทั่วไป"
-                elif code.startswith(("0601", "0602", "0603", "0604", "0606", "060")):
-                    category = "หมวดวิชาเฉพาะ"
-                elif code.startswith("xxxx") or "เสรี" in name_th:
-                    category = "หมวดวิชาเลือกเสรี"
-
-                alt_group = None
-                if current_track:
-                    alt_group = f"alt_track_y{y}s{s}_slot{course_index_in_track}"
-                    course_index_in_track += 1
-                elif "หรือ" in code:
-                    alt_group = f"alt_choice_{y}_{s}_{code[:8]}"
-                elif "สหกิจ" in str(name_th or "") or "coop" in str(name_en or "").lower():
-                    alt_group = f"alt_coop_{y}_{s}"
-
-                c_dict = {
-                    "code": code,
-                    "name_th": name_th,
-                    "name_en": name_en,
-                    "credits": credits_val,
-                    "year": y,
-                    "semester": s,
-                    "category": category,
-                    "type": course_type,
-                    "prerequisite": "ไม่มี",
-                    "flexible_year_semester": None if (y > 0 and s > 0) else "3/1, 3/2, 4/1",
-                    "note": None,
-                    "alt_group": alt_group,
-                }
-                courses.append(clean_and_normalize_course(c_dict))
-                continue
-
-        i += 1
-
-    # รวมวิชาทางเลือกสหกิจศึกษาในภาคการศึกษาเดียวกัน
-    merged_courses = []
-    idx = 0
-    while idx < len(courses):
-        c = courses[idx]
-        if idx + 1 < len(courses):
-            c_next = courses[idx + 1]
-            if (c.get("alt_group") and c["alt_group"].startswith("alt_coop_") and
-                c["alt_group"] == c_next.get("alt_group") and
-                c["year"] == c_next["year"] and c["semester"] == c_next["semester"] and
-                c["year"] > 0):
-                merged_c = dict(c)
-                merged_c["code"] = f"{c['code']} หรือ {c_next['code']}"
-                merged_c["name_th"] = f"{c['name_th']}\nหรือ\n{c_next['name_th']}"
-                merged_c["name_en"] = f"{c.get('name_en') or ''}\n{c_next.get('name_en') or ''}".strip() or None
-                merged_courses.append(merged_c)
-                idx += 2
-                continue
-        merged_courses.append(c)
-        idx += 1
-    courses = merged_courses
-
-    plan = "coop" if prog_name != "AIT" else None
-    return {"program": prog_name, "plan": plan, "courses": courses}
-
-
 def _text_to_json_chunked(md_pages: list[str]) -> dict:
     """แบ่งหน้าเป็นก้อนแบบมี overlap แล้วเรียก text LLM ทีละก้อน พร้อมส่งบริบทหมวดวิชา"""
     # Clean whitespace lines
@@ -1501,6 +1170,45 @@ def _text_to_json_chunked(md_pages: list[str]) -> dict:
                 d = {"courses": d}
             c_list = d.get("courses") or []
             print(f"      ได้ {len(c_list)} วิชา")
+
+            # Deterministic Code Guard: ตรวจสอบและกำหนด year / semester ตามหัวข้อตารางใน chunk อย่างแม่นยำ
+            chunk_text = "\n\n".join(part)
+            headers = []
+            for m in re.finditer(r"ป[ีิ]ท[ีิ่\s]*([1-4])\s*ภาคการศึกษาท[ีิ่\s]*([1-3])", chunk_text):
+                headers.append((m.start(), int(m.group(1)), int(m.group(2))))
+
+            if not headers:
+                # หน้ารายวิชาเลือก 3.1.3 แน่นอน 100% -> year=0, semester=0
+                for c in c_list:
+                    c["year"] = 0
+                    c["semester"] = 0
+                    c["type"] = "เลือก"
+                    if not c.get("flexible_year_semester"):
+                        c["flexible_year_semester"] = "3/1, 3/2, 4/1"
+            elif len(headers) == 1:
+                # มีตารางภาคการศึกษาเดียวในหน้านี้
+                _, hy, hs = headers[0]
+                for c in c_list:
+                    c["year"] = hy
+                    c["semester"] = hs
+            else:
+                # มีหลายตารางบนหน้านี้ (เช่น ปี 4 ภาค 1 และ ปี 4 ภาค 2)
+                for c in c_list:
+                    code = str(c.get("code") or "")
+                    name = str(c.get("name_th") or "")
+                    pos = -1
+                    if code and code in chunk_text:
+                        pos = chunk_text.find(code)
+                    elif name and name in chunk_text:
+                        pos = chunk_text.find(name)
+                    
+                    curr_y, curr_s = headers[0][1], headers[0][2]
+                    for h_pos, hy, hs in headers:
+                        if pos >= h_pos:
+                            curr_y, curr_s = hy, hs
+                    c["year"] = curr_y
+                    c["semester"] = curr_s
+
             if c_list:
                 for c in reversed(c_list):
                     if c.get("category") and c["category"] in VALID_CATEGORIES:
@@ -1508,21 +1216,17 @@ def _text_to_json_chunked(md_pages: list[str]) -> dict:
                         break
             chunks.append(d)
         except Exception as e:
-            print(f"      ⚠ ก้อนที่ {ci + 1} ใช้ Parser สกัดตรง: {e}")
-            parsed = parse_curriculum_text("\n\n".join(part))
-            if parsed.get("courses"):
-                chunks.append(parsed)
+            print(f"      ❌ ก้อนที่ {ci + 1} เกิดข้อผิดพลาดใน LLM: {e}")
 
     if not chunks:
-        # Fallback to direct parse
-        return parse_curriculum_text("\n\n".join(cleaned_pages))
+        return {"courses": []}
 
     return merge_chunks(chunks)
 
 
 def pipeline_text(pdf_path: str, page_spec: str | None, prog_name: str = "DSBA") -> dict:
     """
-    ⭐ pipeline พิเศษของกลุ่ม B: ข้าม OCR ไปเลย
+    ⭐ pipeline พิเศษของกลุ่ม B: ข้าม OCR ไปเลย ใช้ Pure LLM (qwen3:4b) สกัด JSON ทุก chunk
     """
     print("    ดึงข้อความจาก PDF โดยตรง (ไม่ผ่าน OCR)...")
     text = extract_pdf_text(pdf_path, page_spec)
@@ -1544,11 +1248,8 @@ def pipeline_text(pdf_path: str, page_spec: str | None, prog_name: str = "DSBA")
         print("      วิชาในหน้าเหล่านั้นจะหายไป --> Recall จะต่ำกว่าความจริง")
         print("      ถ้าเล่มมีหน้าสแกนปน ให้ใช้ --pipeline vlm แทน")
 
-    # ใช้ Hybrid Parser ดึงโครงสร้างตารางและรายวิชาโดยตรงอย่างรวดเร็วและแม่นยำสูง
-    parsed = parse_curriculum_text(text, prog_name)
-    if parsed.get("courses"):
-        return merge_chunks([parsed])
-
+    # ใช้ Pure LLM (MODEL_TEXT: qwen3:4b) จัด JSON ทุก chunk โดยตรง ไม่ใช้ regex parser
+    print(f"    [Pure LLM Pipeline] ใช้ {MODEL_TEXT} สกัดโครงสร้างตารางและรายวิชาเป็น JSON ทีละ chunk โดยตรง...")
     return _text_to_json_chunked(pages_text)
 
 
@@ -1818,7 +1519,8 @@ def evaluate(pred: dict, gt: dict) -> tuple[dict, dict]:
 
 
 def run_pipeline(name: str, pages: list[bytes], outdir: Path,
-                 pdf_path: str | None, page_spec: str | None, prog_name: str = "DSBA") -> dict | None:
+                 pdf_path: str | None, page_spec: str | None, prog_name: str = "DSBA",
+                 plan_name: str | None = None) -> dict | None:
     print(f"\n{'─' * 70}")
     print(f"  PIPELINE: {name}")
     print(f"{'─' * 70}")
@@ -1843,18 +1545,24 @@ def run_pipeline(name: str, pages: list[bytes], outdir: Path,
         print(f"  ⚠ {name} ไม่ได้ผลลัพธ์")
         return None
 
+    if prog_name:
+        data["program"] = prog_name
+    if plan_name:
+        data["plan"] = plan_name
+
     data["_meta"] = {
         "pipeline": name,
         "elapsed_sec": round(time.time() - t0, 1),
         "models": {"ocr": MODEL_OCR, "text": MODEL_TEXT},
         "dpi": DPI, "pages_per_chunk": PAGES_PER_CHUNK,
     }
-    # เสริมข้อมูลวิชาบังคับก่อน (prerequisite), ชื่ออังกฤษ และเลขหน้าอ้างอิงจากเล่ม PDF
+    # เสริมข้อมูลวิชาบังคับก่อน (prerequisite), ชื่ออังกฤษ คำอธิบายรายวิชา และเลขหน้าอ้างอิงจากเล่ม PDF
     if pdf_path and data.get("courses"):
-        prereqs, en_names, course_pages, th_names, credits_map = extract_pdf_course_descriptions(pdf_path)
+        prereqs, en_names, course_pages, th_names, credits_map, descriptions_th = extract_pdf_course_descriptions(pdf_path)
         enriched_pre = 0
         enriched_en = 0
         enriched_pages = 0
+        enriched_desc = 0
         for c in data.get("courses", []):
             code = c.get("code")
             if code in prereqs and (not c.get("prerequisite") or c.get("prerequisite") == "ไม่มี"):
@@ -1869,14 +1577,17 @@ def run_pipeline(name: str, pages: list[bytes], outdir: Path,
             if code in en_names and not c.get("name_en"):
                 c["name_en"] = en_names[code]
                 enriched_en += 1
+            if code in descriptions_th and not c.get("description_th"):
+                c["description_th"] = descriptions_th[code]
+                enriched_desc += 1
             if code in course_pages:
                 pdf_list = sorted(course_pages[code])
                 printed_list = [max(1, p - 5) for p in pdf_list]
                 c["pdf_pages"] = ";".join(map(str, pdf_list))
                 c["printed_pages"] = ";".join(map(str, printed_list))
                 enriched_pages += 1
-        if enriched_pre or enriched_en or enriched_pages:
-            print(f"  ✓ เสริมข้อมูลจากเล่ม PDF: prerequisite {enriched_pre} วิชา, name_en {enriched_en} วิชา, เลขหน้าอ้างอิง {enriched_pages} วิชา")
+        if enriched_pre or enriched_en or enriched_pages or enriched_desc:
+            print(f"  ✓ เสริมข้อมูลจากเล่ม PDF: prerequisite {enriched_pre} วิชา, name_en {enriched_en} วิชา, description_th {enriched_desc} วิชา, เลขหน้าอ้างอิง {enriched_pages} วิชา")
 
     path = outdir / f"pred_{name}.json"
     path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -1913,7 +1624,7 @@ def enrich_all_curricula_pages() -> None:
             continue
 
         print(f"\n[+] กำลังสกัดเลขหน้าจาก {pdf_path.name} ({prog})...")
-        prereqs, en_names, course_pages, th_names, credits_map = extract_pdf_course_descriptions(str(pdf_path))
+        prereqs, en_names, course_pages, th_names, credits_map, descriptions_th = extract_pdf_course_descriptions(str(pdf_path))
         print(f"    ✓ พบรายวิชาที่มีเลขหน้าในเล่ม: {len(course_pages)} วิชา")
 
         for base_dir in target_dirs:
@@ -1941,6 +1652,8 @@ def enrich_all_curricula_pages() -> None:
                     c["name_en"] = en_names[code]
                 if code in prereqs and (not c.get("prerequisite") or c.get("prerequisite") == "ไม่มี"):
                     c["prerequisite"] = prereqs[code]
+                if code in descriptions_th and not c.get("description_th"):
+                    c["description_th"] = descriptions_th[code]
 
             pred_file.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
             print(f"    ✓ อัปเดต {pred_file.relative_to(repo_root)}: เพิ่มเลขหน้า {enriched}/{len(courses)} วิชา")
@@ -2516,7 +2229,7 @@ def main() -> None:
 
     results: dict[str, dict] = {}
     for n in names:
-        r = run_pipeline(n, pages, outdir, args.input, page_spec, prog_name=prog)
+        r = run_pipeline(n, pages, outdir, args.input, page_spec, prog_name=prog, plan_name=args.plan)
         if r:
             results[n] = r
 

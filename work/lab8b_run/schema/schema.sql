@@ -42,6 +42,7 @@ CREATE TABLE IF NOT EXISTS elective_slot (
     code_pattern   TEXT,
     credits        INTEGER NOT NULL CHECK (credits BETWEEN 0 AND 12),
     credit_options TEXT,
+    alt_group      TEXT,
     note           TEXT
 );
 
@@ -88,7 +89,7 @@ UNION ALL
 
 SELECT e.id + 100000 AS id, sp.plan_id, sp.plan_type, sp.program_id, e.year, e.semester,
        e.code_pattern AS code, e.slot_name_th AS name_th, e.slot_name_en AS name_en,
-       e.credits, NULL AS alt_group, e.note,
+       e.credits, e.alt_group AS alt_group, e.note,
        NULL AS pdf_pages, NULL AS printed_pages, 1 AS is_elective_slot
 FROM elective_slot e
 JOIN study_plan sp ON sp.plan_id = e.plan_id;
@@ -104,8 +105,9 @@ FROM (
 
     SELECT plan_id,
            (SELECT program_id FROM study_plan WHERE study_plan.plan_id = elective_slot.plan_id) AS program_id,
-           year, semester, credits, 1 AS n_courses
+           year, semester, MAX(credits) AS credits, 1 AS n_courses
     FROM elective_slot
+    GROUP BY plan_id, year, semester, COALESCE(alt_group, 'x' || id)
 )
 GROUP BY plan_id, program_id, year, semester;
 

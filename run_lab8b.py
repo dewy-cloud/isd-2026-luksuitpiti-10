@@ -35,8 +35,18 @@ PROGRAMS = {
         "input_candidates": [
             ROOT / "work" / "lab7b_run" / "DSBA" / "pred_text.json",
             ROOT / "lab7_final" / "output" / "DSBA" / "pred_text.json",
-            ROOT / "work" / "lab7b_run" / "pred_vlm.json",
-            ROOT / "work" / "lab7b_run" / "pred_markdown.json",
+        ],
+        "gold_qa": ROOT / "data" / "QA" / "gold_questions_DSBA.json",
+    },
+    "DSBA_non_coop": {
+        "program_id": "DSBA",
+        "name_th": "วิทยาการข้อมูลและการวิเคราะห์เชิงธุรกิจ (ปกติ)",
+        "name_en": "Data Science and Business Analytics (DSBA)",
+        "degree": "วท.บ. (วิทยาการข้อมูลและการวิเคราะห์เชิงธุรกิจ)",
+        "total_credits": 132,
+        "years": 4,
+        "input_candidates": [
+            ROOT / "work" / "lab7b_run" / "DSBA_non_coop" / "pred_text.json",
         ],
         "gold_qa": ROOT / "data" / "QA" / "gold_questions_DSBA.json",
     },
@@ -53,6 +63,18 @@ PROGRAMS = {
         ],
         "gold_qa": ROOT / "data" / "QA" / "gold_questions_combined.json",
     },
+    "BIT_non_coop": {
+        "program_id": "BIT",
+        "name_th": "เทคโนโลยีสารสนเทศทางธุรกิจ (ปกติ)",
+        "name_en": "Business Information Technology (BIT)",
+        "degree": "วท.บ. (เทคโนโลยีสารสนเทศทางธุรกิจ)",
+        "total_credits": 126,
+        "years": 4,
+        "input_candidates": [
+            ROOT / "work" / "lab7b_run" / "BIT_non_coop" / "pred_text.json",
+        ],
+        "gold_qa": ROOT / "data" / "QA" / "gold_questions_combined.json",
+    },
     "IT": {
         "program_id": "IT",
         "name_th": "เทคโนโลยีสารสนเทศ (สหกิจศึกษา)",
@@ -63,6 +85,18 @@ PROGRAMS = {
         "input_candidates": [
             ROOT / "work" / "lab7b_run" / "IT" / "pred_text.json",
             ROOT / "lab7_final" / "output" / "IT" / "pred_text.json",
+        ],
+        "gold_qa": ROOT / "data" / "QA" / "gold_questions_combined.json",
+    },
+    "IT_non_coop": {
+        "program_id": "IT",
+        "name_th": "เทคโนโลยีสารสนเทศ (ปกติ)",
+        "name_en": "Information Technology (IT)",
+        "degree": "วท.บ. (เทคโนโลยีสารสนเทศ)",
+        "total_credits": 129,
+        "years": 4,
+        "input_candidates": [
+            ROOT / "work" / "lab7b_run" / "IT_non_coop" / "pred_text.json",
         ],
         "gold_qa": ROOT / "data" / "QA" / "gold_questions_combined.json",
     },
@@ -87,6 +121,11 @@ REGULATION_CANDIDATES = [
     ROOT / "work" / "lab7b_run" / "regulations.json",
 ]
 
+GENED_CANDIDATES = [
+    ROOT / "work" / "lab7b_run" / "gened_courses.json",
+    ROOT / "work" / "lab8b_run" / "gened_courses.json",
+]
+
 
 def run(*args: object) -> None:
     """Run command with project root as working directory."""
@@ -105,14 +144,14 @@ def find_first_existing(candidates: list[Path]) -> Path | None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="End-to-End Automation Script for Lab 8B (Supports 4 Curricula)",
+        description="End-to-End Automation Script for Lab 8B (Supports 4 Curricula / 7 Plans)",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
         "--program",
-        choices=["all", "DSBA", "BIT", "IT", "AIT"],
+        choices=["all", "DSBA", "BIT", "IT", "AIT", "DSBA_non_coop", "BIT_non_coop", "IT_non_coop"],
         default="all",
-        help="หลักสูตรที่ต้องการประมวลผล ('all' สำหรับทุกหลักสูตร 4 สาขา)",
+        help="หลักสูตรที่ต้องการประมวลผล ('all' สำหรับทุกหลักสูตร 4 สาขา 7 แผนการศึกษา)",
     )
     parser.add_argument(
         "--skip-lab7",
@@ -233,6 +272,14 @@ def main() -> None:
     else:
         print("  [!] ไม่พบไฟล์ regulations.json ข้ามการโหลดข้อบังคับ")
 
+    # โหลดรายวิชาหมวดวิชาศึกษาทั่วไป (GenEd)
+    gened_file = find_first_existing(GENED_CANDIDATES)
+    if gened_file:
+        print(f"\n  [+] โหลดรายวิชาศึกษาทั่วไป (GenEd) จาก {gened_file}...")
+        run(ROOT / "src" / "ocr_system" / "extract_gened.py", "--load-only", "-o", gened_file, "-d", db_path)
+    else:
+        print("  [!] ไม่พบไฟล์ gened_courses.json ข้ามการโหลดหมวด GenEd")
+
     # -------------------------------------------------------------------------
     # 4. ตรวจสอบความสอดคล้อง 7 ข้อ (verify)
     # -------------------------------------------------------------------------
@@ -242,6 +289,11 @@ def main() -> None:
     if args.program != "all":
         verify_cmd.extend(["--program-id", args.program])
     run(*verify_cmd)
+
+    # สำเนา curriculum.db ไปเป็น curriculum_demo.db โดยอัตโนมัติ
+    demo_db_path = db_path.parent / "curriculum_demo.db"
+    shutil.copy2(db_path, demo_db_path)
+    print(f"  [+] สำเนาฐานข้อมูลสำหรับ Demo เรียบร้อย: {demo_db_path}")
 
     # -------------------------------------------------------------------------
     # 5. ประเมินผลชุดคำถามทอง (eval)

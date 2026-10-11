@@ -5,10 +5,10 @@
     "counts": {
       "program": 4,
       "study_plan": 7,
-      "course": 263,
-      "plan_item": 262,
-      "elective_slot": 59,
-      "prerequisite": 26,
+      "course": 504,
+      "plan_item": 268,
+      "elective_slot": 71,
+      "prerequisite": 30,
       "regulation": 11
     },
     "checks": [
@@ -67,7 +67,7 @@
       "study_plan": 1,
       "course": 79,
       "plan_item": 36,
-      "elective_slot": 9,
+      "elective_slot": 17,
       "prerequisite": 5,
       "regulation": 11
     },
@@ -76,7 +76,7 @@
         "id": "CHK1",
         "name": "หน่วยกิตรวมของแผน = หน่วยกิตที่หลักสูตรประกาศ",
         "ok": true,
-        "detail": "DSBA_DEFAULT: แผนรวม 132 · ประกาศไว้ 132"
+        "detail": "DSBA_COOP: แผนรวม 132 · ประกาศไว้ 132"
       },
       {
         "id": "CHK2",
@@ -136,7 +136,7 @@
         "id": "CHK1",
         "name": "หน่วยกิตรวมของแผน = หน่วยกิตที่หลักสูตรประกาศ",
         "ok": true,
-        "detail": "BIT_DEFAULT: แผนรวม 126 · ประกาศไว้ 126"
+        "detail": "BIT_COOP: แผนรวม 126 · ประกาศไว้ 126"
       },
       {
         "id": "CHK2",
@@ -185,7 +185,7 @@
     "counts": {
       "program": 1,
       "study_plan": 1,
-      "course": 100,
+      "course": 99,
       "plan_item": 47,
       "elective_slot": 6,
       "prerequisite": 17,
@@ -196,7 +196,7 @@
         "id": "CHK1",
         "name": "หน่วยกิตรวมของแผน = หน่วยกิตที่หลักสูตรประกาศ",
         "ok": true,
-        "detail": "IT_DEFAULT: แผนรวม 129 · ประกาศไว้ 129"
+        "detail": "IT_COOP: แผนรวม 129 · ประกาศไว้ 129"
       },
       {
         "id": "CHK2",
@@ -245,10 +245,10 @@
     "counts": {
       "program": 1,
       "study_plan": 1,
-      "course": 50,
+      "course": 34,
       "plan_item": 34,
       "elective_slot": 7,
-      "prerequisite": 5,
+      "prerequisite": 4,
       "regulation": 11
     },
     "checks": [
@@ -256,7 +256,7 @@
         "id": "CHK1",
         "name": "หน่วยกิตรวมของแผน = หน่วยกิตที่หลักสูตรประกาศ",
         "ok": true,
-        "detail": "AIT_DEFAULT: แผนรวม 120 · ประกาศไว้ 120"
+        "detail": "AIT_SINGLE: แผนรวม 120 · ประกาศไว้ 120"
       },
       {
         "id": "CHK2",
