@@ -1,0 +1,6 @@
+﻿level,level_name,total_questions,valid_sql_count,valid_sql_rate,correct_answers,execution_accuracy
+1,Simple Lookup,144,144,100.0,141,97.92
+2,Filter & Aggregate,12,12,100.0,10,83.33
+3,Multi-table Relation,17,17,100.0,15,88.24
+4,Regulation Query,10,10,100.0,6,60.0
+5,Ambiguous Query,6,6,100.0,6,100.0

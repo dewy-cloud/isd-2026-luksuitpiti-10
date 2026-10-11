@@ -1,10 +1,10 @@
 {
-  "total_evaluated_questions": 180,
-  "faithfulness_count": 169,
-  "faithfulness_rate": 93.89,
-  "exact_match_count": 160,
-  "exact_match_total": 171,
-  "exact_match_rate": 93.57,
+  "total_evaluated_questions": 189,
+  "faithfulness_count": 178,
+  "faithfulness_rate": 94.18,
+  "exact_match_count": 169,
+  "exact_match_total": 180,
+  "exact_match_rate": 93.89,
   "database_course_citation_coverage": 99.8,
   "database_regulation_citation_coverage": 100.0,
   "system_grounded_citation_ready": true

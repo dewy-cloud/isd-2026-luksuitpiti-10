@@ -68,7 +68,7 @@ flowchart TD
 #### 1.1 กระบวนการทำงาน (Process)
 1. **การกรองหน้าเอกสาร (Page Range Slicing)**: คัดกรองเฉพาะหน้าที่มีตารางแผนการศึกษา (เช่น หน้า 42–58) และหน้าภาคผนวก ก ข้อบังคับการศึกษา (หน้า 94, 96–99, 101) เพื่อลด Token Overhead
 2. **การสกัดแบบ Multimodal (Triple-Path Extraction)**:
-   - **Path A (Text-based)**: สกัดตารางแผนการศึกษาจาก PDF Digital Text โดยตรงผ่าน `PyMuPDF` และ `pdfplumber` ร่วมกับ Regex Code Guard เพื่อให้ได้ความเร็วสูงสุดและ Zero Hallucination
+   - **Path A (Text-based)**: สกัดตารางแผนการศึกษาจาก PDF Digital Text โดยตรงผ่าน `PyMuPDF` และ `pdfplumber` ร่วมกับ Regex Code Guard เพื่อให้ได้ความเร็วสูงสุดและลดโอกาสเกิด Hallucination
    - **Path B (VLM-based: ข้อบังคับ)**: แปลงหน้าข้อบังคับการศึกษาที่เป็นภาพสแกนเป็นภาพ PNG (150 DPI) แล้วส่งให้ Vision Language Model (`typhoon-ocr1.5-3b`) แปลงภาพเป็น Markdown ก่อนให้ `Qwen3:4b` สกัดเป็น JSON ข้อบังคับ (`regulations.json`)
    - **Path C (Two-Stage VLM + LLM: หมวด GenEd)**: สกัดคำอธิบายรายวิชาหมวดวิชาศึกษาทั่วไป (หน้า 154–227) ซึ่งมีปัญหาฟอนต์สแกนเสียหาย ผ่าน `extract_gened.py` ด้วยสถาปัตยกรรม Batch Stage Execution (Typhoon-OCR 1.5 $\rightarrow$ Markdown Cache $\rightarrow$ Qwen3 Schema Ingestion) สกัดได้ครบ **266 รายวิชา** พร้อมโครงสร้างชั่วโมงเรียน (lecture_h, lab_h, self_h) และคำอธิบายรายวิชาถูกต้องสมบูรณ์ 100% (266/266 วิชา)
 3. **การจับคู่และประเมินเทียบ Ground Truth**: ใช้อัลกอริทึม **Multi-pass Alignment** (จับคู่แบบเข้มงวด `key_strict` และแบบผ่อนปรน `key_loose`) เพื่อคำนวณ Precision, Recall, F1 และวัดค่า CER/WER
@@ -102,39 +102,42 @@ flowchart LR
 | :--- | :--- | :--- |
 | `DPI` | `150` | ความละเอียดที่สมดุลระหว่างความคมชัดของสระภาษาไทยและขนาดภาพเข้าโมเดล VLM |
 | `PAGES_PER_CHUNK` | `1` | ค่าเริ่มต้น (1 หน้า/chunk) เพื่อป้องกัน Context Clutter และไม่ให้โมเดลตกหล่นแถวกลางตาราง |
-| `temperature` (OCR Stage) | `0.0` | อุณหภูมิ 0.0 เพื่อให้อ่านตัวอักษรไทยได้อย่างแม่นยำและเที่ยงตรงที่สุด ไม่เติมแต่งคำ |
-| `temperature` (LLM Structuring) | `0.1` | ลดความสุ่มของโมเดลในการจัดโครงสร้างข้อบังคับ (Regulations) |
+| `temperature` (OCR, Structuring, NL2SQL, Answer) | `0.0` | อุณหภูมิ 0.0 แบบ Greedy Decoding ตามฟังก์ชัน `ollama_generate()` ในโค้ดจริง (บรรทัด 417) เพื่อลดความแปรปรวน เพิ่มความทำซ้ำได้ และคุมขอบเขตคำตอบ |
+| `temperature` (Regulation & GenEd Stage 2) | `0.1` | ลดความสุ่มแต่เปิดความยืดหยุ่นทางภาษาเล็กน้อยสำหรับเนื้อหาร้อยแก้วยาวๆ ในข้อบังคับ และคำอธิบาย GenEd |
 | `repeat_penalty` | `1.2` (Reg) / `1.1` (GenEd) | ป้องกันโมเดลเกิดอาการวนลูปข้อความภาษาไทย โดยใช้ 1.2 ในส่วนข้อบังคับ และ 1.1 ใน GenEd Stage 2 |
 | `num_ctx` | `8192` | รองรับข้อความจากตารางหลักสูตรทั้งหน้า |
 | `num_predict` | `4096` | รองรับ JSON Output ขนาดยาวที่บรรจุ 10–25 วิชาต่อ Chunk |
 
-##### กลยุทธ์การกำหนด Temperature ของระบบ (Deterministic vs Generative Policy)
-ระบบแบ่งนโยบายการควบคุมค่า Temperature ออกเป็น 2 ระดับตามความเสี่ยงทางข้อมูล:
-1. **`temperature = 0.0` (Zero Randomness / Greedy Decoding)**:
-   - **ความหมาย**: เป็นการสั่งให้โมเดลเลือกคำ/โทเคนที่ได้คะแนนความน่าจะเป็นสูงสุด (Probability สูงสุด) ในแต่ละตำแหน่งเสมอ ตัดความสุ่มทิ้งทั้งหมด ทำให้ได้ผลลัพธ์ที่คงที่ 100% ทุกครั้งที่รัน (Deterministic & Fully Reproducible)
-   - **จุดที่ระบบนำมาใช้งาน**:
-     - **OCR Stage** ([`lab7b_curriculum.py`](src/ocr_system/lab7b_curriculum.py) & [`extract_gened.py`](src/ocr_system/extract_gened.py)): อ่านตัวอักษรไทย สระลอย วรรณยุกต์ และรหัสวิชา 8 หลักจากภาพสแกนให้ตรงตามเอกสารต้นฉบับเป๊ะๆ ป้องกันการเดาหรือแต่งคำ
+##### กลยุทธ์การกำหนด Temperature ของระบบ (Greedy Decoding vs Controlled Stochasticity Policy)
+ระบบแบ่งนโยบายการควบคุมค่า Temperature ตามการอิมพลีเมนต์ในโค้ดจริงออกเป็น 2 ระดับ:
+1. **`temperature = 0.0` (Zero Randomness / Greedy Decoding - ค่าเริ่มต้นหลักของระบบ)**:
+   - **ความหมาย**: เป็นการสั่งให้โมเดลเลือกคำ/โทเคนที่ได้คะแนนความน่าจะเป็นสูงสุด (Probability สูงสุด) ในแต่ละตำแหน่งเสมอ เพื่อ**ลดความแปรปรวนและเพิ่มความทำซ้ำได้ (Reproducibility)** ให้ได้คำตอบที่คงเส้นคงวามากที่สุด
+   - **จุดที่ระบบนำมาใช้งานจริงในโค้ด**:
+     - **OCR Stage** ([`lab7b_curriculum.py`](src/ocr_system/lab7b_curriculum.py)): อ่านตัวอักษรไทย สระลอย วรรณยุกต์ และรหัสวิชา 8 หลักจากภาพสแกนให้ตรงตามเอกสารต้นฉบับมากที่สุด
      - **NL2SQL Engine** ([`lab8b_curriculum_db.py`](src/ocr_system/lab8b_curriculum_db.py)): แปลงคำถามภาษาธรรมชาติเป็นคำสั่ง SQL ที่ต้องมีความแม่นยำด้านไวยากรณ์ตายตัว เช่น การเลือกตาราง/วิว (`v_semester_credits`) และเงื่อนไขฟิลด์ (`program_id = 'IT'`) ป้องกันข้อผิดพลาด Syntax Error
-     - **Text Pipeline Structuring** ([`lab7b_curriculum.py`](src/ocr_system/lab7b_curriculum.py)): จัดโครงสร้างตารางเรียนจาก Digital Text Layer เข้า Schema JSON เพื่อกำจัดปัญหาข้อมูลหลอน (Zero Hallucination)
-2. **`temperature = 0.1` (Low Stochasticity)**:
-   - **ความหมาย**: อนุญาตให้มีความยืดหยุ่นทางภาษาเล็กน้อย เพื่อให้การเรียบเรียงประโยคภาษาไทยมีความเป็นธรรมชาติ แต่ยังคงควบคุมไม่ให้เนื้อหาบิดเบือน
-   - **จุดที่ระบบนำมาใช้งาน**:
-     - **Answer Synthesis** ([`model_service.py`](lab10_fastapi/curriculum_app/model_service.py)): เรียบเรียงคำตอบภาษาไทยสรุปผลจากตาราง SQL ให้สุภาพ กระชับ และอ่านเข้าใจง่าย
-     - **Regulation Structuring** ([`lab7b_curriculum.py`](src/ocr_system/lab7b_curriculum.py)): สกัดข้อบังคับสถาบันฯ ที่เป็นบทร้อยแก้วยาวๆ ในภาคผนวก ก เพื่อช่วยลดการติดลูปคำซ้ำของภาษาไทย
+     - **Text Pipeline Structuring** ([`lab7b_curriculum.py`](src/ocr_system/lab7b_curriculum.py)): จัดโครงสร้างตารางเรียนจาก Digital Text Layer เข้า Schema JSON เพื่อลดความแปรปรวนและลดความเสี่ยงจากข้อมูลหลอน
+     - **Answer Synthesis** ([`model_service.py`](lab10_fastapi/curriculum_app/model_service.py)): เรียกผ่าน `ollama_generate()` ของ Lab 8B ซึ่งล็อก `temperature: 0.0` เพื่อช่วยควบคุมการสังเคราะห์คำตอบให้อยู่ในขอบเขตของผลลัพธ์จาก SQL
+2. **`temperature = 0.1` (Low Stochasticity - กำหนดเฉพาะจุด)**:
+   - **ความหมาย**: อนุญาตให้มีความยืดหยุ่นทางภาษาเล็กน้อย เพื่อให้การเรียบเรียงประโยคภาษาไทยมีความเป็นธรรมชาติ และลดการติดลูปคำซ้ำของภาษาไทย
+   - **จุดที่ระบบนำมาใช้งานจริงในโค้ด**:
+     - **Regulation Structuring** ([`lab7b_curriculum.py`](src/ocr_system/lab7b_curriculum.py)): สกัดข้อบังคับสถาบันฯ ที่เป็นบทร้อยแก้วยาวๆ ในภาคผนวก ก
+     - **GenEd Stage 2** ([`extract_gened.py`](src/ocr_system/extract_gened.py)): สกัดคำอธิบายรายวิชาหมวดวิชาศึกษาทั่วไป 74 หน้า
 
 #### 1.4 ระยะเวลาในการรัน (Execution Time)
-- **สกัดตารางรายวิชาทั้งหลักสูตร (Text Path - Pure LLM Chunked)**: ~106 – 410 วินาที ต่อหลักสูตร (~10–18 หน้า)
+- **สกัดตารางรายวิชาทั้งหลักสูตร (End-to-End Chunked LLM)**: 106.4 – 410.0 วินาที ต่อหลักสูตร (บันทึกจริงใน `_meta.elapsed_sec`: AIT: 106.4s, BIT: 268.7s, DSBA: 283.9s, IT: 410.0s)
 - **สกัดข้อบังคับการศึกษา (VLM Path)**: ~5 – 7 วินาที ต่อหน้า PDF (6 หน้า รวม ~38 วินาที)
-- **ประเมินผลเทียบ Ground Truth (Step 1 Eval)**: **0.12 วินาที** (คำนวณใน RAM)
+- **ประเมินผลเทียบ Ground Truth ในหน่วยความจำ (Step 1 Eval)**: **0.12 วินาที** (คำนวณใน RAM)
 
-#### 1.5 ผลลัพธ์และตัวชี้วัด (Evaluation Metrics)
+#### 1.5 ผลลัพธ์และตัวชี้วัด (Reproducible Extraction Evaluation Metrics - Lab 9 Step 1)
+*ผลการรันจริงซ้ำจาก Repository ปัจจุบันผ่านคำสั่ง `python lab9/step1_eval_extraction.py` บนไฟล์ `work/lab7b_run/`:*
+
 | หลักสูตร | Ground Truth | สกัดได้จริง | จับคู่ถูก (Matched) | วิชาตกหล่น (FN) | วิชาเกิน (FP) | Precision | Recall | F1-Score |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **DSBA** | 90 | 89 | 89 | 1 | 0 | **100.0%** | **98.9%** | **99.4%** |
-| **IT** | 106 | 110 | 105 | 1 | 5 | **95.5%** | **99.1%** | **97.2%** |
-| **BIT** | 63 | 65 | 63 | 0 | 2 | **96.9%** | **100.0%** | **98.4%** |
-| **AIT** | 57 | 58 | 56 | 1 | 2 | **96.6%** | **98.2%** | **97.4%** |
-| **เฉลี่ยรวมทั้งระบบ** | **316** | **322** | **313** | **3** | **9** | **97.2%** | **99.0%** | **98.1%** |
+| **DSBA** | 90 | 96 | 86 | 4 | 10 | **89.6%** | **95.6%** | **92.5%** |
+| **IT** | 106 | 108 | 102 | 4 | 6 | **94.4%** | **96.2%** | **95.3%** |
+| **BIT** | 63 | 64 | 62 | 1 | 2 | **96.9%** | **98.4%** | **97.6%** |
+| **AIT** | 57 | 41 | 39 | 18 | 2 | **95.1%** | **68.4%** | **79.6%** |
+| **รวมจำนวน / เฉลี่ย Macro** | **316** | **309** | **289** | **27** | **20** | **94.0%** | **89.7%** | **91.3%** |
 
 ---
 
@@ -264,13 +267,13 @@ erDiagram
 - **CHK7 (Term Credit Limits)**: หน่วยกิตที่ลงทะเบียนต่อภาคการศึกษาปกติ ต้องอยู่ระหว่าง 9 – 22 หน่วยกิต
 
 #### 2.3 โมเดล ไลบรารี และเครื่องมือที่ใช้
-- **Database Engine**: `SQLite 3` พร้อมเปิดใช้งาน `PRAGMA foreign_keys = ON;`
+- **Database Engine**: `SQLite 3` พร้อมเปิดใช้งาน `PRAGMA foreign_keys = ON;` (ใช้โหมด Journal ปกติของ SQLite ยังไม่ได้เปิดใช้งาน WAL Mode)
 - **Validation**: `Pydantic v2` (BaseModel Data Validation)
 - **Language**: Python 3.11+ Standard Library (`sqlite3`, `pathlib`)
 
-#### 2.4 ระยะเวลาในการรัน (Execution Time)
-- **นำเข้าข้อมูลและสร้างตาราง SQLite ทั้งหมด**: ~0.35 วินาที
-- **รันตรวจกฎความสอดคล้อง 7 ข้อ บน 5 ฐานข้อมูล (Step 2 Eval)**: **0.08 วินาที**
+#### 2.4 ระยะเวลาและประสิทธิภาพในการประมวลผล (Execution & Performance)
+- **นำเข้าข้อมูลและสร้างตาราง SQLite ทั้งหมด**: ประมวลผลผ่าน Python Script (`sqlite3`) แบบ Direct Local Transaction เสร็จสิ้นในระดับไม่ถึง 1 วินาที (Sub-second)
+- **รันตรวจกฎความสอดคล้อง 7 ข้อ บน 5 ฐานข้อมูล (Step 2 Eval)**: ตรวจสอบความถูกต้องของ Foreign Key, Plan Scope และ Prerequisite Rules ครบ 7 กฎ อย่างรวดเร็วในหน่วยมิลลิวินาที (Sub-second)
 
 #### 2.5 ผลลัพธ์และตัวชี้วัด (Evaluation Metrics)
 | ฐานข้อมูล | รายวิชา (course) | แผนการศึกษา (study_plan) | รายการในแผน (plan_item) | สล็อตวิชาเลือก (elective_slot) | Prerequisite | ข้อบังคับ (regulation) | ผลการตรวจ CHK1–CHK7 | สถานะ |
@@ -316,26 +319,29 @@ flowchart TD
 | พารามิเตอร์ | ค่าที่กำหนด | เหตุผลทางเทคนิค |
 | :--- | :--- | :--- |
 | `model` | `qwen3:4b` | โมเดลขนาดกะทัดรัด (2.5 GB) ที่รองรับภาษาไทยและมีความสามารถด้าน Coding/SQL สูง |
-| `temperature` | `0.0` | กำหนด 0.0 เพื่อความแน่นอน (Deterministic) และให้คำสั่ง SQL คงเส้นคงวาแม่นยำสูงสุด |
+| `temperature` | `0.0` | กำหนด 0.0 แบบ Greedy Decoding เพื่อลดความแปรปรวน เพิ่มความทำซ้ำได้ และให้คำสั่ง SQL คงเส้นคงวาแม่นยำสูงสุด |
 | `num_ctx` | `4096` | เพียงพอต่อการใส่ DDL และตัวอย่าง Few-shot ทั้งหมด |
 | `num_predict` | `256` | เพียงพอต่อความยาวของคำสั่ง SQL ทั่วไป (เฉลี่ย 40–80 โทเคน) |
 | `max_attempts` | `2` (`range(2)`) | ลองทั้งหมด 2 ครั้ง (รอบแรก + Retry ซ่อมแซม 1 ครั้ง) เพื่อควบคุม Latency |
 
 #### 3.4 ระยะเวลาในการรัน (Execution Time)
-- **ประมวลผลต่อคำถาม (Single Query Inference)**: **1.3 – 1.8 วินาที** (เฉลี่ย 1.46 วินาที/ข้อ)
-- **รันสดครบทั้งชุด 180 ข้อ (Full Live Benchmark)**: **~4.3 นาที** (263 วินาที)
-- **รันจาก Cache Baseline (Cached Benchmark)**: **0.05 วินาที**
+- **รันสดประเมินผลครบ 189 ข้อ (Live Evaluation Benchmark - `lab9/reports/live_eval_result.json`)**: **เฉลี่ย 1.85 วินาที/ข้อ** (ต่ำสุด 0.77 วินาที, ค่ามัธยฐาน 1.81 วินาที, สูงสุด 10.19 วินาที, เวลารวม 350.03 วินาที)
+- **รันจาก Cache Baseline ในหน่วยความจำ (Cached Benchmark)**: **0.05 วินาที**
 
 #### 3.5 ผลลัพธ์และตัวชี้วัด (NL2SQL Evaluation Metrics)
-ชุดทดสอบ: **Gold Questions 180 ข้อ** ครอบคลุม 4 สาขา (DSBA 45, IT 45, BIT 45, AIT 45 ข้อ)
+ชุดทดสอบรวมล่าสุด: **Gold Questions 189 ข้อ** ประกอบด้วยคำถามหลักสูตรเดิมที่ตัดรายการซ้ำออก 179 ข้อ และ Regulation Query เพิ่มเติม 10 ข้อ ส่วนผล Isolated DB ด้านล่างเป็น artifact แยกชุดละ 45 ข้อ
 
-| ฐานข้อมูลทดสอบ | จำนวนคำถาม | คำสั่ง SQL รันผ่าน (Valid SQL) | ผลลัพธ์ตรงเฉลย (Execution Accuracy) | รูปแบบ Error ที่พบ |
+| ฐานข้อมูลทดสอบ | จำนวนคำถาม | คำสั่ง SQL รันผ่าน (Valid SQL) | ผลลัพธ์ SQL ตรงเฉลย (Execution Accuracy) | รูปแบบ Error ที่พบ |
 | :--- | :---: | :---: | :---: | :--- |
 | **BIT (Isolated DB)** | 45 | **100.0%** (45/45) | **100.0%** (45/45) | ไม่มี Error |
 | **IT (Isolated DB)** | 45 | **100.0%** (45/45) | **100.0%** (45/45) | ไม่มี Error |
 | **DSBA (Isolated DB)** | 45 | **100.0%** (45/45) | **86.7%** (39/45) | ค้นหาชื่อวิชาเลือกทางเลือกอื่น / ผลลัพธ์ว่างเปล่า (6 ข้อ) |
 | **AIT (Isolated DB)** | 45 | **100.0%** (45/45) | **88.9%** (40/45) | รหัสวิชาหรือฟิลด์เฉพาะ / ผลลัพธ์ว่างเปล่า (5 ข้อ) |
-| **Unified Main DB (รวม)** | **180** | **100.0% (180/180)** | **93.9% (169/180)** | ผลลัพธ์ว่างเปล่าเนื่องจากชื่อวิชาเลือกหรือรหัสวิชาเฉพาะ (11 ข้อ ไม่มี Syntax Error) |
+| **Unified Main DB (รวมล่าสุด)** | **189** | **100.0% (189/189)** | **94.18% (178/189)** | ผลลัพธ์ไม่ตรง 11 ข้อ โดย 4 ข้อเป็น Regulation category/topic mismatch; ไม่มี Syntax Error |
+
+> 📊 **ขอบเขตของตัวชี้วัดรอบล่าสุด**:
+> - **NL2SQL Execution Accuracy (94.18% / 178 ข้อ)**: วัดว่าคำสั่ง SQL ให้ผลลัพธ์ตรงกับ Ground Truth (`step3_nl2sql_benchmark.json`)
+> - ฟิลด์ `correct` ใน `live_eval_result.json` รอบล่าสุดคำนวณด้วย `score_one()` จาก SQL rows เช่นเดียวกัน จึงไม่รายงานเป็น Human-rated Final-Answer Correctness แยกอีกชุด
 
 ---
 
@@ -343,8 +349,8 @@ flowchart TD
 
 #### 4.1 กระบวนการทำงาน (Process)
 1. **Grounded Synthesis**: นำแถวข้อมูลที่ได้จาก SQL (`rows`) ส่งเข้า `ANSWER_PROMPT` ของ `qwen3:4b` ให้สรุปเป็นภาษาไทยที่สุภาพ กระชับ และตรงตามตาราง
-2. **Zero-Hallucination Enforcement**: โมเดลถูกสั่งห้ามเติมข้อมูลที่ไม่มีอยู่ในตารางอย่างเด็ดขาด
-3. **Evidence Citation Retrieval**: สกัด Metadata เลขหน้าและข้อบังคับจากคอลัมน์ `pdf_pages`, `printed_pages` และ `source_page` เพื่อแนบเป็นหลักฐาน (Citations) ให้ผู้ใช้สามารถเปิดตรวจย้อนกลับไปยังเอกสารต้นฉบับได้
+2. **Strict Groundedness Enforcement**: โมเดลถูกสั่งให้ตอบจากผลลัพธ์ SQL เท่านั้น และห้ามเติมข้อมูลที่ไม่มีอยู่ในตารางอย่างเด็ดขาด
+3. **Evidence Citation Retrieval**: สกัด Metadata เลขหน้าและข้อบังคับจากคอลัมน์ `pdf_pages`, `printed_pages` และ `source_page` เพื่อแสดงเป็นป้ายเลขหน้าอ้างอิงกำกับ
 
 ```mermaid
 flowchart LR
@@ -360,17 +366,21 @@ flowchart LR
 #### 4.2 โมเดลและพารามิเตอร์ (Model & Parameters)
 - **Model**: `qwen3:4b`
 - **Prompt Directive**: `ANSWER_PROMPT` กำหนดรูปแบบ JSON Output `{"answer": "string"}`
-- **Parameters**: `temperature = 0.1`, `num_predict = 256`
+- **Parameters**: `temperature = 0.0` (ผ่านฟังก์ชัน `ollama_generate()` ในโค้ดจริง), `num_predict = 256`
 
 #### 4.3 ระยะเวลาในการรัน (Execution Time)
-- **สังเคราะห์คำตอบต่อข้อ**: ~1.1 – 1.4 วินาที
-- **ประเมินผลความซื่อสัตย์และการอ้างอิง (Step 4 Eval)**: **0.05 วินาที**
+- **สังเคราะห์คำตอบต่อข้อ**: ~0.6 – 1.2 วินาที
+- **ประเมินผลความซื่อสัตย์และการอ้างอิงในหน่วยความจำ (Step 4 Eval)**: **0.05 วินาที**
 
 #### 4.4 ผลลัพธ์และตัวชี้วัด (Groundedness Evaluation Metrics)
-- **Faithfulness / Groundedness**: **93.89%** (169/180 ข้อ)
-- **Exact Match (EM)**: **93.57%** (160/171 ข้อ)
-- **Course Citation Coverage**: **99.8%** (503/504 รายวิชา)
-- **Regulation Citation Coverage**: **100.0%** (11/11 ข้อบังคับ)
+- **ตัวชี้วัดจาก `lab9/reports/step4_groundedness_metrics.json` (Step 4 In-Memory Benchmark)**:
+  - **Faithfulness / Groundedness Proxy**: **94.18%** (178/189 ข้อ โดยอิงฟิลด์ `correct` ที่ตรวจจาก SQL rows)
+  - **Exact Match (EM)**: **93.89%** (169/180 ข้อ - วัดคำถามชนิด `value` และ `count`)
+  - **Course Citation Coverage**: **99.8%** (503/504 รายวิชา มีเลขหน้าจริงในเล่ม มคอ.2 กำกับ)
+  - **Regulation Citation Coverage**: **100.0%** (11/11 ข้อบังคับ มีเลขหน้าสแกนจริงในภาคผนวก ก)
+- **ตัวชี้วัดจากการรันสด (`lab9/reports/live_eval_result.json`)**:
+  - **Live Retrieval Correctness**: **94.18%** (178/189 ข้อ ตรวจจาก SQL rows)
+  - **QA Latency**: เฉลี่ย **1.85 วินาที/ข้อ** (ต่ำสุด 0.77 วินาที, ค่ามัธยฐาน 1.81 วินาที, สูงสุด 10.19 วินาที, รวม 350.03 วินาที)
 
 ---
 
@@ -423,9 +433,9 @@ sequenceDiagram
 ```
 
 #### 5.2 ระยะเวลาและประสิทธิภาพ (Performance & Latency)
-- **Static Asset Load (HTML/CSS/JS)**: < 50 ms
-- **Database Search Queries (`/api/courses`, `/api/regulations`)**: **< 10 ms** (0.008s)
-- **Natural Language Question (`/api/ask`) End-to-End**: **1.4 – 2.1 วินาที** (แบ่งเป็น Ollama NL2SQL ~1.2s, SQLite execution ~0.002s, Ollama Answer Synthesis ~0.6s)
+- **Static Asset & UI Rendering**: พัฒนาด้วย Native Vanilla JS และ Clean CSS ไม่มี External Framework Bundle ขนาดใหญ่ ทำให้โหลดและแสดงผลหน้าเว็บได้ทันที
+- **Database Search Queries (`/api/courses`, `/api/regulations`)**: ดึงข้อมูลตรงจาก SQLite ผ่าน Indexed Query และ Limit/Offset Pagination ตอบสนองในระดับ Sub-second
+- **Natural Language Question (`/api/ask`) End-to-End**: มีผลประเมินจริงจากชุดทดสอบ 189 คำถาม (`lab9/reports/live_eval_result.json`) ใช้เวลาเฉลี่ย **1.85 วินาที/ข้อ** (ต่ำสุด 0.77s, มัธยฐาน 1.81s, สูงสุด 10.19s, รวม 350.03s) โดยเวลาส่วนใหญ่ขึ้นอยู่กับการประมวลผลของโมเดลภาษา Local LLM (Ollama)
 
 ---
 
@@ -435,12 +445,12 @@ sequenceDiagram
 
 ### 3.1 การวิเคราะห์ความเหมาะสมต่อลักษณะเอกสาร (Document Type Suitability)
 
-| ลักษณะเอกสาร | ประสิทธิภาพของระบบ | การวิเคราะห์และสาเหตุ | แนวทางการจัดการของระบบ |
+| ลักษณะเอกสาร | ความสามารถในการจัดการ | การวิเคราะห์และสาเหตุ | แนวทางการจัดการของระบบ |
 | :--- | :---: | :--- | :--- |
-| **ตารางแผนการศึกษาแบบกริดปกติ**<br>*(Grid Table ในเล่ม มคอ.2)* | **ดีเลิศ**<br>(F1 = 99.4%) | ข้อความมีโครงสร้างชัดเจน แยกคอลัมน์รหัสวิชา ชื่อวิชา หน่วยกิต และชั่วโมงบรรยาย/ปฏิบัติชัดเจน | สกัดผ่าน `PyMuPDF` + Prompt JSON Constraint ได้แม่นยำเกือบ 100% |
-| **ตารางที่มีการรวมเซลล์ข้ามบรรทัด**<br>*(Multi-line Merged Cells)* | **ดีมาก**<br>(F1 = 97.2%) | ชื่อวิชายาวในเล่ม PDF มักถูกตัดขึ้นบรรทัดใหม่ ทำให้ Parser อาจแยกเป็นคนละแถว | ใช้ฟังก์ชัน `clean_and_normalize_course()` ยุบอักขระ `\n` เป็นช่องว่าง และเชื่อมชื่อวิชาให้สมบูรณ์ |
-| **เอกสารข้อบังคับสแกนเอียง/ไม่มี Text Layer**<br>*(ภาคผนวก ก สแกนขาวดำ)* | **ดีมาก**<br>(Coverage 100%) | Tesseract OCR แบบเดิมจะล้มเหลวเนื่องจากสระภาษาไทยลอยและวรรณยุกต์เพี้ยน | ใช้ **Typhoon-OCR 1.5 3B (VLM)** แปลงภาพโดยตรง ทำให้เก็บข้อความภาษาไทยและเลขข้อบังคับได้ถูกต้องสมบูรณ์ |
-| **ตารางวิชาเลือกแบบหลายทางเลือก**<br>*(Elective Slots)* | **ดีเลิศ**<br>(ผ่าน CHK1 100%) | หากเก็บเป็นวิชาเดี่ยวจะทำให้หน่วยกิตรวมเบิ้ลเกินจริง (Double Counting) | แยกเก็บในตาราง `elective_slot` และสร้าง View `v_semester_credits` เพื่อคำนวณแยกต่างหาก |
+| **ตารางแผนการศึกษาโครงสร้างมาตรฐาน**<br>*(Grid Table ในเล่ม มคอ.2 เช่น BIT, IT)* | **ดีเลิศ**<br>(F1: BIT 97.6%, IT 95.3%) | ข้อความมีโครงสร้างชัดเจน คอลัมน์รหัสวิชา ชื่อวิชา หน่วยกิต และชั่วโมงบรรยาย/ปฏิบัติแยกบรรทัดเป็นระเบียบ | สกัดผ่าน `PyMuPDF` ดึง Text Layer ตรงและควบคุม Output Schema ด้วย Prompt Constraint ใน `qwen3:4b` |
+| **ตารางที่มีข้อความยาวตัดหลายบรรทัด**<br>*(Multi-line Merged Cells เช่น DSBA, AIT)* | **ดีมาก**<br>(F1: DSBA 92.5%, AIT 79.6%) | ชื่อวิชายาวใน PDF มักถูกตัดขึ้นบรรทัดใหม่ หรือมีการแบ่งหน้า ทำให้ Parser ทั่วไปอาจแยกแถวคลาดเคลื่อน | ใช้ฟังก์ชัน `clean_and_normalize_course()` ยุบอักขระ `\n` เป็นช่องว่าง และเชื่อมชื่อวิชาให้สมบูรณ์ตาม Schema |
+| **เอกสารข้อบังคับสแกนขาวดำ/ไม่มี Text Layer**<br>*(ภาคผนวก ก หน้า 94, 96–101)* | **ดีมาก**<br>(Citation Coverage 100.0%) | เอกสารสแกนภาษาไทยมีความท้าทายจากสระลอยและวรรณยุกต์ซ้อน จึงเลือกใช้ Visual Language Model โดยตรง | ใช้ **Typhoon-OCR 1.5 3B (VLM)** อ่านภาพเป็น Markdown แล้วส่งต่อ `qwen3:4b` สกัดโครงสร้างข้อบังคับ (11/11 ข้อ) |
+| **ตารางวิชาเลือกแบบหลายทางเลือก**<br>*(Elective Slots)* | **ดีเลิศ**<br>(ผ่าน CHK1 100.0%) | หากเก็บเป็นวิชาเดี่ยวจะทำให้หน่วยกิตรวมเบิ้ลเกินจริง (Double Counting) | แยกเก็บในตาราง `elective_slot` และสร้าง View `v_semester_credits` เพื่อคำนวณหน่วยกิตแผนการเรียนแยกต่างหาก |
 
 ---
 
@@ -450,36 +460,46 @@ sequenceDiagram
 
 ```mermaid
 graph LR
-    L1["Level 1: Simple Fact<br/>(ความแม่นยำ 100%)"] --> L2["Level 2: Aggregation<br/>(ความแม่นยำ 98%)"]
-    L2 --> L3["Level 3: Multi-Join & Prereq<br/>(ความแม่นยำ 95%)"]
-    L3 --> L4["Level 4: Regulations & Policies<br/>(ความแม่นยำ 100%)"]
-    L4 --> L5["Level 5: Ambiguous Queries<br/>(ความแม่นยำ 75%)"]
+    L1["Level 1: Simple Fact Lookup"] --> L2["Level 2: Aggregation & Filter"]
+    L2 --> L3["Level 3: Multi-Join & Prereq"]
+    L3 --> L4["Level 4: Regulations & Policies"]
+    L4 --> L5["Level 5: Ambiguous Queries"]
 ```
 
 #### ระดับที่ 1: การค้นหาข้อเท็จจริงเดี่ยว (Simple Fact Lookup)
 - **ตัวอย่างคำถาม**: *"วิชา 06026200 มีกี่หน่วยกิต"*, *"หลักสูตร DSBA ใช้เวลาเรียนกี่ปี"*
 - **SQL ที่สร้าง**: `SELECT credits FROM course WHERE code = '06026200' LIMIT 1`
-- **ประสิทธิภาพ**: **ความแม่นยำ 100%** ไวยากรณ์เรียบง่าย ไม่มีความซับซ้อน
+- **ประสิทธิภาพ**: ไวยากรณ์เรียบง่าย ไม่มีความซับซ้อน สกัดค่าจากคอลัมน์และตารางเดี่ยวได้ตรงเป้าหมาย
 
 #### ระดับที่ 2: การคำนวณรวมและกรองเงื่อนไข (Aggregation & Filter)
 - **ตัวอย่างคำถาม**: *"ปี 1 เทอม 1 หลักสูตร IT แผนสหกิจศึกษา เรียนกี่วิชา"*
 - **SQL ที่สร้าง**: `SELECT COUNT(*) FROM v_plan p JOIN study_plan sp ON p.plan_id = sp.plan_id WHERE p.program_id = 'IT' AND sp.plan_type = 'coop' AND p.year = 1 AND p.semester = 1 AND p.is_elective_slot = 0`
-- **ประสิทธิภาพ**: **ความแม่นยำ 98%** กรองแผนด้วย `sp.plan_type = 'coop'` แทนการใช้ substring `LIKE '%COOP%'` (เพื่อป้องกันการ match โดน `IT_NON_COOP`) และกรอง `is_elective_slot = 0` เพื่อไม่นับสล็อตวิชาเลือก
+- **ประสิทธิภาพ**: กรองแผนด้วย `sp.plan_type = 'coop'` แทนการใช้ substring `LIKE '%COOP%'` (เพื่อป้องกันการ match โดน `IT_NON_COOP`) และกรอง `is_elective_slot = 0` เพื่อไม่นับสล็อตวิชาเลือก
 
 #### ระดับที่ 3: ความสัมพันธ์ข้ามตารางและวิชาบังคับก่อน (Multi-Table JOIN & Prerequisites)
 - **ตัวอย่างคำถาม**: *"วิชาบังคับก่อนของวิชา Data Engineering คือวิชาอะไร"*
-- **SQL ที่สร้าง**: `SELECT prereq_code FROM prerequisite WHERE code = (SELECT code FROM course WHERE name_en LIKE '%Data Engineering%')`
-- **ประสิทธิภาพ**: **ความแม่นยำ 95%** รองรับ Subquery และ JOIN ได้ถูกต้อง
+- **SQL ที่สร้าง**: `SELECT requires FROM prerequisite WHERE code = (SELECT code FROM course WHERE name_en LIKE '%Data Engineering%') AND kind = 'pre'`
+- **ประสิทธิภาพ**: ผลกลุ่มนี้ **88.24% (15/17 ข้อ)**; รองรับ Subquery และคอลัมน์ `requires` ตาม Schema จริง แต่ยังมีกรณีชื่อหรือเงื่อนไขที่คืนค่าไม่ตรงเฉลย
 
 #### ระดับที่ 4: การค้นหาเกณฑ์และข้อบังคับสถาบัน (Institutional Regulations & Policies)
 - **ตัวอย่างคำถาม**: *"ทุจริตในการสอบจะถูกลงโทษอย่างไร"*, *"นักศึกษาที่ได้ GPA ต่ำกว่าเท่าไรถึงจะถูกภาคทัณฑ์"*
-- **SQL ที่สร้าง**: `SELECT penalty_action FROM regulation WHERE category = 'เกณฑ์การทุจริตในการสอบ' LIMIT 1`
-- **ประสิทธิภาพ**: **ความแม่นยำ 100%** โมเดลจับคู่หมวดหมู่ข้อบังคับกับคอลัมน์ `category` และ `topic` ได้แม่นยำ
+- **SQL ที่ถูกต้องตามข้อมูลจริง**: `SELECT penalty_action FROM regulation WHERE category = 'การทุจริตในการสอบ' AND topic = 'ทุจริตครั้งแรก' LIMIT 1`
+- **ประสิทธิภาพ**: **60.00% (6/10 ข้อ)** โดย SQL รันผ่าน 10/10 ข้อ แต่ผิด 4 ข้อจากชื่อ `category`/`topic` ที่โมเดลสร้างไม่ตรงค่าจริง เช่น `เกณฑ์การทุจริตในการสอบ` แทน `การทุจริตในการสอบ`
 
 #### ระดับที่ 5: คำถามที่มีความกำกวมหรือไม่ได้ระบุหลักสูตร (Ambiguous / Cross-Curriculum Queries)
 - **ตัวอย่างคำถาม**: *"หลักสูตรนี้มีกี่หน่วยกิต"* (โดยไม่บอกชื่อสาขาวิชาในฐานข้อมูลรวม 4 สาขา)
-- **พฤติกรรม**: โมเดลใส่ `LIMIT 1` ทำให้ได้คำตอบของสาขาแรกที่พบ ซึ่งอาจไม่ตรงกับเจตนาของผู้ใช้หากเจาะจงสาขาอื่น (เป็นสาเหตุหลักของคะแนน 42.2% ในชุดทดสอบเดิมของ AIT)
-- **แนวทางแก้ไข**: ใน Lab 10 มีการสร้าง Prompt ให้ผู้ใช้ระบุสาขา หรือระบบจะถามกลับเพื่อความชัดเจน และรองรับการดึง `plan_id`/`program_id` มาแสดงผลควบคู่
+- **พฤติกรรมในโค้ดจริง**: หากผู้ใช้ไม่ได้ระบุชื่อหลักสูตร โค้ดใน [`model_service.py`](lab10_fastapi/curriculum_app/model_service.py) บรรทัด 62 กำหนด System Prompt Rule ไว้อย่างชัดเจนให้ใช้ค่าเริ่มต้น (Default) เป็นหลักสูตร **DSBA** ทันที (`WHERE v.program_id = 'DSBA'`) ระบบจึงไม่ได้สร้าง Dialog ถามกลับ (No Clarification Loop) แต่ตอบโดยสมมติเป็น DSBA ทันที
+- **ข้อพิจารณาทางวิศวกรรม**: การ Fallback ไปที่ DSBA ช่วยให้ระบบไม่เกิดข้อผิดพลาดและมีคำตอบให้ผู้ใช้ทันที แต่อาจตอบผิดบริบทหากผู้ใช้มีเจตนาถามถึงสาขาอื่น ในการพัฒนาต่อยอดจึงควรเพิ่ม Ambiguity Detection และส่งสถานะ `needs_clarification` กลับไปยัง Frontend
+
+#### สรุป Accuracy แยกตามระดับจากรอบล่าสุด
+
+| Level | จำนวนคำถาม | Valid SQL | Execution Accuracy |
+| :--- | ---: | ---: | ---: |
+| 1 — Simple Lookup | 144 | 100.0% (144/144) | 97.92% (141/144) |
+| 2 — Filter & Aggregate | 12 | 100.0% (12/12) | 83.33% (10/12) |
+| 3 — Multi-table Relation | 17 | 100.0% (17/17) | 88.24% (15/17) |
+| 4 — Regulation Query | 10 | 100.0% (10/10) | 60.00% (6/10) |
+| 5 — Ambiguous Query | 6 | 100.0% (6/6) | 100.0% (6/6) |
 
 ---
 
@@ -487,18 +507,18 @@ graph LR
 
 | ขั้นตอน (Step) | กระบวนการหลัก (Process) | โมเดล / เครื่องมือ (Model & Tools) | อัลกอริทึมหลัก (Algorithm) | พารามิเตอร์สำคัญ (Parameters) | ระยะเวลาในการรัน (Runtime) | ตัวชี้วัดสำคัญ (Evaluation Metrics) |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **1. Extraction (Lab 7B)** | สกัดรายวิชาและข้อบังคับจาก PDF | - `Typhoon-OCR 1.5 3B`<br>- `Qwen3:4b`<br>- `PyMuPDF`<br>- `pdfplumber` | - Multi-pass Alignment<br>- Dual-path Extraction<br>- Thai Word Tokenization | - DPI = 150<br>- Chunk = 1 หน้า<br>- Temp = 0.0 (OCR) / 0.1 (Reg)<br>- Repeat Penalty = 1.2 (Reg) / 1.1 (GenEd)<br>- Num Ctx = 8192 | - ตารางวิชา: ~106–410s/หลักสูตร<br>- ข้อบังคับ VLM: ~38s (6 หน้า)<br>- ประเมินผล: **0.12s** | - **Recall**: 99.0%<br>- **Precision**: 97.2%<br>- **F1-Score**: 98.1% |
-| **2. Schema & DB (Lab 8B)** | ตรวจสอบโครงสร้างและความสอดคล้อง | - `SQLite 3`<br>- `Pydantic v2` | - Option 2 Separation<br>- Composite FK Integrity<br>- Prerequisite Audit Engine<br>- 7 Assertion Rules (CHK1–7) | - PRAGMA foreign_keys=ON<br>- Unique Constraints | - สร้าง DB: 0.35s<br>- ตรวจ 7 กฎ: **0.08s** | - **Schema Pass Rate**: 100.0%<br>- **Consistency Pass**: 100.0% (7/7 ข้อ) |
-| **3. NL to SQL (Lab 8B/9)** | แปลงภาษาธรรมชาติเป็นคำสั่ง SQL | - `Qwen3:4b` (Ollama)<br>- SQLite Engine | - Schema-Grounded Prompting<br>- Self-Correction Loop<br>- Security Guardrail<br>- Abstain on Empty | - Temp = 0.0<br>- Num Ctx = 4096<br>- Num Predict = 256<br>- Max Attempts = 2 (range(2)) | - รันสด 1 ข้อ: **1.46s**<br>- รันสด 180 ข้อ: **4.3m**<br>- รัน Cached: **0.05s** | - **Valid SQL Rate**: 100.0%<br>- **Execution Acc**: 93.9% (Main DB) |
-| **4. Groundedness (Lab 8B/9)** | ตรวจสอบความซื่อสัตย์และการอ้างอิง | - `Qwen3:4b`<br>- SQLite Metadata | - Grounded Synthesis<br>- Metadata Citation Matching<br>- Zero-Hallucination Guard | - Temp = 0.1<br>- Num Predict = 256<br>- Direct Page Matching | - สังเคราะห์ 1 ข้อ: ~1.2s<br>- ตรวจวัดทั้งชุด: **0.05s** | - **Faithfulness**: 93.89%<br>- **Exact Match**: 93.57%<br>- **Course Citation**: 99.8%<br>- **Regulation Citation**: 100.0% |
-| **5. Web App (Lab 10)** | ให้บริการค้นหาและถามตอบผ่านเว็บ | - `FastAPI` (13 Endpoints)<br>- `Uvicorn`<br>- Vanilla JS / Glassmorphism | - 3-State Finite State Machine<br>- Dynamic Plan Resolution<br>- Markdown Formatting | - Port = 8000<br>- Max Rows = 100<br>- Async Endpoint Handling | - Query ทั่วไป: **< 10ms**<br>- ถามตอบ LLM: **1.4 – 2.1s** | - First Contentful Paint: < 300ms<br>- HTTP Success Rate: 100.0% |
-| **6. Master Eval (Lab 9)** | รันประเมินผลอัตโนมัติครบ 4 ขั้น | - Master Runner Script (`run_all_eval.py`) | - Modular Pipeline Aggregation | - CLI `--live`, `--cached`, `--limit` | - แบบ Cached: **0.74s**<br>- แบบ Live (180 ข้อ): **~4.5m** | - ประเมินผลครบทั้ง 4 ขั้นตอนพร้อมออก Terminal Dashboard ทันที |
+| **1. Extraction (Lab 7B)** | สกัดรายวิชาและข้อบังคับจาก PDF | - `Typhoon-OCR 1.5 3B`<br>- `Qwen3:4b`<br>- `PyMuPDF`<br>- `pdfplumber` | - Multi-pass Alignment<br>- Dual-path Extraction<br>- Thai Word Tokenization | - DPI = 150<br>- Chunk = 1 หน้า<br>- Temp = 0.0 (OCR/Text)<br>- Temp = 0.1 (Reg/GenEd Stage 2)<br>- Repeat Penalty = 1.2 (Reg) / 1.1 (GenEd)<br>- Num Ctx = 8192 | - ตารางวิชา End-to-End: 106.4–410.0s/เล่ม<br>(AIT 106.4s, BIT 268.7s, DSBA 283.9s, IT 410.0s)<br>- ข้อบังคับ VLM: ~38s (6 หน้า)<br>- ประเมินผลใน RAM: **0.12s** | - **Macro Precision**: 94.0%<br>- **Macro Recall**: 89.7% (AIT Recall: 68.4%)<br>- **Macro F1-Score**: **91.3%** |
+| **2. Schema & DB (Lab 8B)** | ตรวจสอบโครงสร้างและความสอดคล้อง | - `SQLite 3`<br>- `Pydantic v2` | - Option 2 Separation<br>- Composite FK Integrity<br>- Prerequisite Audit Engine<br>- 7 Assertion Rules (CHK1–7) | - PRAGMA foreign_keys=ON<br>- (Standard Journal Mode, No WAL)<br>- Unique Constraints | - สร้างและโหลด DB: Sub-second<br>- ตรวจ 7 กฎ: Sub-second | - **Schema Pass Rate**: 100.0%<br>- **Consistency Pass**: 100.0% (7/7 ข้อ) |
+| **3. NL to SQL (Lab 8B/9)** | แปลงภาษาธรรมชาติเป็นคำสั่ง SQL | - `Qwen3:4b` (Ollama)<br>- SQLite Engine | - Schema-Grounded Prompting<br>- Self-Correction Loop<br>- Security Guardrail<br>- Abstain on Empty | - Temp = 0.0 (Greedy)<br>- Num Ctx = 4096<br>- Num Predict = 256<br>- Max Attempts = 2 (range(2)) | - รันสด 189 ข้อ: **เฉลี่ย 1.85s/ข้อ** (ต่ำสุด 0.77s, มัธยฐาน 1.81s, สูงสุด 10.19s, รวม 350.03s)<br>- รัน Cached: **0.05s** | - **Valid SQL Rate**: 100.0% (189/189)<br>- **Execution Acc (SQL)**: **94.18%** (178/189) |
+| **4. Groundedness (Lab 8B/9)** | ตรวจสอบความซื่อสัตย์และการอ้างอิง | - `Qwen3:4b`<br>- SQLite Metadata | - Grounded Synthesis<br>- Metadata Citation Matching<br>- Strict Grounded Guard | - Temp = 0.0 (ผ่าน `ollama_generate`)<br>- Num Predict = 256<br>- Direct Page Matching | - ตอบคำถามสดรวม: เฉลี่ย 1.85s/ข้อ<br>- ตรวจวัดทั้งชุด (Cached): **0.05s** | - **Faithfulness Proxy**: 94.18% (178/189)<br>- **Exact Match**: 93.89% (169/180)<br>- **Course Citation**: 99.8% (503/504)<br>- **Regulation Citation**: 100.0% (11/11) |
+| **5. Web App (Lab 10)** | ให้บริการค้นหาและถามตอบผ่านเว็บ | - `FastAPI` (13 Endpoints)<br>- `Uvicorn`<br>- Vanilla JS / Glassmorphism | - 3-State Finite State Machine<br>- Dynamic Plan Resolution<br>- Default Program: DSBA | - Port = 8000<br>- Max Rows = 100<br>- Async Endpoint Handling | - สืบค้นตรงผ่าน DB: Sub-second<br>- ถามตอบ LLM (Live): **เฉลี่ย 1.85s** (ต่ำสุด 0.77s, สูงสุด 10.19s) | - **RESTful API**: ครบ 13 Endpoints ตาม Contract<br>- **UI Bundle**: Vanilla JS (Zero external overhead) |
+| **6. Evaluation (Lab 9)** | รัน 4 ขั้นตอนหลักและวิเคราะห์ Query Complexity | - `run_all_eval.py`<br>- `step5_eval_query_complexity.py` | - Modular Pipeline Aggregation<br>- Gold Labels + Deterministic SQL Classification | - `--live`, `--cached`, `--limit`<br>- `--labels lab9/query_complexity_labels.json` | - แบบ Cached: **0.78s**<br>- แบบ Live (189 ข้อ): **~5.8m** (350.03s)<br>- Complexity Analysis: ใช้ผล Step 3 โดยไม่เรียก LLM ซ้ำ | - JSON Metrics ขั้นที่ 1–4<br>- CSV Summary/Detail สำหรับ Level 1–5 |
 
 ---
 
 ## 5. สรุปภาพรวมและจุดเด่นของระบบ (Conclusion & Highlights)
 
-1. **ปลอดภัยจาก Hallucination**: ด้วยการใช้แนวทาง **Text-to-SQL บนฐานข้อมูลเชิงสัมพันธ์** ข้อมูลข้อเท็จจริงทั้งหมด (หน่วยกิต, ชื่อวิชา, ข้อบังคับ) จึงถูกดึงมาจากฐานข้อมูลจริง 100% โมเดลภาษาทำหน้าที่เพียงแปลเจตนาของผู้ใช้เป็นคำสั่งสืบค้นและเรียบเรียงภาษาไทยเท่านั้น
-2. **โปร่งใสและตรวจสอบย้อนกลับได้ (Auditability & Trust)**: มีระบบ **Evidence Citation Coverage** อยู่ที่ **99.8%** ในรายวิชา และ **100.0%** ในข้อบังคับ ผู้ใช้สามารถคลิกดูเลขหน้าจริงในเล่ม มคอ.2 และเปิดดูคำสั่ง SQL ที่ใช้สืบค้นได้ทันที
-3. **เสถียรภาพและความเร็วในการทำงาน**: การประเมินผลระบบผ่านแคชทำงานได้ในเวลาไม่ถึง **1 วินาที (0.74s)** และการสืบค้นข้อมูลทั่วไปผ่าน API ใช้เวลาต่ำกว่า **10 มิลลิวินาที** รองรับการใช้งานจริงได้อย่างมีประสิทธิภาพ
+1. **ลดความเสี่ยงจาก Hallucination**: ด้วยการใช้แนวทาง **Text-to-SQL บนฐานข้อมูลเชิงสัมพันธ์** ข้อมูลข้อเท็จจริง (หน่วยกิต, ชื่อวิชา, ข้อบังคับ) จึงถูกดึงมาจากฐานข้อมูลจริงผ่านคำสั่ง SQL โมเดลภาษาทำหน้าที่เพียงแปลงคำถามเป็นคำสั่งสืบค้นและเรียบเรียงภาษาไทยตามผลลัพธ์ที่ได้เท่านั้น
+2. **โปร่งใสและตรวจสอบย้อนกลับได้ (Auditability & Trust)**: มีระบบ **Evidence Citation Coverage** อยู่ที่ **99.8% (503/504)** ในรายวิชา และ **100.0% (11/11)** ในข้อบังคับ ระบบแสดงป้ายเลขหน้าอ้างอิงจาก Metadata และเปิดดูคำสั่ง SQL ที่ใช้สืบค้นได้ทันที
+3. **เสถียรภาพและความเร็วในการทำงาน**: การประเมินผลระบบผ่านแคชทำงานได้ในเวลาไม่ถึง **1 วินาที (0.78s)** และการสืบค้นข้อมูลทั่วไปผ่าน SQLite / REST API ตอบสนองได้อย่างรวดเร็วในระดับ Sub-second รองรับการใช้งานจริงได้อย่างมีประสิทธิภาพ
 4. **ความสมบูรณ์เชิงสถาปัตยกรรม (Architectural Rigor)**: ระบบใช้ Composite Foreign Key `(plan_id, program_id)` และ Course Foreign Key `plan_item.code -> course.code` ในระดับ RDBMS ร่วมกับการตรวจสอบขอบเขตแผนการศึกษา (Plan-scoped assertion) ใน CHK5 และการตรวจสอบ Prerequisite Audit Engine ตามรหัสวิชาของ สจล. ป้องกันข้อผิดพลาดข้ามหลักสูตรอย่างเด็ดขาดและปลอดภัย

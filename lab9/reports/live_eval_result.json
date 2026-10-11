@@ -11,7 +11,7 @@
     "answer": "132 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 13.8
+    "seconds": 10.19
   },
   {
     "question": "หลักสูตรนี้ใช้เวลาเรียนกี่ปี",
@@ -25,7 +25,7 @@
     "answer": "4 ปี",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.46
+    "seconds": 1.8
   },
   {
     "question": "วิชา 06026200 มีกี่หน่วยกิต",
@@ -39,7 +39,7 @@
     "answer": "3 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.7
+    "seconds": 2.14
   },
   {
     "question": "วิชา 06026200 เรียนชั้นปีที่เท่าไร",
@@ -53,7 +53,7 @@
     "answer": "ปีที่ 1",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.54
+    "seconds": 1.84
   },
   {
     "question": "วิชา 06026200 เรียนภาคการศึกษาใด",
@@ -67,7 +67,7 @@
     "answer": "ภาคการศึกษา 1",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.57
+    "seconds": 1.84
   },
   {
     "question": "วิชา 90644007 มีกี่หน่วยกิต",
@@ -81,7 +81,7 @@
     "answer": "3 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.55
+    "seconds": 1.94
   },
   {
     "question": "วิชา 90644007 เรียนชั้นปีที่เท่าไร",
@@ -95,7 +95,7 @@
     "answer": "ปีที่ 1",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.58
+    "seconds": 1.85
   },
   {
     "question": "วิชา 90644007 เรียนภาคการศึกษาใด",
@@ -109,7 +109,7 @@
     "answer": "ภาคการศึกษา 1",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.54
+    "seconds": 1.92
   },
   {
     "question": "วิชา 90641001 มีกี่หน่วยกิต",
@@ -123,7 +123,7 @@
     "answer": "2 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.61
+    "seconds": 1.73
   },
   {
     "question": "วิชา 90641001 เรียนชั้นปีที่เท่าไร",
@@ -137,7 +137,7 @@
     "answer": "ปีที่ 1",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.5
+    "seconds": 1.66
   },
   {
     "question": "วิชา 90641001 เรียนภาคการศึกษาใด",
@@ -151,7 +151,7 @@
     "answer": "ภาคการศึกษาที่ 1",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.64
+    "seconds": 1.65
   },
   {
     "question": "วิชา 06026208 เรียนชั้นปีที่เท่าไร",
@@ -165,7 +165,7 @@
     "answer": "ปีที่ 2",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.58
+    "seconds": 1.69
   },
   {
     "question": "วิชา 06026208 เรียนภาคการศึกษาใด",
@@ -179,7 +179,7 @@
     "answer": "ภาคการศึกษาที่ 2",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.65
+    "seconds": 1.86
   },
   {
     "question": "วิชา 06026208 มีกี่หน่วยกิต",
@@ -193,7 +193,7 @@
     "answer": "3 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.67
+    "seconds": 1.72
   },
   {
     "question": "วิชา 06026217 มีกี่หน่วยกิต",
@@ -207,7 +207,7 @@
     "answer": "3 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.61
+    "seconds": 1.73
   },
   {
     "question": "ต้องเรียนวิชาอะไรมาก่อนจึงจะลงเรียน 06026217 ได้",
@@ -221,7 +221,7 @@
     "answer": "ไม่พบข้อมูลนี้ในเล่มหลักสูตร",
     "correct": true,
     "why": "ตอบว่าไม่พบตามที่ควร",
-    "seconds": 0.87
+    "seconds": 1.05
   },
   {
     "question": "ปี 1 เทอม 1 เรียนกี่หน่วยกิต",
@@ -235,7 +235,7 @@
     "answer": "18 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 2.32
+    "seconds": 2.6
   },
   {
     "question": "ปี 1 เทอม 1 เรียนกี่วิชา",
@@ -249,7 +249,7 @@
     "answer": "7 วิชา",
     "correct": true,
     "why": "ตรง",
-    "seconds": 2.41
+    "seconds": 2.69
   },
   {
     "question": "ต้องเรียนวิชาอะไรมาก่อนจึงจะลงเรียน 06026212 ได้",
@@ -263,7 +263,7 @@
     "answer": "ต้องเรียนวิชา 06066300 ก่อนจึงจะลงเรียน 06026212 ได้",
     "correct": true,
     "why": "ตรง",
-    "seconds": 2.26
+    "seconds": 2.59
   },
   {
     "question": "วิชา 06066300 เรียนชั้นปีที่เท่าไร",
@@ -277,7 +277,7 @@
     "answer": "ปีที่ 2",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.53
+    "seconds": 1.71
   },
   {
     "question": "วิชา 06066300 เรียนภาคการศึกษาใด",
@@ -291,7 +291,7 @@
     "answer": "ภาคการศึกษา 1",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.49
+    "seconds": 1.72
   },
   {
     "question": "วิชา 06066300 มีกี่หน่วยกิต",
@@ -305,7 +305,7 @@
     "answer": "3 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.61
+    "seconds": 1.82
   },
   {
     "question": "วิชาไหนบ้างที่ต้องเรียน 06066300 มาก่อน",
@@ -322,7 +322,7 @@
     "answer": "06026212, 06026213, 06016457, 060164: 06016458",
     "correct": true,
     "why": "ครบ",
-    "seconds": 2.25
+    "seconds": 2.68
   },
   {
     "question": "ต้องเรียนวิชาอะไรมาก่อนจึงจะลงเรียน 06026215 ได้",
@@ -336,7 +336,7 @@
     "answer": "ต้องเรียนวิชา 06026214 ก่อนจึงจะลงเรียน 06026215 ได้",
     "correct": true,
     "why": "ตรง",
-    "seconds": 2.34
+    "seconds": 2.44
   },
   {
     "question": "วิชา 06026215 เรียนชั้นปีที่เท่าไร",
@@ -350,7 +350,7 @@
     "answer": "ปีที่ 4",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.62
+    "seconds": 1.75
   },
   {
     "question": "วิชา 06026215 เรียนภาคการศึกษาใด",
@@ -364,7 +364,7 @@
     "answer": "ภาคการศึกษา 1",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.6
+    "seconds": 1.65
   },
   {
     "question": "วิชา 06026215 มีกี่หน่วยกิต",
@@ -378,7 +378,7 @@
     "answer": "3 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.74
+    "seconds": 1.71
   },
   {
     "question": "วิชา 06026214 เรียนชั้นปีที่เท่าไร",
@@ -392,7 +392,7 @@
     "answer": "ปีที่ 3",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.68
+    "seconds": 1.76
   },
   {
     "question": "วิชา 06026214 เรียนภาคการศึกษาใด",
@@ -406,7 +406,7 @@
     "answer": "ภาคการศึกษาที่ 2",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.8
+    "seconds": 1.67
   },
   {
     "question": "วิชา 06026214 มีกี่หน่วยกิต",
@@ -420,7 +420,7 @@
     "answer": "3 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.71
+    "seconds": 1.67
   },
   {
     "question": "ต้องเรียนวิชาอะไรมาก่อนจึงจะลงเรียน 06026201 ได้",
@@ -434,7 +434,7 @@
     "answer": "ต้องเรียนวิชา 06026200 ก่อน",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.81
+    "seconds": 1.94
   },
   {
     "question": "วิชาไหนบ้างที่ต้องเรียน 06026200 มาก่อน",
@@ -448,7 +448,7 @@
     "answer": "06026201",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.64
+    "seconds": 1.89
   },
   {
     "question": "วิชา 06026201 เรียนชั้นปีที่เท่าไร",
@@ -462,7 +462,7 @@
     "answer": "ปีที่ 1",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.65
+    "seconds": 1.68
   },
   {
     "question": "วิชา 06026201 เรียนภาคการศึกษาใด",
@@ -476,7 +476,7 @@
     "answer": "ภาคการศึกษาที่ 2",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.63
+    "seconds": 1.8
   },
   {
     "question": "วิชา 06026201 มีกี่หน่วยกิต",
@@ -490,7 +490,7 @@
     "answer": "3 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.69
+    "seconds": 1.74
   },
   {
     "question": "ต้องเรียนวิชาอะไรมาก่อนจึงจะลงเรียน 06066102 ได้",
@@ -515,10 +515,10 @@
     "sql": "SELECT code FROM prerequisite WHERE requires = '06066101' AND kind = 'pre' LIMIT 200",
     "n_rows": 2,
     "error": null,
-    "answer": "06066102, 06016456",
+    "answer": "06016456, 06066102",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.97
+    "seconds": 1.85
   },
   {
     "question": "วิชา 06026213 มีกี่หน่วยกิต",
@@ -532,7 +532,7 @@
     "answer": "3 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.84
+    "seconds": 1.89
   },
   {
     "question": "วิชา 06026202 มีกี่หน่วยกิต",
@@ -546,7 +546,7 @@
     "answer": "3 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.93
+    "seconds": 1.73
   },
   {
     "question": "วิชา 06066101 มีกี่หน่วยกิต",
@@ -560,7 +560,7 @@
     "answer": "3 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.62
+    "seconds": 1.77
   },
   {
     "question": "วิชา 06066303 มีกี่หน่วยกิต",
@@ -574,7 +574,7 @@
     "answer": "3 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.71
+    "seconds": 1.81
   },
   {
     "question": "วิชา 90641003 มีกี่หน่วยกิต",
@@ -588,7 +588,7 @@
     "answer": "1 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.73
+    "seconds": 1.86
   },
   {
     "question": "ปี 2 เทอม 1 เรียนกี่หน่วยกิต",
@@ -602,7 +602,7 @@
     "answer": "18 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 3.68
+    "seconds": 3.89
   },
   {
     "question": "ปี 2 เทอม 2 เรียนกี่หน่วยกิต",
@@ -616,7 +616,7 @@
     "answer": "21 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 3.79
+    "seconds": 3.69
   },
   {
     "question": "วิชา 06026999 ชื่ออะไร",
@@ -630,7 +630,7 @@
     "answer": "ไม่พบข้อมูลนี้ในเล่มหลักสูตร",
     "correct": true,
     "why": "ตอบว่าไม่พบตามที่ควร",
-    "seconds": 1.0
+    "seconds": 0.92
   },
   {
     "question": "หลักสูตร IT มีทั้งหมดกี่หน่วยกิต",
@@ -644,7 +644,7 @@
     "answer": "129 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.52
+    "seconds": 1.56
   },
   {
     "question": "หลักสูตร IT ใช้เวลาเรียนกี่ปี",
@@ -658,7 +658,7 @@
     "answer": "4 ปี",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.58
+    "seconds": 1.55
   },
   {
     "question": "วิชา 06016401 ในหลักสูตร IT มีกี่หน่วยกิต",
@@ -672,7 +672,7 @@
     "answer": "3 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.76
+    "seconds": 1.82
   },
   {
     "question": "วิชา 06016401 ในหลักสูตร IT เรียนชั้นปีที่เท่าไร",
@@ -686,7 +686,7 @@
     "answer": "ปีที่ 1",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.88
+    "seconds": 1.96
   },
   {
     "question": "วิชา 06016401 ในหลักสูตร IT เรียนภาคการศึกษาใด",
@@ -700,7 +700,7 @@
     "answer": "ภาคการศึกษา 1",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.86
+    "seconds": 1.93
   },
   {
     "question": "วิชา 06016402 มีกี่หน่วยกิต",
@@ -714,7 +714,7 @@
     "answer": "3 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.67
+    "seconds": 1.96
   },
   {
     "question": "วิชา 06016402 เรียนชั้นปีที่เท่าไร",
@@ -728,7 +728,7 @@
     "answer": "ปีที่ 1",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.8
+    "seconds": 1.83
   },
   {
     "question": "วิชา 06016402 เรียนภาคการศึกษาใด",
@@ -742,7 +742,7 @@
     "answer": "ภาคการศึกษา 1",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.69
+    "seconds": 1.68
   },
   {
     "question": "วิชา 06016411 มีกี่หน่วยกิต",
@@ -756,7 +756,7 @@
     "answer": "3 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.65
+    "seconds": 1.83
   },
   {
     "question": "วิชา 06016411 เรียนชั้นปีที่เท่าไร",
@@ -770,7 +770,7 @@
     "answer": "ปีที่ 1",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.7
+    "seconds": 1.82
   },
   {
     "question": "วิชา 06016411 เรียนภาคการศึกษาใด",
@@ -784,7 +784,7 @@
     "answer": "ภาคการศึกษา 1",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.6
+    "seconds": 1.85
   },
   {
     "question": "วิชา 06016408 มีกี่หน่วยกิต",
@@ -798,7 +798,7 @@
     "answer": "3 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.79
+    "seconds": 1.71
   },
   {
     "question": "วิชา 06016408 เรียนชั้นปีที่เท่าไร",
@@ -812,7 +812,7 @@
     "answer": "ปีที่ 1",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.88
+    "seconds": 1.67
   },
   {
     "question": "วิชา 06016408 เรียนภาคการศึกษาใด",
@@ -826,7 +826,7 @@
     "answer": "ภาคการศึกษาที่ 2",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.73
+    "seconds": 1.68
   },
   {
     "question": "วิชา 06066001 ในหลักสูตร IT มีกี่หน่วยกิต",
@@ -840,7 +840,7 @@
     "answer": "3 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.71
+    "seconds": 1.8
   },
   {
     "question": "วิชา 06066001 ในหลักสูตร IT เรียนชั้นปีที่เท่าไร",
@@ -854,7 +854,7 @@
     "answer": "ปีที่ 1",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.84
+    "seconds": 1.85
   },
   {
     "question": "วิชา 06066001 ในหลักสูตร IT เรียนภาคการศึกษาใด",
@@ -868,7 +868,7 @@
     "answer": "ภาคการศึกษาที่ 2",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.81
+    "seconds": 1.84
   },
   {
     "question": "วิชา 06066101 ในหลักสูตร IT เรียนชั้นปีที่เท่าไร",
@@ -882,7 +882,7 @@
     "answer": "ปีที่ 1",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.73
+    "seconds": 2.01
   },
   {
     "question": "วิชา 06066101 ในหลักสูตร IT เรียนภาคการศึกษาใด",
@@ -896,7 +896,7 @@
     "answer": "ภาคการศึกษาที่ 2",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.87
+    "seconds": 1.99
   },
   {
     "question": "วิชา 06016409 เรียนชั้นปีที่เท่าไร",
@@ -910,7 +910,7 @@
     "answer": "ปีที่ 2",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.61
+    "seconds": 1.66
   },
   {
     "question": "วิชา 06016409 เรียนภาคการศึกษาใด",
@@ -924,7 +924,7 @@
     "answer": "ภาคการศึกษา 1",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.82
+    "seconds": 1.6
   },
   {
     "question": "วิชา 06016413 เรียนชั้นปีที่เท่าไร",
@@ -938,21 +938,7 @@
     "answer": "ปีที่ 2",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.64
-  },
-  {
-    "question": "วิชา 06066300 เรียนชั้นปีที่เท่าไร",
-    "expect": {
-      "type": "value",
-      "value": 2
-    },
-    "sql": "SELECT year FROM plan_item WHERE code = '06066300' LIMIT 1",
-    "n_rows": 1,
-    "error": null,
-    "answer": "ปีที่ 2",
-    "correct": true,
-    "why": "ตรง",
-    "seconds": 1.72
+    "seconds": 1.79
   },
   {
     "question": "วิชา 06066102 ต้องเรียนวิชาใดมาก่อน",
@@ -966,7 +952,7 @@
     "answer": "วิชา 06066101",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.82
+    "seconds": 1.78
   },
   {
     "question": "วิชา 06016418 ต้องเรียนวิชาใดมาก่อน",
@@ -980,7 +966,7 @@
     "answer": "06016408",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.74
+    "seconds": 1.7
   },
   {
     "question": "วิชา 06016407 ต้องเรียนวิชาใดมาก่อน",
@@ -994,7 +980,7 @@
     "answer": "วิชา 06016406",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.79
+    "seconds": 1.83
   },
   {
     "question": "วิชา 06016419 ต้องเรียนวิชาใดมาก่อน",
@@ -1008,7 +994,7 @@
     "answer": "วิชา 06016413",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.67
+    "seconds": 1.79
   },
   {
     "question": "หลักสูตร IT ปี 1 เทอม 1 เรียนกี่หน่วยกิต",
@@ -1022,7 +1008,7 @@
     "answer": "18 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.92
+    "seconds": 1.99
   },
   {
     "question": "หลักสูตร IT ปี 1 เทอม 2 เรียนกี่หน่วยกิต",
@@ -1036,7 +1022,7 @@
     "answer": "18 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 2.11
+    "seconds": 1.97
   },
   {
     "question": "วิชา 06016403 มีกี่หน่วยกิต",
@@ -1050,7 +1036,7 @@
     "answer": "3 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.84
+    "seconds": 1.86
   },
   {
     "question": "วิชา 06016403 เรียนชั้นปีที่เท่าไร",
@@ -1064,7 +1050,7 @@
     "answer": "ปีที่ 2",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.7
+    "seconds": 1.87
   },
   {
     "question": "วิชา 06016403 เรียนภาคการศึกษาใด",
@@ -1078,7 +1064,7 @@
     "answer": "ภาคการศึกษา 1",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.81
+    "seconds": 1.91
   },
   {
     "question": "วิชา 06016405 มีกี่หน่วยกิต",
@@ -1092,7 +1078,7 @@
     "answer": "3 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.68
+    "seconds": 2.05
   },
   {
     "question": "วิชา 06016405 เรียนชั้นปีที่เท่าไร",
@@ -1106,7 +1092,7 @@
     "answer": "ปีที่ 2",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.56
+    "seconds": 1.93
   },
   {
     "question": "วิชา 06016405 เรียนภาคการศึกษาใด",
@@ -1120,7 +1106,7 @@
     "answer": "ภาคการศึกษาที่ 2",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.65
+    "seconds": 2.01
   },
   {
     "question": "วิชา 06016404 มีกี่หน่วยกิต",
@@ -1134,7 +1120,7 @@
     "answer": "3 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.71
+    "seconds": 1.89
   },
   {
     "question": "วิชา 06016404 เรียนชั้นปีที่เท่าไร",
@@ -1148,7 +1134,7 @@
     "answer": "ปีที่ 3",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.56
+    "seconds": 1.71
   },
   {
     "question": "วิชา 06016406 เรียนชั้นปีที่เท่าไร",
@@ -1162,7 +1148,7 @@
     "answer": "ปีที่ 4",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.57
+    "seconds": 1.72
   },
   {
     "question": "วิชา 06016406 เรียนภาคการศึกษาใด",
@@ -1176,7 +1162,7 @@
     "answer": "ภาคการศึกษา 1",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.61
+    "seconds": 1.76
   },
   {
     "question": "วิชา 06016402 มีชั่วโมงปฏิบัติการกี่ชั่วโมง",
@@ -1190,7 +1176,7 @@
     "answer": "2 ชั่วโมง",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.74
+    "seconds": 2.05
   },
   {
     "question": "วิชา 06016411 มีชั่วโมงปฏิบัติการกี่ชั่วโมง",
@@ -1204,7 +1190,7 @@
     "answer": "2 ชั่วโมง",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.76
+    "seconds": 1.98
   },
   {
     "question": "หลักสูตร IT ปี 2 เทอม 1 เรียนกี่หน่วยกิต",
@@ -1218,7 +1204,7 @@
     "answer": "18 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.93
+    "seconds": 2.02
   },
   {
     "question": "วิชา 06016481 มีกี่หน่วยกิต",
@@ -1232,7 +1218,7 @@
     "answer": "6 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.81
+    "seconds": 2.0
   },
   {
     "question": "วิชา 99999999 ในหลักสูตร IT มีกี่หน่วยกิต",
@@ -1246,7 +1232,7 @@
     "answer": "ไม่พบข้อมูลนี้ในเล่มหลักสูตร",
     "correct": true,
     "why": "ตอบว่าไม่พบตามที่ควร",
-    "seconds": 0.91
+    "seconds": 0.97
   },
   {
     "question": "ปี 7 เทอม 1 ในหลักสูตร IT เรียนวิชาอะไรบ้าง",
@@ -1254,13 +1240,13 @@
       "type": "none",
       "value": null
     },
-    "sql": "SELECT name_th, name_en, code FROM v_plan WHERE program_id = 'IT' AND year = 7 AND semester = 1 LIMIT 1",
+    "sql": "SELECT name_th, name_en, code, credits, year, semester, alt_group, note FROM v_plan WHERE program_id = 'IT' AND year = 7 AND semester = 1 LIMIT 1",
     "n_rows": 0,
     "error": null,
     "answer": "ไม่พบข้อมูลนี้ในเล่มหลักสูตร",
     "correct": true,
     "why": "ตอบว่าไม่พบตามที่ควร",
-    "seconds": 1.02
+    "seconds": 1.23
   },
   {
     "question": "หลักสูตร AIT มีทั้งหมดกี่หน่วยกิต",
@@ -1274,7 +1260,7 @@
     "answer": "120 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.51
+    "seconds": 1.7
   },
   {
     "question": "หลักสูตร AIT ใช้เวลาเรียนกี่ปี",
@@ -1288,7 +1274,7 @@
     "answer": "4 ปี",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.64
+    "seconds": 1.57
   },
   {
     "question": "วิชา 06016401 ในหลักสูตร AIT มีกี่หน่วยกิต",
@@ -1302,7 +1288,7 @@
     "answer": "3 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.87
+    "seconds": 1.8
   },
   {
     "question": "วิชา 06016401 ในหลักสูตร AIT เรียนชั้นปีที่เท่าไร",
@@ -1316,7 +1302,7 @@
     "answer": "ไม่พบข้อมูลนี้ในเล่มหลักสูตร",
     "correct": false,
     "why": "ไม่พบค่า 1 (ได้ [])",
-    "seconds": 1.17
+    "seconds": 1.14
   },
   {
     "question": "วิชา 06016401 ในหลักสูตร AIT เรียนภาคการศึกษาใด",
@@ -1330,7 +1316,7 @@
     "answer": "ไม่พบข้อมูลนี้ในเล่มหลักสูตร",
     "correct": false,
     "why": "ไม่พบค่า 1 (ได้ [])",
-    "seconds": 0.97
+    "seconds": 0.88
   },
   {
     "question": "วิชา 06046400 มีกี่หน่วยกิต",
@@ -1358,7 +1344,7 @@
     "answer": "ปีที่ 1",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.8
+    "seconds": 1.75
   },
   {
     "question": "วิชา 06046400 เรียนภาคการศึกษาใด",
@@ -1372,7 +1358,7 @@
     "answer": "ภาคการศึกษา 1",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.7
+    "seconds": 1.73
   },
   {
     "question": "วิชา 06046402 มีกี่หน่วยกิต",
@@ -1386,7 +1372,7 @@
     "answer": "3 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.81
+    "seconds": 1.76
   },
   {
     "question": "วิชา 06046402 เรียนชั้นปีที่เท่าไร",
@@ -1400,7 +1386,7 @@
     "answer": "ปีที่ 1",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.58
+    "seconds": 1.74
   },
   {
     "question": "วิชา 06046402 เรียนภาคการศึกษาใด",
@@ -1414,7 +1400,7 @@
     "answer": "ภาคการศึกษา 1",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.63
+    "seconds": 1.97
   },
   {
     "question": "วิชา 06066000 มีกี่หน่วยกิต",
@@ -1428,7 +1414,7 @@
     "answer": "3 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.64
+    "seconds": 2.02
   },
   {
     "question": "วิชา 06066000 เรียนชั้นปีที่เท่าไร",
@@ -1442,7 +1428,7 @@
     "answer": "ปีที่ 2",
     "correct": false,
     "why": "ไม่พบค่า 1 (ได้ ['2'])",
-    "seconds": 1.47
+    "seconds": 1.82
   },
   {
     "question": "วิชา 06066000 เรียนภาคการศึกษาใด",
@@ -1456,7 +1442,7 @@
     "answer": "ภาคการศึกษาที่ 1",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.55
+    "seconds": 1.86
   },
   {
     "question": "วิชา 06046401 มีกี่หน่วยกิต",
@@ -1470,7 +1456,7 @@
     "answer": "3 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.56
+    "seconds": 1.96
   },
   {
     "question": "วิชา 06046401 เรียนชั้นปีที่เท่าไร",
@@ -1484,7 +1470,7 @@
     "answer": "ปีที่ 1",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.66
+    "seconds": 1.76
   },
   {
     "question": "วิชา 06046401 เรียนภาคการศึกษาใด",
@@ -1498,7 +1484,7 @@
     "answer": "ภาคการศึกษาที่ 2",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.85
+    "seconds": 2.01
   },
   {
     "question": "วิชา 06046403 มีกี่หน่วยกิต",
@@ -1512,7 +1498,7 @@
     "answer": "3 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.84
+    "seconds": 1.89
   },
   {
     "question": "วิชา 06046403 เรียนชั้นปีที่เท่าไร",
@@ -1526,7 +1512,7 @@
     "answer": "ปีที่ 1",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.59
+    "seconds": 1.98
   },
   {
     "question": "วิชา 06046403 เรียนภาคการศึกษาใด",
@@ -1540,7 +1526,7 @@
     "answer": "ภาคการศึกษาที่ 2",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.86
+    "seconds": 1.89
   },
   {
     "question": "วิชา 06066301 ในหลักสูตร AIT มีกี่หน่วยกิต",
@@ -1554,7 +1540,7 @@
     "answer": "3 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.87
+    "seconds": 1.96
   },
   {
     "question": "วิชา 06066301 ในหลักสูตร AIT เรียนชั้นปีที่เท่าไร",
@@ -1568,7 +1554,7 @@
     "answer": "ปีที่ 1",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.79
+    "seconds": 2.01
   },
   {
     "question": "วิชา 06066301 ในหลักสูตร AIT เรียนภาคการศึกษาใด",
@@ -1582,7 +1568,7 @@
     "answer": "ภาคการศึกษาที่ 2",
     "correct": true,
     "why": "ตรง",
-    "seconds": 2.01
+    "seconds": 2.26
   },
   {
     "question": "วิชา 06046401 ต้องเรียนวิชาใดมาก่อน",
@@ -1596,7 +1582,7 @@
     "answer": "วิชา 06046400",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.94
+    "seconds": 2.0
   },
   {
     "question": "วิชา 06046405 ต้องเรียนวิชาใดมาก่อน",
@@ -1610,7 +1596,7 @@
     "answer": "06066001",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.82
+    "seconds": 1.89
   },
   {
     "question": "วิชา 06046406 ต้องเรียนวิชาใดมาก่อน",
@@ -1619,12 +1605,12 @@
       "value": "06046401"
     },
     "sql": "SELECT requires FROM prerequisite WHERE code = '06046406' AND kind = 'pre' LIMIT 200",
-    "n_rows": 0,
+    "n_rows": 2,
     "error": null,
-    "answer": "ไม่พบข้อมูลนี้ในเล่มหลักสูตร",
-    "correct": false,
-    "why": "ไม่พบค่า 06046401 (ได้ [])",
-    "seconds": 0.92
+    "answer": "วิชา 06046401, 06046402",
+    "correct": true,
+    "why": "ตรง",
+    "seconds": 2.06
   },
   {
     "question": "วิชา 06046414 ต้องเรียนวิชาใดมาก่อน",
@@ -1638,7 +1624,7 @@
     "answer": "ไม่พบข้อมูลนี้ในเล่มหลักสูตร",
     "correct": false,
     "why": "ไม่พบค่า 06046410 (ได้ [])",
-    "seconds": 0.69
+    "seconds": 0.99
   },
   {
     "question": "วิชา 06046442 ต้องเรียนวิชาใดมาก่อน",
@@ -1652,7 +1638,7 @@
     "answer": "ไม่พบข้อมูลนี้ในเล่มหลักสูตร",
     "correct": false,
     "why": "ไม่พบค่า 06046441 (ได้ [])",
-    "seconds": 0.75
+    "seconds": 0.77
   },
   {
     "question": "หลักสูตร AIT ปี 1 เทอม 1 เรียนกี่หน่วยกิต",
@@ -1666,7 +1652,7 @@
     "answer": "15 หน่วยกิต",
     "correct": false,
     "why": "ไม่พบค่า 18 (ได้ ['15'])",
-    "seconds": 1.62
+    "seconds": 1.87
   },
   {
     "question": "หลักสูตร AIT ปี 1 เทอม 2 เรียนกี่หน่วยกิต",
@@ -1680,7 +1666,7 @@
     "answer": "19 หน่วยกิต",
     "correct": false,
     "why": "ไม่พบค่า 16 (ได้ ['19'])",
-    "seconds": 1.69
+    "seconds": 2.01
   },
   {
     "question": "วิชา 06046405 มีกี่หน่วยกิต",
@@ -1694,7 +1680,7 @@
     "answer": "3 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.58
+    "seconds": 1.84
   },
   {
     "question": "วิชา 06046405 เรียนชั้นปีที่เท่าไร",
@@ -1708,7 +1694,7 @@
     "answer": "ปีที่ 2",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.58
+    "seconds": 1.75
   },
   {
     "question": "วิชา 06046405 เรียนภาคการศึกษาใด",
@@ -1722,7 +1708,7 @@
     "answer": "ภาคการศึกษา 1",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.55
+    "seconds": 1.8
   },
   {
     "question": "วิชา 06046406 มีกี่หน่วยกิต",
@@ -1736,7 +1722,7 @@
     "answer": "3 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.66
+    "seconds": 1.94
   },
   {
     "question": "วิชา 06046407 มีกี่หน่วยกิต",
@@ -1750,7 +1736,7 @@
     "answer": "3 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.7
+    "seconds": 1.96
   },
   {
     "question": "วิชา 06046407 เรียนชั้นปีที่เท่าไร",
@@ -1764,7 +1750,7 @@
     "answer": "ปีที่ 2",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.6
+    "seconds": 2.07
   },
   {
     "question": "วิชา 06046407 เรียนภาคการศึกษาใด",
@@ -1778,7 +1764,7 @@
     "answer": "ภาคการศึกษาที่ 2",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.85
+    "seconds": 2.13
   },
   {
     "question": "วิชา 06046410 มีกี่หน่วยกิต",
@@ -1792,7 +1778,7 @@
     "answer": "3 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.8
+    "seconds": 1.86
   },
   {
     "question": "วิชา 06046415 มีกี่หน่วยกิต",
@@ -1806,7 +1792,7 @@
     "answer": "3 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.76
+    "seconds": 1.85
   },
   {
     "question": "วิชา 06046415 เรียนชั้นปีที่เท่าไร",
@@ -1820,7 +1806,7 @@
     "answer": "ปีที่ 3",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.62
+    "seconds": 1.85
   },
   {
     "question": "วิชา 06046441 มีกี่หน่วยกิต",
@@ -1834,7 +1820,7 @@
     "answer": "3 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.63
+    "seconds": 1.92
   },
   {
     "question": "วิชา 06046443 มีกี่หน่วยกิต",
@@ -1848,7 +1834,7 @@
     "answer": "6",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.37
+    "seconds": 1.77
   },
   {
     "question": "หลักสูตร AIT ปี 2 เทอม 1 เรียนกี่หน่วยกิต",
@@ -1862,7 +1848,7 @@
     "answer": "18 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.79
+    "seconds": 2.01
   },
   {
     "question": "วิชา 88888888 ในหลักสูตร AIT มีกี่หน่วยกิต",
@@ -1876,7 +1862,7 @@
     "answer": "ไม่พบข้อมูลนี้ในเล่มหลักสูตร",
     "correct": true,
     "why": "ตอบว่าไม่พบตามที่ควร",
-    "seconds": 0.89
+    "seconds": 1.03
   },
   {
     "question": "ปี 7 เทอม 1 ในหลักสูตร AIT เรียนวิชาอะไรบ้าง",
@@ -1890,7 +1876,7 @@
     "answer": "ไม่พบข้อมูลนี้ในเล่มหลักสูตร",
     "correct": true,
     "why": "ตอบว่าไม่พบตามที่ควร",
-    "seconds": 1.17
+    "seconds": 1.22
   },
   {
     "question": "หลักสูตร BIT มีทั้งหมดกี่หน่วยกิต",
@@ -1904,7 +1890,7 @@
     "answer": "126 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.46
+    "seconds": 1.68
   },
   {
     "question": "หลักสูตร BIT ใช้เวลาเรียนกี่ปี",
@@ -1918,7 +1904,7 @@
     "answer": "4 ปี",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.52
+    "seconds": 1.57
   },
   {
     "question": "วิชา 06036100 ในหลักสูตร BIT มีกี่หน่วยกิต",
@@ -1932,7 +1918,7 @@
     "answer": "3 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.97
+    "seconds": 1.89
   },
   {
     "question": "วิชา 06036100 ในหลักสูตร BIT เรียนชั้นปีที่เท่าไร",
@@ -1946,7 +1932,7 @@
     "answer": "ปีที่ 1",
     "correct": true,
     "why": "ตรง",
-    "seconds": 2.14
+    "seconds": 1.96
   },
   {
     "question": "วิชา 06036100 ในหลักสูตร BIT เรียนภาคการศึกษาใด",
@@ -1960,7 +1946,7 @@
     "answer": "ภาคการศึกษา 1",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.89
+    "seconds": 1.91
   },
   {
     "question": "วิชา 06036101 มีกี่หน่วยกิต",
@@ -1974,7 +1960,7 @@
     "answer": "3 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.82
+    "seconds": 1.81
   },
   {
     "question": "วิชา 06036101 เรียนชั้นปีที่เท่าไร",
@@ -1988,7 +1974,7 @@
     "answer": "ปีที่ 1",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.69
+    "seconds": 1.66
   },
   {
     "question": "วิชา 06036101 เรียนภาคการศึกษาใด",
@@ -2002,7 +1988,7 @@
     "answer": "ภาคการศึกษา 1",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.7
+    "seconds": 1.69
   },
   {
     "question": "วิชา 06036118 มีกี่หน่วยกิต",
@@ -2016,7 +2002,7 @@
     "answer": "3 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.77
+    "seconds": 1.85
   },
   {
     "question": "วิชา 06036118 เรียนชั้นปีที่เท่าไร",
@@ -2030,7 +2016,7 @@
     "answer": "ปีที่ 1",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.73
+    "seconds": 1.78
   },
   {
     "question": "วิชา 06036118 เรียนภาคการศึกษาใด",
@@ -2044,7 +2030,7 @@
     "answer": "ภาคการศึกษาที่ 1",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.71
+    "seconds": 1.78
   },
   {
     "question": "วิชา 06036102 มีกี่หน่วยกิต",
@@ -2058,7 +2044,7 @@
     "answer": "3 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.7
+    "seconds": 1.75
   },
   {
     "question": "วิชา 06036102 เรียนชั้นปีที่เท่าไร",
@@ -2072,7 +2058,7 @@
     "answer": "ปีที่ 1",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.7
+    "seconds": 1.91
   },
   {
     "question": "วิชา 06036102 เรียนภาคการศึกษาใด",
@@ -2086,7 +2072,7 @@
     "answer": "ภาคการศึกษาที่ 2",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.69
+    "seconds": 1.84
   },
   {
     "question": "วิชา 06036109 มีกี่หน่วยกิต",
@@ -2100,7 +2086,7 @@
     "answer": "3 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.74
+    "seconds": 1.99
   },
   {
     "question": "วิชา 06036109 เรียนชั้นปีที่เท่าไร",
@@ -2114,7 +2100,7 @@
     "answer": "ปีที่ 1",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.71
+    "seconds": 1.75
   },
   {
     "question": "วิชา 06036109 เรียนภาคการศึกษาใด",
@@ -2128,7 +2114,7 @@
     "answer": "ภาคการศึกษาที่ 2",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.66
+    "seconds": 1.76
   },
   {
     "question": "วิชา 06036119 มีกี่หน่วยกิต",
@@ -2156,7 +2142,7 @@
     "answer": "ปีที่ 1",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.69
+    "seconds": 1.76
   },
   {
     "question": "วิชา 06036119 เรียนภาคการศึกษาใด",
@@ -2170,7 +2156,7 @@
     "answer": "ภาคการศึกษาที่ 2",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.72
+    "seconds": 1.65
   },
   {
     "question": "วิชา 06036103 มีกี่หน่วยกิต",
@@ -2184,7 +2170,7 @@
     "answer": "3",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.52
+    "seconds": 1.53
   },
   {
     "question": "วิชา 06036103 เรียนชั้นปีที่เท่าไร",
@@ -2198,7 +2184,7 @@
     "answer": "ปีที่ 2",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.72
+    "seconds": 1.76
   },
   {
     "question": "วิชา 06036103 เรียนภาคการศึกษาใด",
@@ -2212,7 +2198,7 @@
     "answer": "ภาคการศึกษา 1",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.73
+    "seconds": 1.67
   },
   {
     "question": "วิชา 06036104 มีกี่หน่วยกิต",
@@ -2226,7 +2212,7 @@
     "answer": "3 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.77
+    "seconds": 1.78
   },
   {
     "question": "วิชา 06036104 เรียนชั้นปีที่เท่าไร",
@@ -2240,7 +2226,7 @@
     "answer": "ปีที่ 2",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.64
+    "seconds": 1.72
   },
   {
     "question": "วิชา 06036104 เรียนภาคการศึกษาใด",
@@ -2268,7 +2254,7 @@
     "answer": "ปีที่ 2",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.76
+    "seconds": 1.65
   },
   {
     "question": "วิชา 06036108 เรียนภาคการศึกษาใด",
@@ -2282,7 +2268,7 @@
     "answer": "ภาคการศึกษาที่ 2",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.8
+    "seconds": 1.76
   },
   {
     "question": "วิชา 06036111 มีกี่หน่วยกิต",
@@ -2296,7 +2282,7 @@
     "answer": "3 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.68
+    "seconds": 1.73
   },
   {
     "question": "วิชา 06036111 เรียนชั้นปีที่เท่าไร",
@@ -2310,7 +2296,7 @@
     "answer": "ปีที่ 2",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.74
+    "seconds": 1.65
   },
   {
     "question": "วิชา 06036112 มีกี่หน่วยกิต",
@@ -2338,7 +2324,7 @@
     "answer": "ปีที่ 2",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.67
+    "seconds": 1.59
   },
   {
     "question": "วิชา 06036107 มีกี่หน่วยกิต",
@@ -2352,7 +2338,7 @@
     "answer": "3 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.69
+    "seconds": 1.83
   },
   {
     "question": "วิชา 06036107 เรียนชั้นปีที่เท่าไร",
@@ -2366,7 +2352,7 @@
     "answer": "ปีที่ 3",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.72
+    "seconds": 1.71
   },
   {
     "question": "วิชา 06036110 มีกี่หน่วยกิต",
@@ -2380,7 +2366,7 @@
     "answer": "3 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.76
+    "seconds": 1.74
   },
   {
     "question": "วิชา 06036115 อยู่ชั้นปีที่เท่าไร",
@@ -2394,7 +2380,7 @@
     "answer": "ปีที่ 4",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.7
+    "seconds": 1.67
   },
   {
     "question": "วิชา 06036115 มีกี่หน่วยกิต",
@@ -2408,7 +2394,7 @@
     "answer": "3 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.72
+    "seconds": 1.78
   },
   {
     "question": "วิชา 06036147 มีกี่หน่วยกิต",
@@ -2422,7 +2408,7 @@
     "answer": "6 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.83
+    "seconds": 1.92
   },
   {
     "question": "วิชา 06036100 มีชั่วโมงปฏิบัติการกี่ชั่วโมง",
@@ -2436,7 +2422,7 @@
     "answer": "2 ชั่วโมง",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.86
+    "seconds": 1.99
   },
   {
     "question": "วิชา 06036118 มีชั่วโมงปฏิบัติการกี่ชั่วโมง",
@@ -2450,7 +2436,7 @@
     "answer": "2 ชั่วโมง",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.75
+    "seconds": 1.97
   },
   {
     "question": "หลักสูตร BIT ปี 1 เทอม 1 เรียนกี่หน่วยกิต",
@@ -2464,7 +2450,7 @@
     "answer": "18 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.99
+    "seconds": 1.9
   },
   {
     "question": "หลักสูตร BIT ปี 1 เทอม 2 เรียนกี่หน่วยกิต",
@@ -2478,7 +2464,7 @@
     "answer": "18 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 2.04
+    "seconds": 1.84
   },
   {
     "question": "หลักสูตร BIT ปี 2 เทอม 1 เรียนกี่หน่วยกิต",
@@ -2492,7 +2478,7 @@
     "answer": "18 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.95
+    "seconds": 1.92
   },
   {
     "question": "วิชา 06036999 ชื่ออะไร",
@@ -2506,7 +2492,7 @@
     "answer": "ไม่พบข้อมูลนี้ในเล่มหลักสูตร",
     "correct": true,
     "why": "ตอบว่าไม่พบตามที่ควร",
-    "seconds": 0.96
+    "seconds": 0.91
   },
   {
     "question": "ปี 7 เทอม 1 ในหลักสูตร BIT เรียนวิชาอะไรบ้าง",
@@ -2514,12 +2500,152 @@
       "type": "none",
       "value": null
     },
-    "sql": "SELECT name_th, name_en, code FROM v_plan WHERE program_id = 'BIT' AND year = 7 AND semester = 1 LIMIT 1",
+    "sql": "SELECT name_th, name_en, code, credits, year, semester, alt_group, note FROM v_plan WHERE program_id = 'BIT' AND year = 7 AND semester = 1 LIMIT 1",
     "n_rows": 0,
     "error": null,
     "answer": "ไม่พบข้อมูลนี้ในเล่มหลักสูตร",
     "correct": true,
     "why": "ตอบว่าไม่พบตามที่ควร",
-    "seconds": 1.03
+    "seconds": 1.22
+  },
+  {
+    "question": "ภาคการศึกษาปกติต้องลงทะเบียนอย่างน้อยกี่หน่วยกิต",
+    "expect": {
+      "type": "value",
+      "value": 9
+    },
+    "sql": "SELECT min_credits FROM regulation WHERE category = 'เกณฑ์การลงทะเบียน' LIMIT 1",
+    "n_rows": 1,
+    "error": null,
+    "answer": "9 หน่วยกิต",
+    "correct": true,
+    "why": "ตรง",
+    "seconds": 1.6
+  },
+  {
+    "question": "ภาคการศึกษาปกติลงทะเบียนได้สูงสุดกี่หน่วยกิต",
+    "expect": {
+      "type": "value",
+      "value": 22
+    },
+    "sql": "SELECT max_credits FROM regulation WHERE category = 'เกณฑ์การลงทะเบียน' LIMIT 1",
+    "n_rows": 1,
+    "error": null,
+    "answer": "22",
+    "correct": true,
+    "why": "ตรง",
+    "seconds": 1.66
+  },
+  {
+    "question": "กรณีพิเศษเพื่อขอจบลงทะเบียนได้สูงสุดกี่หน่วยกิต",
+    "expect": {
+      "type": "value",
+      "value": 27
+    },
+    "sql": "SELECT max_credits FROM regulation WHERE category = 'เกณฑ์การลงทะเบียน' AND topic LIKE '%กรณีพิเศษ%' LIMIT 1",
+    "n_rows": 1,
+    "error": null,
+    "answer": "27 หน่วยกิต",
+    "correct": true,
+    "why": "ตรง",
+    "seconds": 2.13
+  },
+  {
+    "question": "ภาคการศึกษาพิเศษฤดูร้อนลงทะเบียนได้สูงสุดกี่หน่วยกิต",
+    "expect": {
+      "type": "value",
+      "value": 9
+    },
+    "sql": "SELECT max_credits FROM regulation WHERE category = 'เกณฑ์การลงทะเบียน' AND topic LIKE '%ฤดูร้อน%' LIMIT 1",
+    "n_rows": 1,
+    "error": null,
+    "answer": "9 หน่วยกิต",
+    "correct": true,
+    "why": "ตรง",
+    "seconds": 2.07
+  },
+  {
+    "question": "ทุจริตในการสอบครั้งแรกได้รับโทษอะไร",
+    "expect": {
+      "type": "value",
+      "value": "พักการเรียน 1 ภาคการศึกษาถัดไป"
+    },
+    "sql": "SELECT condition_desc, penalty_action, article_no FROM regulation WHERE category = 'เกณฑ์การทุจริตในการสอบ' LIMIT 1",
+    "n_rows": 0,
+    "error": null,
+    "answer": "ไม่พบข้อมูลนี้ในเล่มหลักสูตร",
+    "correct": false,
+    "why": "ไม่พบค่า พักการเรียน 1 ภาคการศึกษาถัดไป (ได้ [])",
+    "seconds": 1.27
+  },
+  {
+    "question": "ทุจริตในการสอบซ้ำมากกว่า 3 ครั้งได้รับโทษอะไร",
+    "expect": {
+      "type": "value",
+      "value": "พ้นสภาพการเป็นนักศึกษา"
+    },
+    "sql": "SELECT condition_desc, penalty_action, article_no FROM regulation WHERE category = 'เกณฑ์การทุจริตในการสอบ' AND condition_desc LIKE '%ซ้ำมากกว่า 3 ครั้ง%' LIMIT 1",
+    "n_rows": 0,
+    "error": null,
+    "answer": "ไม่พบข้อมูลนี้ในเล่มหลักสูตร",
+    "correct": false,
+    "why": "ไม่พบค่า พ้นสภาพการเป็นนักศึกษา (ได้ [])",
+    "seconds": 1.41
+  },
+  {
+    "question": "GPA สะสมสูงสุดที่ยังถือว่าติดภาคทัณฑ์คือเท่าไร",
+    "expect": {
+      "type": "value",
+      "value": 1.99
+    },
+    "sql": "SELECT max_gpa FROM regulation WHERE category = 'เกณฑ์ภาคทัณฑ์' AND topic LIKE '%ติดภาคทัณฑ์%' LIMIT 1",
+    "n_rows": 0,
+    "error": null,
+    "answer": "ไม่พบข้อมูลนี้ในเล่มหลักสูตร",
+    "correct": false,
+    "why": "ไม่พบค่า 1.99 (ได้ [])",
+    "seconds": 1.23
+  },
+  {
+    "question": "GPA สะสมสูงสุดตามเกณฑ์พ้นสภาพนักศึกษาคือเท่าไร",
+    "expect": {
+      "type": "value",
+      "value": 0.99
+    },
+    "sql": "SELECT max_gpa FROM regulation WHERE category = 'เกณฑ์พ้นสภาพ' AND topic LIKE '%GPA%' LIMIT 1",
+    "n_rows": 0,
+    "error": null,
+    "answer": "ไม่พบข้อมูลนี้ในเล่มหลักสูตร",
+    "correct": false,
+    "why": "ไม่พบค่า 0.99 (ได้ [])",
+    "seconds": 1.02
+  },
+  {
+    "question": "เกียรตินิยมอันดับ 1 เหรียญทองต้องมี GPA สะสมอย่างน้อยเท่าไร",
+    "expect": {
+      "type": "value",
+      "value": 3.75
+    },
+    "sql": "SELECT min_gpa FROM regulation WHERE category = 'เกณฑ์เกียรตินิยม' AND topic LIKE '%เหรียญทอง%' LIMIT 1",
+    "n_rows": 1,
+    "error": null,
+    "answer": "3.75",
+    "correct": true,
+    "why": "ตรง",
+    "seconds": 2.02
+  },
+  {
+    "question": "เกียรตินิยมอันดับ 1 ต้องมี GPA สะสมอย่างน้อยเท่าไร",
+    "expect": {
+      "type": "value",
+      "value": 3.5
+    },
+    "sql": "SELECT min_gpa FROM regulation WHERE category = 'เกณฑ์เกียรตินิยม' AND topic = 'เกียรตินิยมอันดับ 1' LIMIT 1",
+    "n_rows": 1,
+    "error": null,
+    "answer": "3.5",
+    "correct": true,
+    "why": "ตรง",
+    "seconds": 2.33
   }
 ]
