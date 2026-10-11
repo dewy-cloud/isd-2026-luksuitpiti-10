@@ -19,6 +19,7 @@ lab9/
 ├── run_all_eval.py                # Master Runner: รันรวดเดียวครบ 4 ขั้นตอน
 │
 ├── step1_eval_extraction.py       # ขั้นที่ 1: การสกัด (Field-level P/R/F1)
+├── step1_eval_all_curricula.py    # CER/WER/Exact Match แบบ pooled ครบทั้ง 7 แผน
 ├── step2_eval_schema.py           # ขั้นที่ 2: ตรวจสอบ Schema & ความสอดคล้อง 7 กฎ (CHK1–CHK7)
 ├── step3_eval_nl2sql.py           # ขั้นที่ 3: ค้นคืน NL to SQL (Valid SQL Rate, Execution Accuracy)
 ├── step4_eval_groundedness.py     # ขั้นที่ 4: ตอบ & อ้างอิง (Groundedness, Citation Coverage, EM)
@@ -31,7 +32,9 @@ lab9/
     ├── step3_nl2sql_benchmark.json
     ├── step4_groundedness_metrics.json
     ├── query_complexity_summary.csv
-    └── query_complexity_detail.csv
+    ├── query_complexity_detail.csv
+    └── all_curricula/
+        └── comparison.csv          # คะแนน metric รวมแยกตามฟิลด์ ไม่แสดงรายวิชา
 ```
 
 ---
@@ -48,6 +51,9 @@ python lab9/run_all_eval.py
 ```bash
 # ขั้นที่ 1: วัดความแม่นยำของการสกัดและ OCR (Lab 7B)
 python lab9/step1_eval_extraction.py
+
+# คะแนน CER/WER/Exact Match แบบ pooled จากทั้ง 7 แผน
+python lab9/step1_eval_all_curricula.py
 
 # ขั้นที่ 2: ตรวจความถูกต้องของ Schema และความสอดคล้อง 7 กฎ (Lab 8B)
 python lab9/step2_eval_schema.py
@@ -86,6 +92,24 @@ python lab9/step5_eval_query_complexity.py --labels lab9/query_complexity_labels
 | BIT | 63 | 64 | 62 | 1 | 2 | 96.9% | 98.4% | 97.6% |
 | AIT | 57 | 41 | 39 | 18 | 2 | 95.1% | 68.4% | 79.6% |
 | **รวมจำนวน / เฉลี่ย Macro** | **316** | **309** | **289** | **27** | **20** | **94.0%** | **89.7%** | **91.3%** |
+
+### คะแนน Extraction แบบรวม 7 แผน (Pooled Metrics)
+
+คำสั่ง `python lab9/step1_eval_all_curricula.py` ประเมิน prediction ทั้ง 7 แผน (DSBA/IT/BIT ทั้ง coop และ no-coop รวม AIT) แล้วรวมตัวนับดิบก่อนคำนวณ metric รายฟิลด์ ผลอยู่ที่ `lab9/reports/all_curricula/comparison.csv` จำนวนรายการเป็นผลรวมของแถวข้ามแผน ไม่ใช่จำนวนวิชาไม่ซ้ำกัน
+
+| ฟิลด์ | จำนวนรายการ | CER | WER | Exact Match |
+| :--- | ---: | ---: | ---: | ---: |
+| รหัสวิชา | 578 | 7.33% | — | 94.12% |
+| ชื่อวิชา (ไทย) | 578 | 13.12% | 25.38% | 65.92% |
+| ชื่อวิชา (อังกฤษ) | 578 | 12.04% | 14.96% | 89.97% |
+| หน่วยกิต | 578 | 13.33% | — | 87.02% |
+| ปี/ภาค | 578 | 5.88% | — | 94.12% |
+| หมวดวิชา | 578 | 6.02% | — | 93.43% |
+| บังคับ/เลือก | 578 | 8.33% | — | 91.70% |
+| วิชาบังคับก่อน | 544 | 1.93% | — | 98.53% |
+| ภาคเรียนยืดหยุ่น | 544 | 54.23% | — | 73.71% |
+
+WER แสดงเฉพาะฟิลด์ชื่อที่ประเมินเป็นข้อความ ส่วนวิชาบังคับก่อนและภาคเรียนยืดหยุ่นคิดจากรายการที่จับคู่ได้ตาม evaluator เดิม
 
 | ขั้นตอนของระบบ | Metric ที่ใช้วัด | ความหมายในบริบทของระบบหลักสูตร | ผลลัพธ์ที่ได้ |
 | :--- | :--- | :--- | :---: |

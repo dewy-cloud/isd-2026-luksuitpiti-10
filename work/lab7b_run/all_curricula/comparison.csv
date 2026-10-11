@@ -1,0 +1,10 @@
+﻿pipeline,plan,attribute,n_items,cer,wer,exact_match_acc,n_sub,n_del,n_ins,n_missing,n_ref_chars
+text,All curricula (pooled),รหัสวิชา,578,0.073254,,0.941176,0,344,0,34,4696
+text,All curricula (pooled),ชื่อวิชา (ไทย) ⭐,578,0.13125,0.253758,0.65917,328,1867,81,34,17341
+text,All curricula (pooled),ชื่อวิชา (อังกฤษ) ⭐,578,0.120411,0.149603,0.899654,128,1871,54,34,17050
+text,All curricula (pooled),หน่วยกิต,578,0.13328,,0.870242,25,628,17,34,5027
+text,All curricula (pooled),ปี/ภาค,578,0.058824,,0.941176,0,102,0,34,1734
+text,All curricula (pooled),หมวดวิชา,578,0.060175,,0.934256,8,452,22,34,8010
+text,All curricula (pooled),บังคับ/เลือก,578,0.083254,,0.916955,70,191,2,34,3159
+text,All curricula (pooled),วิชาบังคับก่อน,544,0.01931,,0.985294,38,0,18,0,2900
+text,All curricula (pooled),ปี/ภาคยืดหยุ่น,544,0.542335,,0.737132,246,0,734,0,1807

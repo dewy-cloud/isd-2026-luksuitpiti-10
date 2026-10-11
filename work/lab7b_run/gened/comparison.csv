@@ -1,0 +1,7 @@
+﻿pipeline,plan,attribute,n_items,cer,wer,exact_match_acc,n_sub,n_del,n_ins,n_missing,n_ref_chars
+Typhoon OCR + Qwen JSON,GenEd,Course code,266,0.0,,1.0,0,0,0,0,2128
+Typhoon OCR + Qwen JSON,GenEd,Thai course name,266,0.016901,0.1,0.781955,30,23,53,0,6272
+Typhoon OCR + Qwen JSON,GenEd,Credits (total),266,0.075188,,0.924812,20,0,0,0,266
+Typhoon OCR + Qwen JSON,GenEd,Lecture hours,266,0.026316,,0.973684,7,0,0,0,266
+Typhoon OCR + Qwen JSON,GenEd,Lab hours,266,0.018727,,0.981203,5,0,0,0,267
+Typhoon OCR + Qwen JSON,GenEd,Self-study hours,266,0.030075,,0.969925,8,0,0,0,266

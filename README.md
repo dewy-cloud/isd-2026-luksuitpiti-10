@@ -78,6 +78,7 @@ python src/ocr_system/lab7b_curriculum.py -i data/input/fulldoc_AIT.pdf --pages 
 > 📌 **หมายเหตุการวัดเวลาและผลการประเมินเทียบ Lab 9**:
 > 1. **เวลาที่ใช้**: เวลาสกัดจริงแบบ End-to-End ของการรัน LLM Chunked บันทึกไว้ใน `_meta.elapsed_sec` ของแต่ละไฟล์ prediction ได้แก่ **AIT (106.4s), BIT (268.7s), DSBA (283.9s), IT (410.0s)** ส่วนตัวเลข **1.1 – 2.5 วินาที** คือเวลาของการคำนวณและประเมินผล (Offline Evaluation & Verification) บนข้อมูล JSON ในหน่วยความจำ
 > 2. **ผลการประเมินภาพรวมใน Lab 9 (Step 1)**: เมื่อรันคำสั่ง `python lab9/step1_eval_extraction.py` บนไฟล์ใน `work/lab7b_run/` ได้ **Ground Truth 316 วิชา, สกัดได้ 309 วิชา และจับคู่ถูก 289 วิชา** ส่วนค่าเฉลี่ยรายหลักสูตรแบบ **Macro Average** คือ **Precision 94.0%, Recall 89.7% และ F1-Score 91.3%**
+> 3. **Pooled metrics ทั้ง 7 แผน**: รัน `python lab9/step1_eval_all_curricula.py` เพื่อสร้าง `lab9/reports/all_curricula/comparison.csv` ซึ่งสรุป CER, WER และ Exact Match แยกตามฟิลด์ โดยรวมตัวนับจาก DSBA/IT/BIT ทั้งแผน coop และ no-coop รวม AIT; จำนวนรายการเป็นผลรวมข้ามแผน ไม่ใช่จำนวนวิชาไม่ซ้ำกัน
 
 ##### 🔬 การประเมินผลไฟล์สกัดย้อนหลัง (Offline Evaluation via `--eval-only`):
 หากมีไฟล์ `pred_text.json` อยู่แล้ว สามารถสั่งประเมินผลเทียบกับ Ground Truth ได้ทันทีโดยไม่ต้องสกัดใหม่:
