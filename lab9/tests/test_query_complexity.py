@@ -5,6 +5,7 @@ from pathlib import Path
 
 from lab9.step5_eval_query_complexity import (
     classify_query,
+    enrich_rows,
     evaluate_by_complexity,
     write_csv_reports,
 )
@@ -75,6 +76,35 @@ class QueryComplexityClassifierTests(unittest.TestCase):
 
 
 class QueryComplexityEvaluationTests(unittest.TestCase):
+    def test_enriched_rows_include_llm_answer_and_expected_answer(self):
+        rows = [
+            {
+                "question": "How many credits?",
+                "answer": "132 credits",
+                "expect": {"type": "value", "value": 132},
+            },
+            {
+                "question": "Which courses require this?",
+                "answer": "A, B",
+                "expect": {"type": "set", "value": ["A", "B"]},
+            },
+            {
+                "question": "Unknown course?",
+                "answer": "No data found",
+                "expect": {"type": "none", "value": None},
+            },
+        ]
+
+        enriched = enrich_rows(rows)
+
+        self.assertEqual(enriched[0]["llm_answer"], "132 credits")
+        self.assertEqual(enriched[0]["expected_answer"], "132")
+        self.assertEqual(enriched[0]["expected_answer_type"], "value")
+        self.assertEqual(enriched[1]["expected_answer"], "A, B")
+        self.assertEqual(enriched[1]["expected_answer_type"], "set")
+        self.assertEqual(enriched[2]["expected_answer"], "No result expected")
+        self.assertEqual(enriched[2]["expected_answer_type"], "none")
+
     def test_calculates_valid_sql_and_execution_accuracy_per_level(self):
         rows = [
             {
@@ -130,6 +160,26 @@ class QueryComplexityEvaluationTests(unittest.TestCase):
         self.assertEqual(detail[0]["valid_sql"], "True")
         self.assertEqual(summary[0]["level"], "1")
         self.assertEqual(summary[0]["execution_accuracy"], "100.0")
+
+    def test_detail_csv_includes_llm_and_expected_answers(self):
+        rows = [{
+            "question": "How many credits?",
+            "sql": "SELECT credits FROM course",
+            "error": None,
+            "correct": True,
+            "answer": "3 credits",
+            "expect": {"type": "value", "value": 3},
+        }]
+        with tempfile.TemporaryDirectory() as tmp:
+            detail_path = Path(tmp) / "detail.csv"
+            summary_path = Path(tmp) / "summary.csv"
+            write_csv_reports(rows, detail_path, summary_path)
+            with detail_path.open(encoding="utf-8-sig", newline="") as handle:
+                detail = list(csv.DictReader(handle))
+
+        self.assertEqual(detail[0]["llm_answer"], "3 credits")
+        self.assertEqual(detail[0]["expected_answer"], "3")
+        self.assertEqual(detail[0]["expected_answer_type"], "value")
 
 
 if __name__ == "__main__":

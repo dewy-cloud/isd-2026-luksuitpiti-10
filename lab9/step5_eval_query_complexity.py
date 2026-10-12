@@ -122,6 +122,24 @@ def _override_for(
     return overrides.get(str(row_number), overrides.get(str(row.get("question") or "")))
 
 
+def format_expected_answer(expect: Any) -> tuple[str, str]:
+    """Render the benchmark's expected answer and type for a readable CSV."""
+    if not isinstance(expect, dict):
+        return ("" if expect is None else str(expect), "")
+
+    expected_type = str(expect.get("type") or "")
+    value = expect.get("value")
+    if expected_type == "none":
+        rendered = "No result expected"
+    elif isinstance(value, (list, tuple, set)):
+        rendered = ", ".join(str(item) for item in value)
+    elif value is None:
+        rendered = ""
+    else:
+        rendered = str(value)
+    return rendered, expected_type
+
+
 def enrich_rows(
     rows: list[dict[str, Any]], overrides: dict[str, int] | None = None
 ) -> list[dict[str, Any]]:
@@ -129,10 +147,14 @@ def enrich_rows(
     enriched = []
     for number, row in enumerate(rows, 1):
         level, reason = classify_query(row, _override_for(row, number, labels))
+        expected_answer, expected_answer_type = format_expected_answer(row.get("expect"))
         enriched.append(
             {
                 "question_number": number,
                 "question": row.get("question", ""),
+                "llm_answer": row.get("answer") or "",
+                "expected_answer": expected_answer,
+                "expected_answer_type": expected_answer_type,
                 "complexity_level": level,
                 "level_name": LEVEL_NAMES[level],
                 "classification_reason": reason,
@@ -187,6 +209,9 @@ def write_csv_reports(
     detail_fields = [
         "question_number",
         "question",
+        "llm_answer",
+        "expected_answer",
+        "expected_answer_type",
         "complexity_level",
         "level_name",
         "classification_reason",

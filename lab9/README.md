@@ -76,7 +76,7 @@ python lab9/step5_eval_query_complexity.py --labels lab9/query_complexity_labels
 ผลของขั้นที่ 5:
 
 - `lab9/reports/query_complexity_summary.csv` — สรุปจำนวนข้อ, Valid SQL และ Execution Accuracy ของ Level 1–5
-- `lab9/reports/query_complexity_detail.csv` — รายละเอียดทุกคำถาม พร้อม Level, เหตุผลการจัดระดับ, SQL และผลถูก/ผิด
+- `lab9/reports/query_complexity_detail.csv` — รายละเอียดทุกคำถาม พร้อมคำถาม, คำตอบที่ระบบให้ (`llm_answer`), เฉลย (`expected_answer`/`expected_answer_type`), Level, SQL และผลถูก/ผิด
 - `lab9/query_complexity_labels.json` — Gold Label ที่กำหนดล่วงหน้า โดยข้อ 180–189 เป็น Regulation Query (Level 4) และคำถามกำกวมที่กำหนดไว้เป็น Level 5
 
 ---
