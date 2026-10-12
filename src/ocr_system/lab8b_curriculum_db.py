@@ -57,6 +57,7 @@ MODEL_TEXT = os.environ.get("LAB8_MODEL_TEXT", "qwen3:4b")
 
 MAX_REPAIR_ROUNDS = 3      # จำนวนครั้งสูงสุดที่ยอมให้ LLM แก้ JSON ของตัวเอง
 SQL_ROW_LIMIT = 200        # กันไม่ให้ query เผลอดึงทั้งตารางมาใส่ prompt
+NUM_CTX = 8192             # prompt แปลง SQL ยาว ~4.3k token — ต่ำกว่านี้ Ollama จะตัด prompt ทิ้ง
 
 # ระเบียบหน่วยกิตต่อภาคเรียนของหลักสูตรปริญญาตรี (ใช้ในการตรวจ CHK7)
 MIN_CREDITS_PER_SEM = 9
@@ -1501,14 +1502,6 @@ SQL_PROMPT = """คุณคือผู้ช่วยแปลงคำถา�
 โครงสร้างฐานข้อมูล
 {ddl}
 
-แนวทางแยกความหมายเรื่องหน่วยกิต:
-{credit_guidance}
-
-กฎตรวจ schema:
-- Use only tables and columns listed in the supplied live schema. Do not assume columns exist based on their names.
-- ก่อนส่ง SQL ให้ตรวจว่าทุก column เป็นของ table/view ที่ระบุ และ alias ทุกตัวประกาศใน FROM/JOIN แล้ว
-- เลือก JOIN จาก foreign key หรือ key ที่มีอยู่จริงใน schema เท่านั้น
-
 หมายเหตุเกี่ยวกับหลักสูตรในฐานข้อมูล:
 - ในฐานข้อมูลมีข้อมูลของหลักสูตร DSBA, IT, AIT, BIT โดยมี program_id คือ 'DSBA', 'IT', 'AIT', 'BIT'
 - ตาราง program และ views (v_plan, v_semester_credits) มีคอลัมน์ program_id
@@ -1573,76 +1566,61 @@ SQL: SELECT credits FROM v_semester_credits WHERE program_id = 'IT' AND year = 1
 คำถาม: หลักสูตร BIT ปี 1 เทอม 2 เรียนกี่หน่วยกิต
 SQL: SELECT credits FROM v_semester_credits WHERE program_id = 'BIT' AND year = 1 AND semester = 2 LIMIT 1
 
-คำถาม: วิชาไหนบ้างที่ต้องเรียน <COURSE_CODE_FROM_QUESTION> มาก่อน
-SQL: SELECT DISTINCT p.code, c.name_th, c.name_en FROM prerequisite AS p JOIN course AS c ON c.code = p.code WHERE p.requires = '<COURSE_CODE_FROM_QUESTION>' AND p.kind = 'pre'
+คำถาม: วิชาไหนบ้างที่ต้องเรียน 06026240 มาก่อน
+SQL: SELECT code FROM prerequisite WHERE requires = '06026240' AND kind = 'pre'
 
-คำถาม: ต้องเรียนวิชาอะไรมาก่อนจึงจะลงเรียน <COURSE_CODE_FROM_QUESTION> ได้
-SQL: SELECT DISTINCT p.requires, c.name_th, c.name_en FROM prerequisite AS p JOIN course AS c ON c.code = p.requires WHERE p.code = '<COURSE_CODE_FROM_QUESTION>' AND p.kind = 'pre'
+คำถาม: ต้องเรียนวิชาอะไรมาก่อนจึงจะลงเรียน 06026215 ได้
+SQL: SELECT requires FROM prerequisite WHERE code = '06026215' AND kind = 'pre'
 
-คำถาม: วิชา <COURSE_CODE_FROM_QUESTION> ต้องเรียนวิชาใดมาก่อน
-SQL: SELECT DISTINCT p.requires, c.name_th, c.name_en FROM prerequisite AS p JOIN course AS c ON c.code = p.requires WHERE p.code = '<COURSE_CODE_FROM_QUESTION>' AND p.kind = 'pre'
+คำถาม: วิชา 06046401 ต้องเรียนวิชาอะไรมาก่อน
+SQL: SELECT requires FROM prerequisite WHERE code = '06046401' AND kind = 'pre'
 
-คำถาม: ภาคการศึกษาปกติต้องลงทะเบียนอย่างน้อยกี่หน่วยกิต
-SQL: SELECT min_credits FROM regulation WHERE category LIKE '%ลงทะเบียน%' AND topic LIKE '%ปกติ%' LIMIT 1
+คำถาม: เกียรตินิยมอันดับ 1 เหรียญทองต้องได้เกรดเท่าไร
+SQL: SELECT min_gpa FROM regulation WHERE category = 'เกณฑ์เกียรตินิยม' AND topic LIKE '%เหรียญทอง%' LIMIT 1
 
-คำถาม: ภาคการศึกษาปกติลงทะเบียนได้สูงสุดกี่หน่วยกิต
-SQL: SELECT max_credits FROM regulation WHERE category LIKE '%ลงทะเบียน%' AND topic LIKE '%ปกติ%' LIMIT 1
+คำถาม: เกียรตินิยมอันดับ 1 ต้องได้ GPA เท่าไร
+SQL: SELECT min_gpa FROM regulation WHERE category = 'เกณฑ์เกียรตินิยม' AND topic = 'เกียรตินิยมอันดับ 1' LIMIT 1
 
-คำถาม: กรณีพิเศษเพื่อขอจบลงทะเบียนได้สูงสุดกี่หน่วยกิต
-SQL: SELECT max_credits FROM regulation WHERE category LIKE '%ลงทะเบียน%' AND topic LIKE '%กรณีพิเศษ%' LIMIT 1
+คำถาม: ทุจริตในการสอบจะถูกลงโทษอย่างไร
+SQL: SELECT condition_desc, penalty_action, article_no FROM regulation WHERE category = 'การทุจริตในการสอบ' LIMIT 1
 
-คำถาม: ภาคการศึกษาพิเศษฤดูร้อนลงทะเบียนได้สูงสุดกี่หน่วยกิต
-SQL: SELECT max_credits FROM regulation WHERE category LIKE '%ลงทะเบียน%' AND topic LIKE '%ฤดูร้อน%' LIMIT 1
+คำถาม: การทุจริตในการสอบอ้างอิงข้อบังคับข้อใด
+SQL: SELECT article_no FROM regulation WHERE category = 'การทุจริตในการสอบ' LIMIT 1
 
-คำถาม: ทุจริตในการสอบครั้งแรกได้รับโทษอะไร
-SQL: SELECT penalty_action FROM regulation WHERE category LIKE '%ทุจริต%' AND topic LIKE '%ครั้งแรก%' LIMIT 1
+คำถาม: นักศึกษาที่ได้ GPA ต่ำกว่าเท่าไรถึงจะถูกภาคทัณฑ์
+SQL: SELECT condition_desc, max_gpa FROM regulation WHERE category = 'เกณฑ์การภาคทัณฑ์' AND topic LIKE '%ติดภาคทัณฑ์%' LIMIT 1
 
-คำถาม: ทุจริตในการสอบซ้ำมากกว่า 3 ครั้งได้รับโทษอะไร
-SQL: SELECT penalty_action FROM regulation WHERE category LIKE '%ทุจริต%' AND topic LIKE '%ซ้ำ%' LIMIT 1
+คำถาม: ลงทะเบียนเรียนภาคปกติได้ต่ำสุดและสูงสุดกี่หน่วยกิต
+SQL: SELECT min_credits, max_credits FROM regulation WHERE category = 'เกณฑ์การลงทะเบียน' AND topic = 'ภาคปกติ' LIMIT 1
 
-คำถาม: GPA สะสมสูงสุดที่ยังถือว่าติดภาคทัณฑ์คือเท่าไร
-SQL: SELECT max_gpa FROM regulation WHERE category LIKE '%ภาคทัณฑ์%' AND topic LIKE '%ติดภาคทัณฑ์%' LIMIT 1
+คำถาม: ลงทะเบียนเรียนภาคปกติได้ต่ำสุดกี่หน่วยกิต
+SQL: SELECT min_credits FROM regulation WHERE category = 'เกณฑ์การลงทะเบียน' AND topic = 'ภาคปกติ' LIMIT 1
 
-คำถาม: GPA สะสมสูงสุดตามเกณฑ์พ้นสภาพนักศึกษาคือเท่าไร
-SQL: SELECT max_gpa FROM regulation WHERE category LIKE '%พ้นสภาพ%' LIMIT 1
-
-คำถาม: เกียรตินิยมอันดับ 1 เหรียญทองต้องมี GPA สะสมอย่างน้อยเท่าไร
-SQL: SELECT min_gpa FROM regulation WHERE category LIKE '%เกียรตินิยม%' AND topic LIKE '%เหรียญทอง%' LIMIT 1
-
-คำถาม: เกียรตินิยมอันดับ 1 ต้องมี GPA สะสมอย่างน้อยเท่าไร
-SQL: SELECT min_gpa FROM regulation WHERE category LIKE '%เกียรตินิยม%' AND topic = 'เกียรตินิยมอันดับ 1' LIMIT 1
+คำถาม: ลงทะเบียนเรียนภาคปกติได้สูงสุดกี่หน่วยกิต
+SQL: SELECT max_credits FROM regulation WHERE category = 'เกณฑ์การลงทะเบียน' AND topic = 'ภาคปกติ' LIMIT 1
 
 คำถาม: เกณฑ์การสำเร็จการศึกษาต้องได้ GPA เท่าไร
-SQL: SELECT min_gpa FROM regulation WHERE category LIKE '%สำเร็จการศึกษา%' AND min_gpa IS NOT NULL LIMIT 1
+SQL: SELECT min_gpa FROM regulation WHERE category = 'เกณฑ์การสำเร็จการศึกษา' AND min_gpa IS NOT NULL LIMIT 1
 
 กติกา
 - เขียน SQL คำสั่งเดียว ขึ้นต้นด้วย SELECT หรือ WITH เท่านั้น
 - ห้ามใช้ INSERT UPDATE DELETE DROP หรือคำสั่งที่แก้ไขข้อมูล
-- ถามเกี่ยวกับข้อบังคับ กฎระเบียบ (เกียรตินิยม, การทุจริตสอบ, ภาคทัณฑ์, พ้นสภาพ, เกณฑ์หน่วยกิตลงทะเบียนขั้นต่ำ-สูงสุด, ภาคฤดูร้อน, กรณีพิเศษขอจบ) ให้ดึงจากตาราง regulation เสมอ ห้ามใช้ v_semester_credits หรือ v_plan
-- สำหรับตาราง regulation ให้ใช้ WHERE category LIKE '%...%' และ topic LIKE '%...%' เพื่อความยืดหยุ่นและตรงกับข้อมูลจริง
-- ถามว่าหลักสูตรใช้เวลาเรียนกี่ปี หรือระยะเวลาเรียน ให้ SELECT years FROM program WHERE program_id = ... เสมอ (ห้ามใช้ COUNT หรือ v_plan)
-- ถามว่าภาคเรียนไหนเรียนกี่วิชา ให้ใช้ SELECT v.n_courses FROM v_semester_credits AS v JOIN study_plan AS sp ON sp.plan_id = v.plan_id WHERE v.program_id = 'DSBA' AND sp.plan_type = 'no_coop' AND v.year = ... AND v.semester = ... LIMIT 1 (ห้ามใช้ COUNT(*) เด็ดขาด เพราะ v_semester_credits มีคอลัมน์ n_courses อยู่แล้ว)
-- ถามว่าภาคเรียนไหนมีกี่หน่วยกิต ให้ใช้ v_semester_credits เสมอ ห้ามใช้ SUM(credits) จาก v_plan เพราะจะนับวิชาเลือกซ้ำ
+- ถามเกี่ยวกับข้อบังคับ กฎระเบียบ (เกียรตินิยม, ทุจริต, ภาคทัณฑ์, พ้นสภาพ, การลงทะเบียนต่ำสุด-สูงสุด) ให้ใช้ตาราง regulation
+- ถามว่าภาคเรียนไหนมีกี่หน่วยกิต ให้ใช้ v_semester_credits เสมอ
+  ห้ามใช้ SUM(credits) จาก v_plan เพราะจะนับวิชาเลือกซ้ำ
 - ถามว่าวิชามีกี่หน่วยกิต ให้ใช้ course หรือ v_plan จากรหัสวิชา code (ห้ามใช้ v_semester_credits)
 - ถามว่าเรียนชั้นปีที่เท่าไร ให้ SELECT year FROM plan_item WHERE code = ...
 - ถามว่าเรียนภาคการศึกษาใด ให้ SELECT semester FROM plan_item WHERE code = ...
 - ถามว่ามีชั่วโมงปฏิบัติการกี่ชั่วโมง ให้ SELECT lab_h FROM course WHERE code = ...
 - ถามว่าเรียนวิชาอะไรบ้าง ให้ใช้ v_plan เพราะมีชื่อวิชาอยู่แล้ว
-- คำถามวิชาบังคับก่อน/วิชาที่ต้องผ่านมาก่อน ให้ใช้ตาราง prerequisite เสมอ (ห้าม SELECT จากตาราง course เดี่ยวๆ โดยไม่มี prerequisite เด็ดขาด หากวิชานั้นไม่มีวิชาบังคับก่อน ผลลัพธ์จาก prerequisite จะเป็น 0 แถว ซึ่งถูกต้องแล้ว)
-- ในตัวอย่าง prerequisite ให้แทนที่ <COURSE_CODE_FROM_QUESTION> ด้วยรหัสวิชาจากคำถามปัจจุบันทุกครั้ง ห้ามคัดลอกรหัสจากตัวอย่าง
-- ถ้าถามว่าวิชา C ต้องเรียนอะไรมาก่อน (C requires what?) ให้กรอง prerequisite.code = 'C' และ p.kind = 'pre'; ถ้าถามว่าวิชาใดต้องเรียน C มาก่อน ให้กรอง prerequisite.requires = 'C' และ p.kind = 'pre'
+- ถามว่าวิชาไหนบ้างต้องเรียน X มาก่อน (วิชาที่ต้องผ่าน X): ให้ SELECT code FROM prerequisite WHERE requires = 'X' AND kind = 'pre'
+- ถามว่าวิชา X ต้องเรียนวิชาใดมาก่อน หรือ ต้องเรียนวิชาใดก่อนถึงจะลง X ได้ (วิชาบังคับก่อนของ X): ให้ SELECT requires FROM prerequisite WHERE code = 'X' AND kind = 'pre'
 - ในตาราง program, v_plan, v_semester_credits, plan_item มีเฉพาะ program_id: 'DSBA', 'IT', 'AIT', 'BIT' เท่านั้น ห้ามใช้ program_id = 'ALL' กับตารางเหล่านี้เด็ดขาด ('ALL' มีเฉพาะในตาราง regulation)
 - หากในคำถามระบุชื่อหลักสูตร ให้เพิ่มเงื่อนไขระบุ program_id ใน WHERE เสมอ
 - หากในคำถามถามเกี่ยวกับแผนการเรียนหรือหน่วยกิตต่อเทอม (v_semester_credits, v_plan) แต่ไม่ได้ระบุชื่อหลักสูตร ให้ใช้ค่าเริ่มต้นเป็น program_id = 'DSBA' และ sp.plan_type = 'no_coop' (และต้อง JOIN study_plan AS sp ON sp.plan_id = v.plan_id เสมอเมื่อใช้ sp.plan_type)
-- หากถามข้อมูลรายวิชาตามแผนและระบุแผนสหกิจ ให้กรอง plan_type = 'coop'; หากระบุแผนปกติ ให้กรอง plan_type = 'no_coop' ห้ามใช้ LIKE '%COOP%' แทนการเทียบ plan_type แบบตรงตัว
-- เมื่อนับรายวิชาจริง ให้ตัดแถวช่องวิชาเลือกออกเฉพาะเมื่อ schema มีคอลัมน์ที่ใช้ระบุช่องดังกล่าว
-- ให้ยึด schema จริงเหนือกว่าตัวอย่าง หากตัวอย่างหรือแนวทางใดขัดกับคอลัมน์ที่มีจริง ให้ใช้ schema จริง
+- ค่า category/topic ที่มีจริงในตาราง regulation (ใช้ค่าตรงตามนี้เท่านั้น):
+{regulation_labels}
 - ตอบเป็น SQL ล้วน ไม่ต้องมีคำอธิบายและไม่ต้องมี markdown fence
-
-ให้ยึด schema จริงเหนือกว่าตัวอย่าง หากตัวอย่างหรือแนวทางใดขัดกับคอลัมน์ที่มีจริง ให้ใช้ schema จริง
-
-กฎจำแนกหน่วยกิต (ให้ใช้กฎนี้ก่อนเลือกตาราง/aggregation):
-{credit_guidance}
 
 คำถาม: {question}
 SQL:"""
@@ -1693,43 +1671,13 @@ def clean_sql_output(s: str) -> str:
     return m.group(0).strip() if m else s
 
 
-def get_live_schema(conn: sqlite3.Connection) -> str:
-    """Return the CREATE statements for tables and views in this connection."""
-    objects = conn.execute(
-        """
-        SELECT type, name, sql
-        FROM sqlite_master
-        WHERE type IN ('table', 'view')
-          AND name NOT LIKE 'sqlite_%'
-          AND sql IS NOT NULL
-        ORDER BY CASE type WHEN 'table' THEN 0 ELSE 1 END, name
-        """
-    ).fetchall()
-    statements = []
-    for row in objects:
-        object_type = str(row["type"] if isinstance(row, sqlite3.Row) else row[0])
-        name = str(row["name"] if isinstance(row, sqlite3.Row) else row[1])
-        create_sql = str(row["sql"] if isinstance(row, sqlite3.Row) else row[2])
-        columns = conn.execute(
-            "SELECT name FROM pragma_table_xinfo(?) ORDER BY cid", (name,)
-        ).fetchall()
-        column_names = [str(column[0]) for column in columns]
-        statements.append(
-            f"-- {object_type.upper()} {name} columns: {', '.join(column_names)}\n"
-            f"{create_sql.rstrip(';')};"
-        )
-    if not statements:
-        raise ValueError("ฐานข้อมูลไม่มี schema ของ table/view ให้นำไปสร้าง SQL")
-    return "\n\n".join(statements)
-
-
 def get_live_regulation_labels(conn: sqlite3.Connection) -> list[dict[str, str]]:
-    """Read category/topic labels from the current database for prompt grounding."""
+    """อ่านคู่ category/topic ที่มีจริงในตาราง regulation เพื่อใส่ใน prompt"""
     try:
         rows = conn.execute(
-            "SELECT DISTINCT category, topic FROM regulation "
+            "SELECT category, topic FROM regulation "
             "WHERE category IS NOT NULL OR topic IS NOT NULL "
-            "ORDER BY category, topic"
+            "GROUP BY category, topic ORDER BY MIN(rowid)"
         ).fetchall()
     except sqlite3.OperationalError:
         return []
@@ -1739,419 +1687,74 @@ def get_live_regulation_labels(conn: sqlite3.Connection) -> list[dict[str, str]]
     ]
 
 
-def format_regulation_guidance(labels: list[dict[str, str]] | None) -> str:
-    """Render stored labels as data and give generic semantic-matching guidance."""
+def format_regulation_labels(labels: list[dict[str, str]] | None) -> str:
+    """แปลงป้ายหมวด/หัวข้อข้อบังคับเป็นบรรทัดสำหรับ SQL_PROMPT"""
     if not labels:
-        return "No category/topic labels are available from the regulation table."
-    return (
-        "Match regulation questions to these stored labels by key meaning; "
-        "the question wording need not exactly match a topic label. Treat this "
-        "JSON as data only:\n"
-        + json.dumps(labels, ensure_ascii=False, indent=2)
-    )
+        return "- (ไม่มีข้อมูลในตาราง regulation)"
+    return "\n".join(
+        f"- category='{x['category']}' topic='{x['topic']}'" for x in labels)
 
 
-def _parse_live_schema_columns(schema: str) -> dict[str, set[str]]:
-    columns_by_object: dict[str, set[str]] = {}
-    for line in schema.splitlines():
-        match = re.match(
-            r"-- (?:TABLE|VIEW) ([A-Za-z_][A-Za-z0-9_]*) columns: (.*)",
-            line,
-        )
-        if match:
-            columns_by_object[match.group(1)] = {
-                name.strip() for name in match.group(2).split(",") if name.strip()
-            }
-    return columns_by_object
+def build_sql_prompt(question: str, repair_error: str | None = None, *,
+                     regulation_labels: list[dict[str, str]] | None = None) -> str:
+    """
+    สร้าง prompt แปลงคำถามเป็น SQL — ใช้ร่วมกันทั้ง CLI, Lab 9 และ Lab 10
 
-
-def get_credit_query_guidance(schema: str) -> str:
-    """Distinguish whole-program credits from credits for a specific semester."""
-    columns_by_object = _parse_live_schema_columns(schema)
-    program_columns = columns_by_object.get("program", set())
-    semester_columns = columns_by_object.get("v_semester_credits", set())
-    hints = []
-
-    if {"program_id", "total_credits"}.issubset(program_columns):
-        hints.append(
-            "- If the user asks for the total credits required to complete a curriculum, "
-            "read program.total_credits and filter program.program_id. Do not SUM semester credits. "
-            "Do not add a plan_type, year, or semester filter to a curriculum-total query."
-        )
-    if {"program_id", "year", "semester", "credits"}.issubset(semester_columns):
-        hints.append(
-            "- If the user asks for credits in a particular semester/year, read "
-            "v_semester_credits.credits and filter the requested program_id, year, and semester. "
-            "If program or plan is omitted, apply the plan-query defaults from the plan selection policy below. "
-            "Do not SUM rows across semesters to answer a whole-curriculum total."
-        )
-
-    return "\n".join(hints) or "- Use only credit fields present in the live schema."
-
-
-def get_plan_selection_guidance(schema: str) -> str:
-    """Return explicit default-plan rules when the live schema supports plans."""
-    columns_by_object = _parse_live_schema_columns(schema)
-    if not ({"v_plan", "v_semester_credits"} & columns_by_object.keys()):
-        return ""
-    guidance = """Plan selection policy for study-plan, course-schedule, and semester queries:
-- If the question omits the program, default program_id = 'DSBA'.
-- If the question omits the study plan, default plan_type = 'no_coop'. Apply both defaults when both are omitted.
-- An explicit program_id or plan_type in the question overrides its corresponding default.
-- These defaults apply even when the question does not explicitly say "plan-specific"; do not count or sum across multiple plan_type values.
-- Apply the plan_type filter using the relation/column shown in the live schema. If it is not on the selected view, JOIN study_plan through the live shared plan_id key and declare the alias before using it.
-- Do not apply these defaults to total curriculum credits from program.total_credits or to a course's own credits when the question does not ask where it is scheduled."""
-    semester_columns = columns_by_object.get("v_semester_credits", set())
-    if "n_courses" in semester_columns:
-        guidance += (
-            "\n- For semester course counts, SELECT v_semester_credits.n_courses; "
-            "never use COUNT(*)."
-        )
-    study_plan_columns = columns_by_object.get("study_plan", set())
-    if {"plan_id", "plan_type"}.issubset(study_plan_columns) and "plan_id" in semester_columns:
-        guidance += (
-            "\n- Filter v_semester_credits.plan_id with study_plan.plan_type = 'no_coop' "
-            "by default (or the explicit plan requested), using the live plan_id key."
-        )
-    return guidance
-
-
-def get_live_schema_guidance(schema: str) -> str:
-    """Derive semantic SQL hints only when the live schema supports them."""
-    columns_by_object = _parse_live_schema_columns(schema)
-
-    hints = []
-    program_columns = columns_by_object.get("program", set())
-    if "total_credits" in program_columns:
-        hints.append(
-            "For total curriculum credits, select program.total_credits; do not sum semester credits."
-        )
-    if "years" in program_columns:
-        hints.append(
-            "For curriculum duration in years, select program.years; do not infer it from study-plan rows."
-        )
-
-    semester_columns = columns_by_object.get("v_semester_credits", set())
-    study_plan_columns = columns_by_object.get("study_plan", set())
-    if {"credits", "year", "semester"}.issubset(semester_columns):
-        hint = (
-            "For credits in a specific semester/year, use v_semester_credits.credits "
-            "with the requested program_id, year, and semester; do not sum across semesters "
-            "for a whole-curriculum total."
-        )
-        if "plan_type" not in semester_columns:
-            hint += "; this view has no plan_type column."
-        if {"plan_id", "plan_type"}.issubset(study_plan_columns) and "plan_id" in semester_columns:
-            hint += "; to filter plan type, JOIN study_plan AS sp ON sp.plan_id = v_semester_credits.plan_id, then filter sp.plan_type (use the declared source alias instead of the table name if one exists)."
-        hints.append(hint)
-
-    plan_columns = columns_by_object.get("v_plan", set())
-    if {"code", "name_th", "name_en"}.issubset(plan_columns):
-        hints.append(
-            "For courses in a study plan, use v_plan columns through the alias declared for v_plan; "
-            "never reference another alias unless it is declared in FROM/JOIN."
-        )
-
-    return "\n".join(f"- {hint}" for hint in hints) or "- Use only tables and columns in the live schema."
-
-
-def get_sql_repair_diagnostics(repair_error: str, schema: str) -> str:
-    """Explain missing-column errors by resolving SQL aliases against live schema."""
-    columns_by_object = _parse_live_schema_columns(schema)
-    sql_match = re.search(r"SQL.{0,20}:\s*(.+)", repair_error)
-    sql = sql_match.group(1) if sql_match else ""
-    aliases: dict[str, str] = {}
-    reserved = {
-        "where", "join", "left", "right", "inner", "outer", "cross",
-        "on", "group", "order", "limit", "union", "having",
-    }
-    for match in re.finditer(
-        r"\b(?:FROM|JOIN)\s+([A-Za-z_][A-Za-z0-9_]*)"
-        r"(?:\s+(?:AS\s+)?([A-Za-z_][A-Za-z0-9_]*))?",
-        sql,
-        re.IGNORECASE,
-    ):
-        table, alias = match.group(1), match.group(2)
-        if not alias or alias.lower() in reserved:
-            alias = table
-        aliases[alias] = table
-
-    def join_hints(
-        source_table: str,
-        source_ref: str,
-        owners: list[str],
-        missing_column: str,
-    ) -> list[str]:
-        suggestions = []
-        source_columns = columns_by_object.get(source_table, set())
-        for owner in owners:
-            owner_columns = columns_by_object.get(owner, set())
-            shared_keys = sorted(source_columns & owner_columns)
-            if not shared_keys:
-                continue
-            owner_alias = next(
-                (alias for alias, table in aliases.items() if table == owner),
-                "".join(part[0] for part in owner.split("_")) or owner[0],
-            )
-            if owner_alias in aliases and aliases[owner_alias] != owner:
-                owner_alias = f"{owner_alias}_2"
-            key_conditions = " AND ".join(
-                f"{source_ref}.{key} = {owner_alias}.{key}" for key in shared_keys
-            )
-            suggestions.append(
-                f"JOIN {owner} AS {owner_alias} ON {key_conditions}; "
-                f"จากนั้นใช้ {owner_alias}.{missing_column}"
-            )
-        return suggestions
-
-    column_match = re.search(
-        r"no such column:\s*([A-Za-z_][\w]*(?:\.[A-Za-z_][\w]*)?)",
-        repair_error,
-    )
-    if not column_match:
-        return "ตรวจ table, column และ alias จาก schema จริงก่อนแก้"
-
-    reference = column_match.group(1)
-    if "." in reference:
-        alias, column = reference.split(".", 1)
-        table = aliases.get(alias)
-        if table:
-            available = ", ".join(sorted(columns_by_object.get(table, set())))
-            diagnosis = f"Alias {alias} -> {table}; คอลัมน์ที่มีจริง: {available}"
-            if column not in columns_by_object.get(table, set()):
-                diagnosis += f"; {column} ไม่มีใน {table}"
-                owners = sorted(
-                    name for name, cols in columns_by_object.items() if column in cols
-                )
-                if owners:
-                    diagnosis += f"; {column} มีอยู่ใน {', '.join(owners)}"
-                    suggestions = join_hints(table, alias, owners, column)
-                    if suggestions:
-                        diagnosis += "; JOIN ที่ใช้คีย์ร่วมได้: " + "; ".join(suggestions)
-            return diagnosis
-
-        declared = ", ".join(f"{key} -> {value}" for key, value in aliases.items()) or "none"
-        owners = sorted(
-            name for name, cols in columns_by_object.items() if column in cols
-        )
-        suffix = f"; {column} exists in {', '.join(owners)}" if owners else ""
-        suggestions = []
-        for relation in sorted(set(aliases.values())):
-            source_ref = next(
-                (name for name, table in aliases.items() if table == relation), relation
-            )
-            suggestions.extend(join_hints(relation, source_ref, owners, column))
-        join_text = "; valid join(s): " + "; ".join(suggestions) if suggestions else ""
-        return (
-            f"Alias {alias} is not declared in FROM/JOIN (declared aliases: {declared})"
-            f"{suffix}{join_text}"
-        )
-
-    column = reference
-    relations = sorted(set(aliases.values()))
-    sources = [
-        f"{table} ({', '.join(sorted(columns_by_object.get(table, set())))})"
-        for table in relations
-    ]
-    owners = sorted(name for name, cols in columns_by_object.items() if column in cols)
-    suffix = f"; {column} มีอยู่ใน {', '.join(owners)}" if owners else ""
-    join_suggestions = []
-    for relation in relations:
-        source_ref = next(
-            (alias for alias, table in aliases.items() if table == relation), relation
-        )
-        join_suggestions.extend(join_hints(relation, source_ref, owners, column))
-    join_text = "; JOIN ที่ใช้คีย์ร่วมได้: " + "; ".join(join_suggestions) if join_suggestions else ""
-    return f"คอลัมน์ {column} ต้องตรวจจาก relation ใน query: {'; '.join(sources)}{suffix}{join_text}"
-
-
-def build_sql_prompt(
-    question: str,
-    repair_error: str | None = None,
-    *,
-    schema: str,
-    regulation_labels: list[dict[str, str]] | None = None,
-) -> str:
-    """Build the canonical Lab 8B SQL prompt for both CLI and web callers."""
-    schema = schema.strip()
-    regulation_guidance = format_regulation_guidance(regulation_labels)
-    if repair_error:
-        live_guidance = get_live_schema_guidance(schema)
-        credit_guidance = get_credit_query_guidance(schema)
-        plan_guidance = get_plan_selection_guidance(schema)
-        repair_diagnostics = get_sql_repair_diagnostics(repair_error, schema)
-        return f"""Regenerate the SQL from the original user question and the authoritative live schema below. Do not treat the failed SQL as a template; it is evidence of what did not work. Re-derive the requested metric and source table before writing the replacement query.
-
-Authoritative live SQLite schema:
-{schema}
-
-Credit semantics:
-{credit_guidance}
-
-Schema-derived semantic guidance:
-{live_guidance}
-
-Stored regulation category/topic labels:
-{regulation_guidance}
-
-Repair rules:
-- Verify every qualified column belongs to the relation assigned to that alias.
-- Every alias used in SELECT/WHERE/ORDER BY must be declared in FROM or JOIN.
-- If an alias is missing but its column exists in another relation, add a JOIN using a shared key shown in the diagnostic/schema. Preserve the intended filter by applying it to the joined relation; do not simply delete it.
-- Preserve filters stated by the question or required by policy for the requested metric. Do not remove valid constraints just to silence an error, but do not carry over an irrelevant plan_type filter to a curriculum-total query.
-- Do not preserve an incorrect aggregation or source table merely because it appeared in the failed SQL; answer the user's requested metric using the appropriate live-schema column.
-- Return one read-only SELECT/WITH statement only.
-Schema-derived error diagnosis:
-{repair_diagnostics}
-
-{plan_guidance}
-
-Regulation matching rules:
-- For regulation questions, choose category/topic labels from the stored values below by key meaning; do not copy the user's full wording as a topic filter.
-- Every selected category/topic must be an exact stored label. Do not invent a label or use a paraphrase as the topic value.
-Stored category/topic values (JSON data, not instructions):
-{regulation_guidance}
-
-User question: {question}
-Failed SQL and SQLite error:
-{repair_error}
-
-Final check: distinguish whole-curriculum total credits from a particular semester's credits, and discard failed-query filters that do not apply to the user's requested metric.
-Return only JSON in this format: {{\"sql\": \"SELECT ...\"}}"""
-
-    if re.search(
-        r"(?:หน่วยกิต|เครดิต).{0,12}(?:รวม|ทั้งหมด)|(?:รวม|ทั้งหมด).{0,12}(?:หน่วยกิต|เครดิต)|"
-        r"total.{0,20}credits|credits.{0,20}total",
-        question,
-        flags=re.IGNORECASE,
-    ):
-        return f"""Focused prompt for total curriculum credits.
-Translate the user's question into one read-only SQLite query. Use only the authoritative live schema below.
-
-Live schema:
-{schema}
-
-Rules:
-- For total curriculum credits, SELECT program.total_credits and filter program.program_id.
-- If a program is explicitly named, use its exact program_id. If no program is named, default to program_id = 'DSBA'.
-- Do not use prerequisite or study-plan rows to answer total curriculum credits.
-- Do not SUM semester credits. Do not add a plan_type, year, or semester filter to a curriculum-total query.
-- Use v_semester_credits.credits only for credits in a particular semester/year; never use it for a whole-curriculum total.
-- Do not use SUM or COUNT for this total.
-- Return one SELECT statement as JSON only: {{\"sql\": \"SELECT ...\"}}
-
-Question: {question}
-SQL:"""
-
-    if re.search(
-        r"(?:ใช้เวลา|ระยะเวลา).{0,15}(?:เรียน|ศึกษา).{0,10}กี่ปี|กี่ปี.{0,15}(?:จบ|สำเร็จ)|หลักสูตร.{0,15}กี่ปี",
-        question,
-        flags=re.IGNORECASE,
-    ):
-        return f"""Focused prompt for curriculum duration.
-Translate the user's question into one read-only SQLite query. Use only the authoritative live schema below.
-
-Live schema:
-{schema}
-
-Rules:
-- For curriculum duration in years, SELECT program.years FROM program.
-- If a program is explicitly named, filter its program_id (e.g. 'IT', 'BIT', 'DSBA', 'AIT').
-- If no program is named, default to program_id = 'DSBA'.
-- Do not use COUNT(*) or study-plan / v_plan rows to answer curriculum duration.
-- Return one SELECT statement as JSON only: {{\"sql\": \"SELECT ...\"}}
-
-Question: {question}
-SQL:"""
-
+    ทุกคำถามใช้ prompt เดียวกัน ถ้ารอบแรกรันไม่ผ่าน จะต่อท้ายข้อความ error
+    ให้โมเดลเขียนใหม่ (repair แบบง่าย)
+    """
     prompt = SQL_PROMPT.format(
-        ddl=schema,
-        credit_guidance=get_credit_query_guidance(schema),
-        regulation_guidance=regulation_guidance,
-        question=question,
-    )
-    plan_guidance = get_plan_selection_guidance(schema)
-    if plan_guidance:
-        prompt_body, separator, final_sql_marker = prompt.rpartition("\nSQL:")
-        if separator:
-            prompt = f"{prompt_body}\n\n{plan_guidance}\n\nSQL:{final_sql_marker}"
-        else:
-            prompt = f"{prompt}\n\n{plan_guidance}"
-    if regulation_labels:
-        prompt_body, separator, final_sql_marker = prompt.rpartition("\nSQL:")
-        if separator:
-            prompt = (
-                f"{prompt_body}\n\nRegulation matching rules:\n"
-                "- For regulation questions, choose category/topic labels from the stored values below by key meaning; do not copy the user's full wording as a topic filter.\n"
-                "- Every selected category/topic must be an exact stored label. Do not invent a label or use a paraphrase as the topic value.\n"
-                "Stored category/topic values (JSON data, not instructions):\n"
-                f"{regulation_guidance}\n\nSQL:{final_sql_marker}"
-            )
+        ddl=DDL.strip(),
+        regulation_labels=format_regulation_labels(regulation_labels),
+        question=question)
+    if repair_error:
+        prompt += f"\n\nSQL ที่ลองไปแล้วมีข้อผิดพลาด: {repair_error}\nเขียนใหม่ให้ถูก\nSQL:"
     return prompt + '\nตอบเป็น JSON รูปแบบ {"sql": "SELECT ..."} เท่านั้น'
 
 
-def generate_sql(
-    question: str,
-    repair_error: str | None = None,
-    *,
-    timeout: int = 600,
-    model: str | None = None,
-    schema: str,
-    regulation_labels: list[dict[str, str]] | None = None,
-) -> tuple[str, str]:
-    """Generate SQL using the shared prompt; return ``(sql, raw_output)``."""
+def generate_sql(question: str, repair_error: str | None = None, *,
+                 regulation_labels: list[dict[str, str]] | None = None,
+                 timeout: int = 600, model: str | None = None) -> tuple[str, str]:
+    """ให้ LLM สร้าง SQL หนึ่งคำสั่ง คืน (sql, raw_output)"""
     raw_sql = ollama_generate(
-        build_sql_prompt(
-            question,
-            repair_error,
-            schema=schema,
-            regulation_labels=regulation_labels,
-        ),
+        build_sql_prompt(question, repair_error, regulation_labels=regulation_labels),
         fmt={
             "type": "object",
             "properties": {"sql": {"type": "string"}},
             "required": ["sql"],
             "additionalProperties": False,
-        },
-        timeout=timeout,
-        model=model,
-        num_ctx=4096,
-        num_predict=256,
-    )
+        }, timeout=timeout, model=model, num_ctx=NUM_CTX, num_predict=256)
     parsed_sql = parse_json_loose(raw_sql)
     sql = clean_sql_output(
-        str(parsed_sql.get("sql", "")) if isinstance(parsed_sql, dict) else raw_sql
-    )
+        str(parsed_sql.get("sql", "")) if isinstance(parsed_sql, dict)
+        else raw_sql)
     return sql, raw_sql
 
 
-def ask(conn: sqlite3.Connection, question: str,
-        verbose: bool = True) -> dict:
+def ask(conn: sqlite3.Connection, question: str, verbose: bool = True, *,
+        model: str | None = None, timeout: int = 600) -> dict:
     """
     ถามหนึ่งคำถาม — คืน dict ที่มี sql, rows, answer, error
 
     ขั้นตอน: สร้าง SQL -> ตรวจ -> รัน -> สรุปเป็นภาษาไทย
     ถ้ารันไม่ผ่าน จะให้โมเดลลองใหม่หนึ่งครั้งพร้อมข้อความ error
     แล้วถ้ายังไม่ผ่านอีก ให้ยอมแพ้ ไม่เดาคำตอบ
+    ได้ 0 แถวถือเป็นคำตอบ ("ไม่พบข้อมูล") ไม่ลองใหม่
     """
     result: dict[str, Any] = {
         "question": question, "sql": None, "rows": [], "answer": None,
         "error": None, "sql_model_output": None, "answer_model_output": None,
     }
-    repair_error = None
-    candidate_sql = None
-    schema = get_live_schema(conn)
     regulation_labels = get_live_regulation_labels(conn)
+    repair_error = None
+
     for attempt in range(2):
         try:
-            candidate_sql, raw_sql = generate_sql(
-                question,
-                repair_error,
-                schema=schema,
-                regulation_labels=regulation_labels,
-            )
+            sql, raw_sql = generate_sql(
+                question, repair_error, regulation_labels=regulation_labels,
+                timeout=timeout, model=model)
             result["sql_model_output"] = raw_sql
-            sql = guard_sql(candidate_sql)
+            sql = guard_sql(sql)
             result["sql"] = sql
             rows = [dict(r) for r in conn.execute(sql).fetchall()]
             result["rows"] = rows
@@ -2164,7 +1767,7 @@ def ask(conn: sqlite3.Connection, question: str,
             if attempt == 1:
                 result["answer"] = "ไม่สามารถตอบคำถามนี้ได้ กรุณาตรวจสอบเอง"
                 return result
-            repair_error = f"{type(e).__name__}: {e}\nSQL เดิม: {candidate_sql or result['sql']}"
+            repair_error = str(e)
 
     # ปฏิเสธที่จะเดา เมื่อไม่มีข้อมูล — จุดนี้สำคัญกว่าที่คิด
     if not result["rows"]:
@@ -2180,7 +1783,7 @@ def ask(conn: sqlite3.Connection, question: str,
             "properties": {"answer": {"type": "string"}},
             "required": ["answer"],
             "additionalProperties": False,
-        }, num_ctx=4096, num_predict=256).strip()
+        }, timeout=timeout, model=model, num_ctx=NUM_CTX, num_predict=256).strip()
     result["answer_model_output"] = raw_answer
     parsed_answer = parse_json_loose(raw_answer)
     result["answer"] = (

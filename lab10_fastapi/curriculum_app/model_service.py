@@ -1,6 +1,5 @@
-"""Qwen text-to-SQL adapter that reuses Lab 8B's Ollama helper."""
+"""Qwen text-to-SQL adapter that reuses Lab 8B's ask() pipeline."""
 
-import json
 import re
 from types import ModuleType
 from typing import Any
@@ -11,12 +10,9 @@ from .config import Settings
 from .database import CurriculumDatabase
 
 
-ANSWER_SCHEMA = {
-    "type": "object",
-    "properties": {"answer": {"type": "string"}},
-    "required": ["answer"],
-    "additionalProperties": False,
-}
+# เงื่อนไข category/topic ที่เป็นค่าตัวอักษรตรง ๆ ใน SQL ของโมเดล เช่น topic = 'ภาคปกติ'
+REGULATION_FILTER_RE = re.compile(
+    r"\b(category|topic)\s*(=|LIKE)\s*'((?:[^']|'')*)'", re.IGNORECASE)
 
 
 class QwenTextToSQL:
@@ -32,47 +28,14 @@ class QwenTextToSQL:
         except requests.RequestException:
             return False
 
-    def _chat(self, prompt: str, schema: dict) -> dict:
-        # MODEL INTEGRATION POINT: เปลี่ยนฟังก์ชันนี้หากไม่ใช้ Ollama/Qwen
-        # เรียกฟังก์ชัน Ollama ของ Lab 8B โดยตรง เพื่อไม่สร้าง client ซ้ำใน Lab 10
-        raw = self.lab8b.ollama_generate(
-            prompt, fmt=schema, timeout=self.config.request_timeout,
-            model=self.config.ollama_model, num_ctx=4096, num_predict=256,
-        )
-        return self.lab8b.parse_json_loose(raw)
-
-    def make_sql(
-        self,
-        question: str,
-        schema: str,
-        repair_error: str | None = None,
-        regulation_labels: list[dict[str, str]] | None = None,
-    ) -> str:
-        sql, _ = self.lab8b.generate_sql(
-            question,
-            repair_error=repair_error,
-            timeout=self.config.request_timeout,
-            model=self.config.ollama_model,
-            schema=schema,
-            regulation_labels=regulation_labels,
-        )
-        return sql
-
-    def summarize(self, question: str, rows: list[dict[str, Any]]) -> str:
-        prompt = f"""ตอบภาษาไทยจากผลฐานข้อมูลเท่านั้น
-คำถาม: {question}
-ผลฐานข้อมูล: {json.dumps(rows[:40], ensure_ascii=False)}
-ตอบ JSON ที่มี key ชื่อ answer และห้ามเพิ่มข้อมูลที่ไม่มีในผล"""
-        
-        return str(self._chat(prompt, ANSWER_SCHEMA).get("answer", "")).strip()
-
     def extract_sources(self, database: CurriculumDatabase, question: str, sql: str, rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
         sources: list[dict[str, Any]] = []
         seen = set()
 
         # 1. ตรวจสอบข้อมูลข้อบังคับ (regulations) จาก rows
+        #    แนบเฉพาะแถวที่มีเลขข้อหรือเลขหน้าจริง ถ้าไม่มี ให้ข้อ 1b ค้นจาก SQL แทน
         for r in rows:
-            if any(k in r for k in ("article_no", "condition_desc", "penalty_action", "source_page")):
+            if r.get("article_no") or r.get("source_page"):
                 title = str(r.get("topic") or r.get("category") or "ข้อบังคับสถาบันฯ").strip()
                 art = r.get("article_no")
                 spage = r.get("source_page")
@@ -86,6 +49,11 @@ class QwenTextToSQL:
                         "printed_pages": str(spage) if spage else None,
                         "pdf_pages": None,
                     })
+
+        # 1b. SQL อ่านตาราง regulation แต่ไม่ได้ SELECT เลขข้อ/เลขหน้ามาด้วย
+        #     ค้นซ้ำด้วยเงื่อนไข category/topic เดียวกับที่ใช้หาคำตอบ
+        if not any(s["type"] == "regulation" for s in sources):
+            sources.extend(self._regulation_sources_from_sql(database, sql, seen))
 
         # 2. ตรวจสอบข้อมูลรายวิชา (course) จาก rows หรือ question
         codes_found: list[str] = []
@@ -130,43 +98,65 @@ class QwenTextToSQL:
         # 3. หากไม่พบแหล่งอ้างอิงที่มีเลขหน้าจริง ไม่ต้องใส่ fallback หมวดที่ฮาร์ดโค้ด
         return sources
 
-    def ask(self, database: CurriculumDatabase, question: str) -> dict:
-        sql = ""
-        rows: list[dict[str, Any]] = []
-        repair_error = None
-        schema_conn = self.lab8b.open_db(database.path, readonly=True)
+    def _regulation_sources_from_sql(self, database: CurriculumDatabase, sql: str, seen: set) -> list[dict[str, Any]]:
+        """หาเลขข้อบังคับและเลขหน้าของแถว regulation ที่ SQL ของโมเดลใช้ตอบ"""
+        if not re.search(r"\bregulation\b", sql or "", re.IGNORECASE):
+            return []
+        filters = REGULATION_FILTER_RE.findall(sql)
+        if not filters:
+            # ไม่รู้ว่าคำตอบมาจากแถวไหน — ไม่แนบดีกว่าแนบผิด
+            return []
+
+        # ชื่อคอลัมน์และ operator มาจาก regex ที่จำกัดค่าไว้แล้ว ส่วนค่าส่งเป็น parameter
+        where = " AND ".join(f"{col.lower()} {op.upper()} ?" for col, op, _ in filters)
+        params = [value.replace("''", "'") for _, _, value in filters]
         try:
-            schema = self.lab8b.get_live_schema(schema_conn)
-            regulation_labels = self.lab8b.get_live_regulation_labels(schema_conn)
-        finally:
-            schema_conn.close()
-
-        for attempt in range(2):
+            conn = self.lab8b.open_db(database.path, readonly=True)
             try:
-                sql = self.make_sql(
-                    question,
-                    repair_error=repair_error,
-                    schema=schema,
-                    regulation_labels=regulation_labels,
-                )
-                sql, rows = database.query_from_model(sql)
-            except Exception as exc:
-                if attempt == 1:
-                    raise
-                repair_error = (
-                    f"{type(exc).__name__}: {exc}\nSQL เดิม: {sql}"
-                )
+                rows = conn.execute(
+                    "SELECT category, topic, article_no, source_page FROM regulation "
+                    f"WHERE {where} LIMIT 3", params).fetchall()
+            finally:
+                conn.close()
+        except Exception:
+            return []
+
+        sources = []
+        for r in rows:
+            title = str(r["topic"] or r["category"] or "ข้อบังคับสถาบันฯ").strip()
+            key = f"reg:{title}:{r['article_no']}"
+            if key in seen:
                 continue
+            seen.add(key)
+            sources.append({
+                "type": "regulation",
+                "title": title,
+                "article_no": r["article_no"],
+                "printed_pages": str(r["source_page"]) if r["source_page"] else None,
+                "pdf_pages": None,
+            })
+        return sources
 
-            if rows or attempt == 1:
-                break
-            repair_error = (
-                "SQL รันสำเร็จแต่ได้ 0 rows โปรดตรวจสอบ schema และเงื่อนไขให้ตรงคำถาม "
-                "แก้ SQL เฉพาะเมื่อพบสาเหตุ และห้ามตัดเงื่อนไขหลักสูตร/แผนที่ผู้ใช้ระบุ "
-                f"SQL เดิม: {sql}"
+    def ask(self, database: CurriculumDatabase, question: str) -> dict:
+        # ใช้ lab8b.ask() ตัวเดียวกับที่ Lab 9 วัดผล — prompt, num_ctx, repair
+        # และ guard_sql จึงเหมือนกันทุกอย่าง เว็บเพิ่มแค่ citations และ max_rows
+        database._require_db()
+        conn = self.lab8b.open_db(database.path, readonly=True)
+        try:
+            result = self.lab8b.ask(
+                conn, question, verbose=False,
+                model=self.config.ollama_model,
+                timeout=self.config.request_timeout,
             )
+        finally:
+            conn.close()
 
-        answer = self.summarize(question, rows) if rows else "ไม่พบข้อมูลนี้ในฐานข้อมูลหลักสูตร"
-        answer = self.lab8b.ensure_answer_matches_rows(answer, rows)
+        if result["error"] and result["sql_model_output"] is None:
+            # โมเดลไม่ตอบเลยทั้งสองรอบ — Ollama ไม่พร้อม ให้ API ตอบ 503
+            raise requests.ConnectionError(result["error"])
+
+        sql = result["sql"] or ""
+        rows = result["rows"][: database.max_rows]
+        answer = result["answer"] or "ไม่พบข้อมูลนี้ในเล่มหลักสูตร"
         sources = self.extract_sources(database, question, sql, rows)
         return {"question": question, "sql": sql, "rows": rows, "answer": answer, "sources": sources}
