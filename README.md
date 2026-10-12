@@ -240,29 +240,32 @@ python src/ocr_system/lab8b_curriculum_db.py verify -d work/lab8b_run/curriculum
 python src/ocr_system/lab8b_curriculum_db.py eval -d work/lab8b_run/curriculum.db -q work/lab8b_run/gold_questions.json -o work/lab8b_run/eval_result.json --model qwen3:4b
 ```
 **สรุปผลการประเมิน (Evaluation Metrics):**
+- **การตั้งค่า NL2SQL ปัจจุบัน**: Prompt เดียวสำหรับทุกคำถาม (DDL + Few-shot 30 ข้อ + รายการ `category`/`topic` ของข้อบังคับจากฐานข้อมูล), `qwen3:4b` ที่ `temperature = 0.0` และ `num_ctx = 8192`, แก้ SQL 1 ครั้งเมื่อรันไม่ผ่าน และใช้ฟังก์ชัน `ask()` ตัวเดียวกันทั้ง Benchmark และหน้าเว็บ (รายละเอียดใน `sysdoc.md` หัวข้อ 3)
 - **ตัวชี้วัดจากคำสั่งประเมิน SQL (`work/lab8b_run/eval_result.json` และ `lab9/reports/step3_nl2sql_benchmark.json`)**:
   - **SQL Syntax Validity**: **100.0%** (189/189 คำถามสร้าง SQL ที่รันผ่านได้)
-  - **NL2SQL Execution Accuracy (Unified Database)**: **94.18%** (178/189 คำถามที่ผลลัพธ์ SQL ตรงกับ Ground Truth ในฐานข้อมูล)
+  - **NL2SQL Execution Accuracy (Unified Database)**: **95.24%** (180/189 คำถามที่ผลลัพธ์ SQL ตรงกับ Ground Truth ในฐานข้อมูล) ข้อผิด 9 ข้อเป็นปัญหาที่ข้อมูลหรือเฉลย 7 ข้อ และโมเดลสร้าง SQL ผิด 2 ข้อ
   - **ผลแยกตาม Query Complexity (Lab 9 Step 5):**
 
 | Level | จำนวนคำถาม | Valid SQL | Execution Accuracy |
 | :--- | ---: | ---: | ---: |
 | 1 — Simple Lookup | 144 | 100.0% (144/144) | 97.92% (141/144) |
-| 2 — Filter & Aggregate | 12 | 100.0% (12/12) | 83.33% (10/12) |
+| 2 — Filter & Aggregate | 13 | 100.0% (13/13) | 76.92% (10/13) |
 | 3 — Multi-table Relation | 17 | 100.0% (17/17) | 88.24% (15/17) |
-| 4 — Regulation Query | 10 | 100.0% (10/10) | 60.00% (6/10) |
-| 5 — Ambiguous Query | 6 | 100.0% (6/6) | 100.0% (6/6) |
+| 4 — Regulation Query | 10 | 100.0% (10/10) | 90.00% (9/10) |
+| 5 — Ambiguous Query | 5 | 100.0% (5/5) | 100.0% (5/5) |
 
   - วิธีทำซ้ำ: รัน Step 3 เพื่อสร้าง `work/lab8b_run/eval_result.json` ก่อน แล้วรัน `python lab9/step5_eval_query_complexity.py --labels lab9/query_complexity_labels.json`
   - ผล Step 5: `lab9/reports/query_complexity_summary.csv` สรุปผลราย Level และ `lab9/reports/query_complexity_detail.csv` แสดงคำถาม, คำตอบจาก LLM, เฉลย, SQL และผลถูก/ผิด โดยป้าย Level กำหนดไว้ใน `lab9/query_complexity_labels.json`
-  - **Per-Program SQL Execution Accuracy (Isolated Databases; artifact แยกชุดละ 45 ข้อ)**:
+  - **Per-Program SQL Execution Accuracy (Isolated Databases; artifact เดิมแยกชุดละ 45 ข้อ รันเมื่อ 11 ต.ค. 2569 ด้วย Prompt เวอร์ชันก่อน ยังไม่ได้รันใหม่)**:
     - **BIT**: **100.0%** (45/45 ข้อ)
     - **IT**: **100.0%** (45/45 ข้อ)
     - **DSBA**: **86.7%** (39/45 ข้อ - ผลลัพธ์ว่างเปล่าเนื่องจากชื่อวิชาเลือก 6 ข้อ)
     - **AIT**: **88.9%** (40/45 ข้อ - รหัสเฉพาะ 5 ข้อ)
 - **ตัวชี้วัดจากการรันสดล่าสุด (`lab9/reports/live_eval_result.json`)**:
-  - **Live Retrieval Correctness**: **94.18%** (178/189 ข้อ โดย `score_one()` ตรวจค่าจาก SQL rows)
-  - **Live QA Latency**: **เฉลี่ย 1.85 วินาที/ข้อ** (ต่ำสุด 0.77 วินาที, ค่ามัธยฐาน 1.81 วินาที, สูงสุด 10.19 วินาที, รวม 350.03 วินาที / 189 ข้อ)
+  - **Live Retrieval Correctness**: **95.24%** (180/189 ข้อ โดย `score_one()` ตรวจค่าจาก SQL rows)
+  - **Live QA Latency**: **เฉลี่ย 1.69 วินาที/ข้อ** (ต่ำสุด 0.74 วินาที, ค่ามัธยฐาน 1.66 วินาที, สูงสุด 8.00 วินาที, รวม 319.81 วินาที / 189 ข้อ)
+  - **ทดสอบผ่าน API จริง (`POST /api/ask` 30 คำถาม)**: HTTP 200 ครบ 30/30 และ SQL ตรงกับ Benchmark ทุกตัวอักษร 30/30 เฉลี่ย 1.92 วินาที/ข้อ (รวม HTTP และการค้นป้ายอ้างอิง)
+  - สร้างผลชุดนี้ซ้ำได้ด้วย `python lab9/run_all_eval.py --live` (ต้องใส่ `--live` มิฉะนั้นสคริปต์จะใช้ผลที่บันทึกไว้แทนการถามโมเดลสด)
 
 ---
 
@@ -279,7 +282,7 @@ python -m uvicorn lab10_fastapi.curriculum_app.main:app --host 127.0.0.1 --port 
 1. **หน้าถามตอบหลักสูตร AI (Assistant Chat UI)**:
    - URL: [http://127.0.0.1:8000/](http://127.0.0.1:8000/) หรือ [http://127.0.0.1:8000/static/index.html](http://127.0.0.1:8000/static/index.html)
    - ฟีเจอร์: ถามตอบภาษาธรรมชาติเกี่ยวกับโครงสร้างหลักสูตร แผนการเรียน และข้อบังคับการศึกษา พร้อมระบบแสดง SQL และตารางข้อมูล
-   - **ระบบ Grounded Citation Badge**: แสดงป้ายเลขหน้าอ้างอิงจริง `[อ้างอิงหน้า x]` วางเคียงข้างป้าย `[Success]` เหนือกล่องคำตอบอย่างเป็นระเบียบ (เช่น รายวิชาอ้างอิงหน้า 17, ข้อบังคับอ้างอิงหน้า 98 ข้อ 25.2.2 โดยหากคำถามใดไม่มีเลขหน้าเฉพาะเจาะจงในเล่ม ระบบจะซ่อนป้ายอ้างอิงอัตโนมัติ เพื่อความถูกต้องตามหลัก Grounded Citation และลดความเสี่ยงจากการอ้างอิงคลาดเคลื่อน)
+   - **ระบบ Grounded Citation Badge**: แสดงป้ายเลขหน้าอ้างอิงจริง `[อ้างอิงหน้า x]` วางเคียงข้างป้าย `[Success]` เหนือกล่องคำตอบอย่างเป็นระเบียบ (เช่น รายวิชาอ้างอิงเลขหน้าจากตาราง `course`, ข้อบังคับเกียรตินิยมอันดับ 1 อ้างอิงข้อ 27.2.2 หน้า 93 โดยหากคำถามใดไม่มีเลขหน้าเฉพาะเจาะจงในฐานข้อมูล เช่น หน่วยกิตรวมของหลักสูตรหรือหน่วยกิตต่อเทอม ระบบจะซ่อนป้ายอ้างอิงอัตโนมัติ เพื่อความถูกต้องตามหลัก Grounded Citation และลดความเสี่ยงจากการอ้างอิงคลาดเคลื่อน)
 2. **หน้าโครงสร้างหลักสูตรและรายวิชาทั้งหมด (Course Catalog & Regulations)**:
    - URL: [http://127.0.0.1:8000/courses](http://127.0.0.1:8000/courses) หรือ [http://127.0.0.1:8000/static/courses.html](http://127.0.0.1:8000/static/courses.html)
    - ฟีเจอร์: ตรวจสอบรายวิชาทั้งหมด 504 วิชา (วิชาเฉพาะ 238 + GenEd 266) ค้นหารหัส/ชื่อวิชา ตรวจสอบวิชาบังคับก่อน (Prerequisites 30 รายการ) และดูข้อบังคับการศึกษา สจล.
@@ -329,7 +332,7 @@ lab10_fastapi/curriculum_app/static/
 ### API Contract สรุป
 | Endpoint | Method | Request Body / Param | Response Success | Response Error |
 | :--- | :---: | :--- | :--- | :--- |
-| `/api/ask` | POST | `{"question": "string"}` | `200` (`question`, `sql`, `rows`, `answer`, `sources`) | `422` (Invalid/SQL Error), `503` (Ollama/DB offline) |
+| `/api/ask` | POST | `{"question": "string"}` | `200` (`question`, `sql`, `rows`, `answer`, `sources`) | `422` (Request body ไม่ถูกต้อง), `503` (Ollama/DB offline); ถ้าสร้าง SQL ไม่สำเร็จแม้แก้ 1 ครั้ง จะตอบ `200` พร้อม `answer` ปฏิเสธ |
 | `/api/courses` | GET | `search`, `program_id`, `limit`, `offset` | `200` (List of CourseResponse + `programs`) | `503` (DB offline) |
 | `/api/courses` | POST | `CourseCreate` (พร้อม `plan_id` Dynamic Check) | `201` (CourseResponse + `plan_id`) | `422` (ขาด `plan_id` ในสาขาหลายแผน), `409` (รหัสซ้ำ) |
 | `/api/courses/{code}/prerequisites` | GET | `code`: รหัสวิชา 8 หลัก | `200` (`code`, `name_th`, `requires`, `required_by`) | `404` (ไม่พบรายวิชา), `503` (DB offline) |

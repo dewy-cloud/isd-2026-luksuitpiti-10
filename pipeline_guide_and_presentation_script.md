@@ -45,7 +45,7 @@ flowchart TD
     subgraph S4["Phase 4: Serving & Evaluation"]
         D2 --> Q1["NL-to-SQL Service (Qwen3:4b)<br/>lab10_fastapi.curriculum_app"]
         Q1 --> Q2["FastAPI Server & Web UI<br/>http://127.0.0.1:8000"]
-        D2 --> B1["Automated 4-Step Benchmark<br/>lab9/run_all_eval.py"]
+        D2 --> B1["4-Step Benchmark + Complexity Analysis<br/>run_all_eval.py / step5_eval_query_complexity.py"]
     end
 ```
 
@@ -95,13 +95,13 @@ ollama pull scb10x/typhoon-ocr1.5-3b
 🎙️ **สคริปต์บทพูดสำหรับ Phase 0:**
 > "ในการเริ่มต้นระบบ เราเริ่มจากการเตรียมสภาพแวดล้อมบนเครื่องคอมพิวเตอร์ โดยสร้าง Python Virtual Environment และติดตั้ง Dependencies ที่จำเป็นทั้งหมด จากนั้นเราสตาร์ทบริการ Ollama บนเครื่อง Local ซึ่งจุดเด่นสำคัญของระบบเราคือ **ทำงานแบบ Offline ภายในเครื่องทั้งหมด** โดยไม่ต้องพึ่งพา Cloud API ภายนอก ทำให้ไม่มีค่าใช้จ่าย และรักษาความปลอดภัยของข้อมูลได้อย่างสมบูรณ์ โดยเราใช้โมเดล **Qwen3 (4B)** สำหรับการประมวลผลข้อความและเขียน SQL และโมเดล **Typhoon-OCR 1.5** สำหรับการอ่านข้อความภาษาไทยจากภาพสแกนครับ"
 
-💡 **นโยบายการกำหนดค่า Temperature (Deterministic vs Generative Policy)**:
-* **`temperature = 0.0` (Zero Randomness / Greedy Decoding)**:
-  * **ใช้ตอนไหน**: ใช้ใน **OCR Stage** (อ่านภาพสแกนด้วย Typhoon-OCR), **NL2SQL Engine** (แปลงภาษาเป็นคำสั่ง SQL ด้วย Qwen3:4b), และ **Text Pipeline** (จัดโครงสร้างตารางเรียนเป็น JSON)
-  * **เหตุผล**: บังคับให้ผลลัพธ์มีความแน่นอนตายตัว (Deterministic 100%) ตัดความสุ่มทิ้งทั้งหมด เพื่อให้อ่านตัวอักษร/รหัสวิชาตรงตามต้นฉบับเป๊ะ และเขียน SQL ถูกไวยากรณ์ ไม่เกิด Hallucination
-* **`temperature = 0.1` (Low Stochasticity)**:
-  * **ใช้ตอนไหน**: ใช้ใน **Answer Synthesis** (สรุปคำตอบภาษาไทยในเว็บแอป Lab 10) และ **Regulation Structuring** (จัดโครงสร้างข้อบังคับร้อยแก้วในภาคผนวก ก)
-  * **เหตุผล**: อนุญาตให้มีความยืดหยุ่นทางภาษาเล็กน้อย เพื่อให้การเรียบเรียงประโยคภาษาไทยมีความสละสลวย อ่านเข้าใจง่าย และลดการติดลูปคำซ้ำ
+💡 **นโยบายการกำหนดค่า Temperature (Greedy Decoding vs Controlled Stochasticity Policy)**:
+* **`temperature = 0.0` (Zero Randomness / Greedy Decoding - ค่าหลักของระบบ)**:
+  * **ใช้ตอนไหน**: ใช้ใน **OCR Stage** (อ่านภาพสแกนด้วย Typhoon-OCR), **NL2SQL Engine** (แปลงภาษาเป็นคำสั่ง SQL ด้วย Qwen3:4b), **Text Pipeline** (จัดโครงสร้างตารางเรียนเป็น JSON) และ **Answer Synthesis** (ตามฟังก์ชัน `ollama_generate()` ในโค้ดจริงที่ล็อกไว้ที่ 0.0)
+  * **เหตุผล**: ใช้การถอดรหัสแบบ Greedy Decoding เพื่อ**ลดความแปรปรวนและเพิ่มความทำซ้ำได้ (Reproducibility)** ให้อ่านตัวอักษร/รหัสวิชาตรงตามต้นฉบับมากที่สุด เขียน SQL ได้ถูกต้องตามไวยากรณ์ และช่วยควบคุมการสังเคราะห์คำตอบให้อยู่ในขอบเขตของผลลัพธ์จาก SQL
+* **`temperature = 0.1` (Low Stochasticity - กำหนดเฉพาะจุด)**:
+  * **ใช้ตอนไหน**: ใช้ใน **Regulation Structuring** (จัดโครงสร้างข้อบังคับร้อยแก้วในภาคผนวก ก) และ **GenEd Stage 2** (สกัดคำอธิบายวิชาศึกษาทั่วไป 74 หน้า)
+  * **เหตุผล**: อนุญาตให้มีความยืดหยุ่นทางภาษาเล็กน้อย เพื่อให้การจัดโครงสร้างเนื้อหาข้อความยาวๆ มีความเป็นธรรมชาติและช่วยลดการเกิดอาการติดลูปคำซ้ำภาษาไทย
 
 ---
 
@@ -191,7 +191,7 @@ python src/ocr_system/extract_gened.py -i data/input/fulldoc_dsba.pdf --pages 15
 * `work/lab7b_run/regulations/intermediate_regulations_vlm.md`
 * `work/lab7b_run/markdown_pages/` (แคช Markdown รายหน้า 74 หน้า)
 * `work/lab7b_run/gened_combined.md` (ไฟล์ Markdown รวมหมวดวิชาศึกษาทั่วไปทั้งหมด)
-* `work/lab7b_run/gened_courses.json` (ข้อมูลรายวิชา GenEd ครบทั้ง 266 วิชา พร้อมคำอธิบายไทย-อังกฤษ และหน่วยกิตย่อย lecture_h, lab_h, self_h ครบถ้วน 100%)
+* `work/lab7b_run/gened_courses.json` (ข้อมูลรายวิชา GenEd ครบทั้ง 266 วิชา พร้อมชื่อและคำอธิบายภาษาไทย name_th, description_th และโครงสร้างหน่วยกิตย่อย lecture_h, lab_h, self_h ครบถ้วน 100%)
 
 🎙️ **สคริปต์บทพูดสำหรับ Phase 3:**
 > "ใน Phase ที่ 3 มีจุดเด่นด้านวิศวกรรมคือเราแบ่งกลยุทธ์การสกัดออกเป็น 3 รูปแบบอย่างเหมาะสมกับลักษณะข้อมูล:
@@ -230,8 +230,14 @@ python run_lab8b.py --program all --skip-eval
 ทดสอบประเมินประสิทธิภาพ End-to-End: สกัด $\rightarrow$ Schema $\rightarrow$ Text-to-SQL $\rightarrow$ ตอบ & อ้างอิงหน้าจริง:
 
 ```powershell
-# รันการประเมินผลครบทั้ง 4 ขั้นตอน
-python lab9/run_all_eval.py
+# รันการประเมินผลครบทั้ง 4 ขั้นตอน (--live = ถามโมเดลสด 189 ข้อ ประมาณ 5–6 นาที, ต้องเปิด Ollama)
+python lab9/run_all_eval.py --live
+
+# วิเคราะห์ผล Step 3 แยกตาม Query Complexity Level 1–5
+python lab9/step5_eval_query_complexity.py --labels lab9/query_complexity_labels.json
+
+# รวมคะแนน Extraction แบบ CER/WER/Exact Match ครบทั้ง 7 แผน
+python lab9/step1_eval_all_curricula.py
 ```
 
 📁 **ผลลัพธ์ที่ได้**:
@@ -239,9 +245,12 @@ python lab9/run_all_eval.py
 * `lab9/reports/step2_schema_verification.json` (ความสอดคล้อง 7 กฎ CHK1–CHK7)
 * `lab9/reports/step3_nl2sql_benchmark.json` (ความถูกต้องของคำสั่ง SQL จากคำถามธรรมชาติ)
 * `lab9/reports/step4_groundedness_metrics.json` (ความถูกต้องของคำตอบและการอ้างอิงเลขหน้าจริง)
+* `lab9/reports/query_complexity_summary.csv` (สรุป Valid SQL และ Execution Accuracy แยก Level 1–5)
+* `lab9/reports/query_complexity_detail.csv` (ผลรายคำถามพร้อมคำตอบที่ระบบให้, เฉลย, Gold Label, SQL และเหตุผลการจัดระดับ)
+* `lab9/reports/all_curricula/comparison.csv` (คะแนน Extraction แบบ pooled แยกตามฟิลด์จากทั้ง 7 แผน)
 
 🎙️ **สคริปต์บทพูดสำหรับ Phase 5:**
-> "ใน Phase ที่ 5 เราใช้ Automated Evaluation Suite ของ Lab 9 ในการทดสอบ Benchmark ระบบอย่างเข้มงวด 4 ขั้นตอน ตั้งแต่การสกัด, ตรวจสอบ Schema, ประเมินความถูกต้องของการแปลงคำถามภาษาธรรมชาติเป็น SQL (NL-to-SQL), และตรวจสอบความซื่อสัตย์ต่อฐานข้อมูล (Groundedness) ว่าโมเดลตอบคำถามโดยอ้างอิงจากข้อมูลจริงในฐานข้อมูลเท่านั้น และมีการแสดงเลขหน้าอ้างอิงที่ถูกต้องแม่นยำครับ"
+> "ใน Phase ที่ 5 เราใช้ Automated Evaluation Suite ของ Lab 9 ในการทดสอบ Benchmark ระบบ 4 ขั้นตอนหลัก ตั้งแต่การสกัด, ตรวจสอบ Schema, ประเมิน NL-to-SQL และตรวจสอบ Groundedness จากนั้นวิเคราะห์เพิ่มเติมด้วย Query Complexity Evaluation เพื่อแยกผล Level 1–5 ผลรอบล่าสุด 189 ข้อ SQL รันผ่าน 100% และให้ผลตรงเฉลย 95.24% จุดที่เราปรับแล้วได้ผลชัดคือ Regulation Query ซึ่งเดิมผิดเพราะโมเดลสร้างชื่อ category และ topic ไม่ตรงกับฐานข้อมูล พอเราแนบรายการ category/topic จริงจากตาราง regulation ลงใน Prompt คำถามข้อบังคับก็ถูก 9 จาก 10 ข้อ ส่วนข้อผิดที่เหลือ 9 ข้อ 7 ข้อมาจากข้อมูลหรือเฉลยที่ต้องแก้ที่ขั้นสกัดข้อมูล ไม่ใช่ที่โมเดลครับ"
 
 ---
 
@@ -259,7 +268,7 @@ uvicorn lab10_fastapi.curriculum_app.main:app --host 127.0.0.1 --port 8000 --rel
 * 🛠️ **หน้า Interactive API Documentation**: `http://127.0.0.1:8000/docs`
 
 🎙️ **สคริปต์บทพูดสำหรับ Phase 6:**
-> "ขั้นตอนสุดท้ายคือการเปิดใช้งานระบบผ่านคำสั่ง `uvicorn` ซึ่งจะสตาร์ท FastAPI Application ขึ้นมาบนเครื่อง เมื่อเปิดเบราว์เซอร์ไปที่ `http://127.0.0.1:8000` ผู้ใช้สามารถพิมพ์ถามคำถามภาษาธรรมชาติ เช่น *'หลักสูตร DSBA ปี 1 เทอม 1 เรียนวิชาอะไรบ้าง'* หรือ *'เกียรตินิยมอันดับ 1 ต้องได้เกรดเท่าไร'* ระบบจะแปลงคำถามเป็น SQL ดึงข้อมูลจาก `curriculum.db` แล้วสรุปคำตอบภาษาไทยพร้อมแสดง Badge อ้างอิงเลขหน้าจริงในเอกสาร มคอ.2 ได้อย่างถูกต้อง รวดเร็วภายในเวลาไม่เกิน 3 วินาทีครับ"
+> "ขั้นตอนสุดท้ายคือการเปิดใช้งานระบบผ่านคำสั่ง `uvicorn` ซึ่งจะสตาร์ท FastAPI Application ขึ้นมาบนเครื่อง เมื่อเปิดเบราว์เซอร์ไปที่ `http://127.0.0.1:8000` ผู้ใช้สามารถพิมพ์ถามคำถามภาษาธรรมชาติ เช่น *'วิชา 06026240 มีกี่หน่วยกิต'* หรือ *'เกียรตินิยมอันดับ 1 ต้องมี GPA สะสมอย่างน้อยเท่าไร'* ระบบจะแปลงคำถามเป็น SQL ดึงข้อมูลจาก `curriculum.db` แล้วสรุปคำตอบภาษาไทยพร้อมแสดง Badge อ้างอิงเลขหน้าจริงในเอกสาร มคอ.2 เช่น เกียรตินิยมอันดับ 1 ตอบ 3.5 อ้างอิงข้อ 27.2.2 หน้า 93 หน้าเว็บเรียกฟังก์ชันเดียวกับที่ใช้วัดผลใน Lab 9 ผลที่วัดได้จึงตรงกับที่ผู้ใช้เห็นจริง ผลทดสอบสดล่าสุด 189 ข้อใช้เวลาเฉลี่ย 1.69 วินาทีต่อข้อ (ต่ำสุด 0.74 วินาที, มัธยฐาน 1.66 วินาที) โดย SQL รันผ่าน 100% และให้ผลตรงเฉลย 95.24% ครับ"
 
 ---
 

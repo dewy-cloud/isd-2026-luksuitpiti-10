@@ -251,29 +251,29 @@ http://127.0.0.1:8000/api/courses/06026201/prerequisites
 
 ## 10. จุดเปลี่ยนโมเดลของนักศึกษา
 
-เปิด `curriculum_app/model_service.py` แล้วค้นหา:
-
-```text
-MODEL INTEGRATION POINT
-```
-
-ฟังก์ชันที่ต้องเปลี่ยนคือ:
+Curriculum App ไม่ได้เรียกโมเดลเองแล้ว `QwenTextToSQL.ask()` ใน `curriculum_app/model_service.py` เรียก `ask()` ของ Lab 8B (`src/ocr_system/lab8b_curriculum_db.py`) ตัวเดียวกับที่ Lab 9 ใช้วัดผล ทุกการเรียก LLM (สร้าง SQL และสรุปคำตอบ) จึงผ่านฟังก์ชันเดียวคือ:
 
 ```python
-QwenTextToSQL._chat()
+lab8b_curriculum_db.ollama_generate()
 ```
 
-จากนั้นแก้ `_chat()` ให้เรียกฟังก์ชัน inference ของโมเดลและคืน Python `dict` รูปแบบเดิม ส่วน FastAPI, SQLite และ frontend ไม่ต้องแก้ ส่วน Transcript App ใช้โมเดลผ่าน `lab8a_denoise.py` และ `lab7a_transcript.py` โดยตรง
+- **เปลี่ยนเฉพาะชื่อโมเดลใน Ollama**: ตั้ง `CURRICULUM_OLLAMA_MODEL` ใน `curriculum_app/.env` (หน้าเว็บส่งค่านี้เข้า `lab8b.ask(model=...)`) ส่วน Lab 9 ใช้ `LAB8_MODEL_TEXT`
+- **เปลี่ยนไปใช้โมเดลที่ไม่ใช่ Ollama**: แก้ `ollama_generate()` ให้เรียก inference ของโมเดลใหม่และคืนข้อความ JSON รูปแบบเดิม (`{"sql": ...}` หรือ `{"answer": ...}`) หน้าเว็บและ Benchmark จะใช้โมเดลใหม่พร้อมกัน ส่วน FastAPI, SQLite และ frontend ไม่ต้องแก้
+- Prompt แปลง SQL ยาวประมาณ 4,341 token จึงต้องใช้ `NUM_CTX = 8192` (หรือ context ของโมเดลใหม่ที่ใหญ่กว่า Prompt)
+
+ส่วน Transcript App ใช้โมเดลผ่าน `lab8a_denoise.py` และ `lab7a_transcript.py` โดยตรง
 
 ## 11. ลำดับการทำงานของ `/api/ask`
 
 1. `index.html` ส่ง `POST /api/ask`
 2. FastAPI ตรวจ request ด้วย Pydantic
-3. Qwen สร้าง `SELECT` SQL
-4. `database.py` ปฏิเสธ SQL ที่แก้ข้อมูล
-5. เปิด SQLite แบบ read-only แล้วรัน query
-6. Qwen สรุป rows เป็นคำตอบภาษาไทย
-7. FastAPI ส่ง JSON กลับหน้าเว็บ
+3. `model_service.py` เปิด SQLite แบบ read-only แล้วเรียก `lab8b.ask()`
+4. `build_sql_prompt()` สร้าง Prompt (DDL + Few-shot + ป้ายหมวดข้อบังคับจากฐานข้อมูล) แล้ว Qwen สร้าง SQL เป็น JSON
+5. `guard_sql()` อนุญาตเฉพาะ `SELECT`/`WITH` คำสั่งเดียว และเติม `LIMIT 200`
+6. รัน query ถ้า Error จะส่งข้อความ Error ให้ Qwen แก้ SQL 1 ครั้ง ถ้าได้ 0 แถวจะตอบ "ไม่พบข้อมูลนี้ในเล่มหลักสูตร" โดยไม่ลองใหม่
+7. Qwen สรุป rows เป็นคำตอบภาษาไทย
+8. `extract_sources()` หาเลขหน้าอ้างอิงของรายวิชาและข้อบังคับ
+9. FastAPI ส่ง JSON (`question`, `sql`, `rows` สูงสุด 100 แถว, `answer`, `sources`) กลับหน้าเว็บ
 
 ## 12. ปัญหาที่พบบ่อย
 
