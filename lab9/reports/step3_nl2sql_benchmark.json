@@ -1,61 +1,64 @@
 {
   "main_database": {
     "total_questions": 189,
-    "correct_answers": 178,
-    "execution_accuracy": 94.18,
-    "valid_sql_count": 189,
-    "valid_sql_rate": 100.0,
+    "correct_answers": 163,
+    "execution_accuracy": 86.24,
+    "valid_sql_count": 186,
+    "valid_sql_rate": 98.41,
     "error_distribution": {
-      "syntax_error": 0,
-      "empty_rows": 11,
+      "syntax_error": 3,
+      "empty_rows": 22,
       "wrong_value": 0,
-      "other": 0
+      "other": 1
     },
     "wrong_cases_sample": [
       {
-        "question": "วิชา 06016401 ในหลักสูตร AIT เรียนชั้นปีที่เท่าไร",
+        "question": "วิชาไหนบ้างที่ต้องเรียน 06066300 มาก่อน",
         "expect": {
-          "type": "value",
-          "value": 1
+          "type": "set",
+          "value": [
+            "06026212",
+            "06026213"
+          ]
         },
-        "sql": "SELECT year FROM plan_item WHERE code = '06016401' AND program_id = 'AIT' LIMIT 1",
-        "why": "ไม่พบค่า 1 (ได้ [])"
+        "sql": "SELECT c.code AS course_code, c.name_th AS course_name FROM course c WHERE c.code = '06066300' LIMIT 200",
+        "why": "ขาด 06026212, 06026213"
       },
       {
-        "question": "วิชา 06016401 ในหลักสูตร AIT เรียนภาคการศึกษาใด",
+        "question": "วิชาไหนบ้างที่ต้องเรียน 06026200 มาก่อน",
         "expect": {
           "type": "value",
-          "value": 1
+          "value": "06026201"
         },
-        "sql": "SELECT semester FROM plan_item WHERE code = '06016401' AND program_id = 'AIT' LIMIT 1",
-        "why": "ไม่พบค่า 1 (ได้ [])"
+        "sql": "SELECT c.code AS course_code, c.name_th AS course_name FROM course c WHERE c.code = '06026200' LIMIT 200",
+        "why": "ไม่พบค่า 06026201 (ได้ ['06026200', 'แคลคูลัส 1'])"
       },
       {
-        "question": "วิชา 06066000 เรียนชั้นปีที่เท่าไร",
+        "question": "วิชาไหนบ้างที่ต้องเรียน 06066101 มาก่อน",
         "expect": {
           "type": "value",
-          "value": 1
+          "value": "06066102"
         },
-        "sql": "SELECT year FROM plan_item WHERE code = '06066000' LIMIT 1",
-        "why": "ไม่พบค่า 1 (ได้ ['2'])"
+        "sql": "SELECT c.code AS course_code, c.name_th AS course_name FROM course c JOIN prerequisite p ON p.requires = c.code WHERE p.course_code = '06066101' AND p.kind = 'pre' LIMIT 200",
+        "why": "ไม่พบค่า 06066102 (ได้ [])"
       },
       {
-        "question": "วิชา 06046414 ต้องเรียนวิชาใดมาก่อน",
+        "question": "หลักสูตร IT มีทั้งหมดกี่หน่วยกิต",
         "expect": {
           "type": "value",
-          "value": "06046410"
+          "value": 129
         },
-        "sql": "SELECT requires FROM prerequisite WHERE code = '06046414' AND kind = 'pre' LIMIT 200",
-        "why": "ไม่พบค่า 06046410 (ได้ [])"
+        "sql": "SELECT program.total_credits FROM program WHERE program.program_id = 'DSBA' LIMIT 200",
+        "why": "ไม่พบค่า 129 (ได้ ['132'])"
       },
       {
-        "question": "วิชา 06046442 ต้องเรียนวิชาใดมาก่อน",
+        "question": "หลักสูตร IT ปี 1 เทอม 1 เรียนกี่หน่วยกิต",
         "expect": {
           "type": "value",
-          "value": "06046441"
+          "value": 18
         },
-        "sql": "SELECT requires FROM prerequisite WHERE code = '06046442' AND kind = 'pre' LIMIT 200",
-        "why": "ไม่พบค่า 06046441 (ได้ [])"
+        "sql": "SELECT v.n_courses FROM v_semester_credits AS v JOIN study_plan AS sp ON sp.plan_id = v.plan_id WHERE v.program_id = 'IT' AND sp.plan_type = 'no_coop' AND v.year = 1 AND v.semester = 1 LIMIT 1",
+        "why": "ไม่พบค่า 18 (ได้ ['7'])"
       }
     ]
   },
