@@ -307,7 +307,7 @@ erDiagram
 #### 3.1 กระบวนการทำงาน (Process)
 ทั้ง Lab 9 (Benchmark) และ Lab 10 (`POST /api/ask`) เรียกฟังก์ชันเดียวกันคือ `ask()` ใน [`lab8b_curriculum_db.py`](src/ocr_system/lab8b_curriculum_db.py) ผลที่วัดได้ใน Benchmark จึงเป็นพฤติกรรมเดียวกับที่ผู้ใช้เจอบนหน้าเว็บ (ทดสอบยิง API 30 ข้อ ได้ SQL ตรงกับ Benchmark ทุกตัวอักษร 30/30)
 
-1. **Schema-Grounded Prompting (Prompt เดียวสำหรับทุกคำถาม)**: `build_sql_prompt()` ประกอบ `SQL_PROMPT` จาก DDL ของฐานข้อมูล (`DDL`), Few-shot Examples 30 ข้อ, กติกาการเลือกตาราง/คอลัมน์ และรายการ `category`/`topic` ของข้อบังคับที่อ่านสดจากตาราง `regulation` (`get_live_regulation_labels()`) เพื่อให้โมเดลใช้ชื่อหมวดข้อบังคับตรงกับค่าจริงในฐานข้อมูล
+1. **Schema-Grounded Prompting (Prompt เดียวสำหรับทุกคำถาม)**: `build_sql_prompt()` ประกอบ `SQL_PROMPT` จาก DDL ของฐานข้อมูล (`DDL`), Few-shot Examples 35 ข้อ (รวมตัวอย่างคำถามรายการวิชาที่คืนทุกแถวโดยไม่ใส่ `LIMIT 1`), กติกาการเลือกตาราง/คอลัมน์ และรายการ `category`/`topic` ของข้อบังคับที่อ่านสดจากตาราง `regulation` (`get_live_regulation_labels()`) เพื่อให้โมเดลใช้ชื่อหมวดข้อบังคับตรงกับค่าจริงในฐานข้อมูล
 2. **Constrained Output Decoding**: บังคับให้ LLM ส่งคืนเฉพาะ JSON `{"sql": "SELECT ..."}` ผ่าน Ollama Format Schema แล้ว `clean_sql_output()` ตัด `<think>` และ Markdown Fence ออก
 3. **Security Guardrail 2 ชั้น**:
    - ชั้นที่ 1: เปิด SQLite แบบอ่านอย่างเดียว (`file:...?mode=ro`)
@@ -317,7 +317,7 @@ erDiagram
 
 ```mermaid
 flowchart TD
-    Q["คำถามของผู้ใช้<br/>(Lab 9 Benchmark หรือ POST /api/ask)"] --> INJECT["build_sql_prompt()<br/>(DDL + Few-shot 30 ข้อ + Regulation Labels)"]
+    Q["คำถามของผู้ใช้<br/>(Lab 9 Benchmark หรือ POST /api/ask)"] --> INJECT["build_sql_prompt()<br/>(DDL + Few-shot 35 ข้อ + Regulation Labels)"]
     INJECT --> LLM["Qwen3:4b<br/>(Ollama, Temp=0.0, num_ctx=8192)"]
     LLM --> PARSE["parse_json_loose() & clean_sql_output()"]
     PARSE --> GUARD{"guard_sql()<br/>ตรวจสอบความปลอดภัย"}
@@ -341,13 +341,13 @@ flowchart TD
 | :--- | :--- | :--- |
 | `model` | `qwen3:4b` | โมเดลขนาดกะทัดรัดที่รองรับภาษาไทยและมีความสามารถด้าน Coding/SQL รันบน GPU 6 GB ได้ |
 | `temperature` | `0.0` | Greedy Decoding เพื่อลดความแปรปรวน เพิ่มความทำซ้ำได้ และให้คำสั่ง SQL คงเส้นคงวา |
-| `NUM_CTX` | `8192` | Prompt แปลง SQL ยาวประมาณ **4,341 token** (วัดจาก `prompt_eval_count` ของ Ollama) ถ้าตั้ง 4096 Ollama จะตัด Prompt ส่วนต้น (DDL) ทิ้งโดยไม่แจ้ง ใช้ค่าเดียวกันทั้งตอนสร้าง SQL และตอนสรุปคำตอบ เพื่อไม่ให้ Ollama ต้องโหลดโมเดลใหม่ระหว่างสองขั้น |
+| `NUM_CTX` | `8192` | Prompt แปลง SQL ยาวประมาณ **4,777 token** (วัดจาก `prompt_eval_count` ของ Ollama) ถ้าตั้ง 4096 Ollama จะตัด Prompt ส่วนต้น (DDL) ทิ้งโดยไม่แจ้ง ใช้ค่าเดียวกันทั้งตอนสร้าง SQL และตอนสรุปคำตอบ เพื่อไม่ให้ Ollama ต้องโหลดโมเดลใหม่ระหว่างสองขั้น |
 | `num_predict` | `256` | เพียงพอต่อความยาวของคำสั่ง SQL (เฉลี่ยประมาณ 29 โทเคน) |
 | การเรียกโมเดลสร้าง SQL | สูงสุด 2 ครั้ง | รอบแรก + Repair 1 ครั้ง เฉพาะเมื่อ SQL Error เพื่อควบคุม Latency |
 | `SQL_ROW_LIMIT` | `200` | `guard_sql()` เติม `LIMIT 200` กันการดึงทั้งตารางเข้า Prompt (Lab 10 ตัดแสดงผลที่ `max_rows = 100`) |
 
 #### 3.4 ระยะเวลาในการรัน (Execution Time)
-- **รันสดประเมินผลครบ 189 ข้อ (`python lab9/run_all_eval.py --live`, ผลใน `lab9/reports/live_eval_result.json`)**: **เฉลี่ย 1.69 วินาที/ข้อ** (ต่ำสุด 0.74 วินาที, ค่ามัธยฐาน 1.66 วินาที, สูงสุด 8.00 วินาทีซึ่งเป็นข้อแรกที่ Ollama โหลดโมเดล, เวลารวม 319.81 วินาที)
+- **รันสดประเมินผลครบ 189 ข้อ (`python lab9/run_all_eval.py --live`, ผลใน `lab9/reports/live_eval_result.json`)**: **เฉลี่ย 1.64 วินาที/ข้อ** (ต่ำสุด 0.74 วินาที, ค่ามัธยฐาน 1.58 วินาที, สูงสุด 3.75 วินาที, เวลารวม 310.61 วินาที) คำขอแรกหลังเปิด Ollama อาจช้าถึง 8–10 วินาทีเพราะต้องโหลดโมเดล
 - **สัดส่วนเวลาต่อ 1 คำถาม** (วัดจาก `prompt_eval_duration`/`eval_duration` ของ Ollama): สร้าง SQL ประมาณ 1.06 วินาที (อ่าน Prompt 0.08 วินาที เพราะ Ollama Cache ส่วนต้นของ Prompt ที่เหมือนกันทุกข้อ + สร้าง SQL 0.71 วินาที) และสรุปคำตอบประมาณ 0.86 วินาที เวลาส่วนใหญ่จึงอยู่ที่การสร้าง Output ไม่ใช่ความยาว Prompt
 - **รันจาก Cache Baseline ในหน่วยความจำ (Cached Benchmark)**: **0.05 วินาที**
 
@@ -356,23 +356,23 @@ flowchart TD
 
 | ฐานข้อมูลทดสอบ | จำนวนคำถาม | คำสั่ง SQL รันผ่าน (Valid SQL) | ผลลัพธ์ SQL ตรงเฉลย (Execution Accuracy) | รูปแบบ Error ที่พบ |
 | :--- | :---: | :---: | :---: | :--- |
-| **Unified Main DB (รวมล่าสุด)** | **189** | **100.0% (189/189)** | **95.24% (180/189)** | ผลลัพธ์ว่างหรือค่าไม่ตรง 9 ข้อ ไม่มี Syntax Error |
+| **Unified Main DB (รวมล่าสุด)** | **189** | **100.0% (189/189)** | **96.30% (182/189)** | ผลลัพธ์ว่างหรือค่าไม่ตรง 7 ข้อ (ทั้งหมดมาจากข้อมูลหรือเฉลย) ไม่มี Syntax Error |
 | BIT (Isolated DB) † | 45 | 100.0% (45/45) | 100.0% (45/45) | ไม่มี Error |
 | IT (Isolated DB) † | 45 | 100.0% (45/45) | 100.0% (45/45) | ไม่มี Error |
 | DSBA (Isolated DB) † | 45 | 100.0% (45/45) | 91.1% (41/45) | ผลลัพธ์ว่าง/ค่าไม่ตรง 4 ข้อ |
 | AIT (Isolated DB) † | 45 | 100.0% (45/45) | 88.9% (40/45) | ผลลัพธ์ว่าง/ค่าไม่ตรง 5 ข้อ |
 | **รวม Isolated DB ทั้ง 4 ฐาน** † | **180** | **100.0% (180/180)** | **95.0% (171/180)** | ผลลัพธ์ว่าง/ค่าไม่ตรง 9 ข้อ ไม่มี Syntax Error |
 
-† ผล Isolated DB รันใหม่ด้วย Prompt ปัจจุบัน (13 ต.ค. 2569) โดยใช้ `lab8b_curriculum_db.py eval` กับคำถาม 45 ข้อต่อหลักสูตรใน `work/lab8b_run/{BIT,IT,DSBA,AIT}/gold_questions.json` บนฐานข้อมูลแยกรายหลักสูตร ผลบันทึกใน `work/lab8b_run/{BIT,IT,DSBA,AIT}/eval_result.json` คำถามชุดแยกเป็นส่วนหนึ่งของชุด 189 ข้อ (BIT/IT/DSBA ครบ 45 ข้อ, AIT 43 ข้อ) แต่รันบนฐานข้อมูลต่างกัน ผลจึงต่างกันได้ ข้อผิดของ DSBA มาจากคำถามที่ไม่ระบุหลักสูตรหรือแผน ซึ่งระบบใช้ค่าเริ่มต้นแผนปกติ (`no_coop`) แต่ฐานข้อมูลแยกของ DSBA มีแผนเดียว (3 ข้อ) และโมเดลกรองเป็น BIT แทน DSBA (1 ข้อ) ส่วน AIT เป็นปัญหาข้อมูล/เฉลยชุดเดียวกับฐานข้อมูลรวม (`06016401` และหน่วยกิต AIT ปี 1)
+† ผล Isolated DB รันใหม่ด้วย Prompt ปัจจุบัน (16 ต.ค. 2569) โดยใช้ `lab8b_curriculum_db.py eval` กับคำถาม 45 ข้อต่อหลักสูตรใน `work/lab8b_run/{BIT,IT,DSBA,AIT}/gold_questions.json` บนฐานข้อมูลแยกรายหลักสูตร ผลบันทึกใน `work/lab8b_run/{BIT,IT,DSBA,AIT}/eval_result.json` คำถามชุดแยกเป็นส่วนหนึ่งของชุด 189 ข้อ (BIT/IT/DSBA ครบ 45 ข้อ, AIT 43 ข้อ) แต่รันบนฐานข้อมูลต่างกัน ผลจึงต่างกันได้ ข้อผิดของ DSBA มาจากคำถามที่ไม่ระบุหลักสูตรหรือแผน ซึ่งระบบใช้ค่าเริ่มต้นแผนปกติ (`no_coop`) แต่ฐานข้อมูลแยกของ DSBA มีเฉพาะแผนสหกิจ (`DSBA_COOP`) จึงได้ 0 แถว (ทั้ง 4 ข้อ) ส่วน AIT เป็นปัญหาข้อมูล/เฉลยชุดเดียวกับฐานข้อมูลรวม (`06016401` และหน่วยกิต AIT ปี 1)
 
-**วิเคราะห์ข้อผิด 9 ข้อของ Unified Main DB**:
+**วิเคราะห์ข้อผิด 7 ข้อของ Unified Main DB**:
 | สาเหตุ | จำนวน | รายละเอียด |
 | :--- | :---: | :--- |
 | ข้อมูลหรือเฉลยไม่ตรงกัน | 7 | วิชา `06016401` ไม่อยู่ในแผน AIT แต่เฉลยระบุว่าอยู่ (2 ข้อ), หน่วยกิต AIT ปี 1 เทอม 1/2 ในฐานข้อมูลคือ 15/19 แต่เฉลยคือ 18/16 (2 ข้อ), ตาราง `prerequisite` ไม่มีข้อมูลวิชาบังคับก่อนของ `06046414` และ `06046442` (2 ข้อ), คำถามชั้นปีของ `06066000` ไม่ระบุหลักสูตรแต่วิชาอยู่หลายหลักสูตรต่างชั้นปี (1 ข้อ) |
-| โมเดลสร้าง SQL ผิด | 2 | คำถาม "ปี 2 เทอม 2" ที่ไม่ระบุหลักสูตรถูกกรองเป็น BIT แทนค่าเริ่มต้น DSBA, และคำถามเกณฑ์พ้นสภาพเลือก `min_gpa` แทน `max_gpa` |
+| โมเดลสร้าง SQL ผิด | 0 | รอบก่อนมี 2 ข้อ (คำถาม "ปี 2 เทอม 2" ถูกกรองเป็น BIT และเกณฑ์พ้นสภาพเลือก `min_gpa`) แก้แล้วด้วยตัวอย่าง `max_gpa` ใน Prompt |
 
 > 📊 **ขอบเขตของตัวชี้วัดรอบล่าสุด**:
-> - **NL2SQL Execution Accuracy (95.24% / 180 ข้อ)**: วัดว่าคำสั่ง SQL ให้ผลลัพธ์ตรงกับ Ground Truth (`step3_nl2sql_benchmark.json`)
+> - **NL2SQL Execution Accuracy (96.30% / 182 ข้อ)**: วัดว่าคำสั่ง SQL ให้ผลลัพธ์ตรงกับ Ground Truth (`step3_nl2sql_benchmark.json`)
 > - ฟิลด์ `correct` ใน `live_eval_result.json` คำนวณด้วย `score_one()` จาก SQL rows เช่นเดียวกัน จึงไม่รายงานเป็น Human-rated Final-Answer Correctness แยกอีกชุด
 > - ผลของ LLM ขยับได้ระหว่างรอบประมาณ ±1–3% แม้ตั้ง `temperature = 0.0` ส่วนต่างระดับ 1–2 ข้อจึงไม่ควรตีความว่าดีขึ้นหรือแย่ลง
 
@@ -384,17 +384,18 @@ flowchart TD
 | Prompt เวอร์ชันก่อน (Live Schema + Focused Prompt + Repair Prompt แบบละเอียด) | 7,507 | 4096 | 86.24% | 98.41% | 2.17 วินาที |
 | Prompt เวอร์ชันก่อน | 7,507 | 8192 | 96.30% | 100% | 2.72 วินาที |
 | Prompt เวอร์ชันก่อน ตัด Focused Prompt และ Repair ออก | 7,507 | 8192 | 92.59% | 98.94% | 2.44 วินาที |
-| Prompt ปัจจุบัน แต่ใช้ `num_ctx` 4096 | 4,341 | 4096 | 86.77% | 93.12% | 1.95 วินาที |
-| **Prompt ปัจจุบัน (ใช้งานจริง)** | **4,341** | **8192** | **95.24%** | **100%** | **1.69 วินาที** |
+| Prompt รุ่นก่อนหน้า แต่ใช้ `num_ctx` 4096 | 4,341 | 4096 | 86.77% | 93.12% | 1.95 วินาที |
+| Prompt รุ่นก่อนหน้า (ก่อนเพิ่มตัวอย่างรายการวิชา) | 4,341 | 8192 | 95.24% | 100% | 1.69 วินาที |
+| **Prompt ปัจจุบัน (ใช้งานจริง)** | **4,777** | **8192** | **96.30%** | **100%** | **1.64 วินาที** |
 
 ข้อสรุปที่นำมาใช้:
 - **`num_ctx` ต้องใหญ่กว่า Prompt**: เมื่อ Prompt ยาวเกิน `num_ctx` Ollama จะตัด Prompt ส่วนต้นทิ้งโดยไม่แจ้ง ทำให้โมเดลไม่เห็น Schema และแต่งชื่อคอลัมน์ขึ้นเอง (เช่น `c.program_id`, `regulation_value`)
-- **Prompt สั้นและกฎไม่ซ้ำกัน เร็วกว่า**: Prompt ปัจจุบันได้ความแม่นยำใกล้เคียงแบบที่ดีที่สุด (ต่าง 2 ข้อ ซึ่งอยู่ในช่วงความผันผวนระหว่างรอบ) แต่เร็วกว่าประมาณ 38% (1.69 กับ 2.72 วินาทีต่อข้อ) เพราะเวลาส่วนใหญ่อยู่ที่การสร้าง Output และตัวอย่างใน Prompt ปัจจุบันพาให้โมเดลสร้าง SQL ที่สั้นกว่า
+- **Prompt สั้นและกฎไม่ซ้ำกัน เร็วกว่า**: Prompt ปัจจุบันได้ความแม่นยำเท่ากับแบบที่ดีที่สุด (96.30%) แต่เร็วกว่าประมาณ 40% (1.64 กับ 2.72 วินาทีต่อข้อ) เพราะเวลาส่วนใหญ่อยู่ที่การสร้าง Output และตัวอย่างใน Prompt ปัจจุบันพาให้โมเดลสร้าง SQL ที่สั้นกว่า
 - **Repair แบบง่ายยังจำเป็น**: ใช้จริงเพียงไม่กี่ข้อแต่ไม่ทำให้ข้อที่ผ่านตั้งแต่ครั้งแรกช้าลง
-- **ชื่อหมวดข้อบังคับต้องมาจากฐานข้อมูลจริง**: เมื่อแนบรายการ `category`/`topic` จากตาราง `regulation` ใน Prompt คำถามข้อบังคับถูก 9/10 ข้อ
+- **ชื่อหมวดข้อบังคับต้องมาจากฐานข้อมูลจริง**: เมื่อแนบรายการ `category`/`topic` จากตาราง `regulation` ใน Prompt คำถามข้อบังคับถูก 10/10 ข้อ (หลังเพิ่มตัวอย่าง `max_gpa` สำหรับเกณฑ์พ้นสภาพ)
 
 #### 3.7 ข้อจำกัดที่ทราบ (Known Limitations)
-- **คำถามรายการวิชา ("เรียนวิชาอะไรบ้าง") อาจได้เพียงวิชาเดียว**: Few-shot Examples ส่วนใหญ่ลงท้ายด้วย `LIMIT 1` และยังไม่มีตัวอย่างคำถามรายการวิชา โมเดลจึงมักสร้าง SQL ที่มี `LIMIT 1` ชุดเฉลยมีคำถามประเภทนี้น้อย Benchmark จึงไม่สะท้อนปัญหานี้ แนวทางแก้คือเพิ่ม Few-shot สำหรับรายการวิชาแล้วรัน Benchmark ใหม่
+- **คำถามรายการวิชา ("เรียนวิชาอะไรบ้าง")**: แก้แล้วด้วยตัวอย่างรายการวิชา 4 ข้อ (`SELECT DISTINCT ... FROM v_plan` ไม่ใส่ `LIMIT`) และกฎให้กรองแผนเสมอยกเว้น AIT ทดสอบเฉพาะ 10 คำถาม (ทุกหลักสูตร ทั้งสองแผน) ได้รายการวิชาครบและจำนวนแถวตรงกับแผน 9/10 ข้อ (เดิม 0/10 เพราะได้วิชาเดียว) ข้อที่ยังพลาดคือ BIT ปี 3–4 แบบไม่ระบุแผน ซึ่งโมเดลไม่กรองแผนจึงได้วิชาของทั้งสองแผนปนกัน ชุดเฉลย 189 ข้อไม่มีคำถามรายการวิชาที่คาดหวังผลลัพธ์ จึงวัดผลส่วนนี้ด้วยชุดทดสอบแยก
 - **ข้อผิด 7 ข้อมาจากข้อมูลหรือเฉลย** (ดูตารางใน 3.5) ต้องแก้ที่ขั้นสกัดข้อมูลหรือชุดเฉลย ไม่ใช่ที่ Prompt
 - **คำถามที่ไม่ระบุหลักสูตรใช้ DSBA แผนปกติเป็นค่าเริ่มต้น** โดยไม่ถามผู้ใช้กลับ (ดู 3.2 ระดับที่ 5 ในหัวข้อการวิเคราะห์)
 
@@ -436,14 +437,14 @@ flowchart LR
 
 #### 4.4 ผลลัพธ์และตัวชี้วัด (Groundedness Evaluation Metrics)
 - **ตัวชี้วัดจาก `lab9/reports/step4_groundedness_metrics.json` (Step 4 ใช้ผลรันสดรอบเดียวกับ Step 3)**:
-  - **Faithfulness / Groundedness Proxy**: **95.24%** (180/189 ข้อ โดยอิงฟิลด์ `correct` ที่ตรวจจาก SQL rows)
+  - **Faithfulness / Groundedness Proxy**: **96.30%** (182/189 ข้อ โดยอิงฟิลด์ `correct` ที่ตรวจจาก SQL rows)
   - **Exact Match (EM)**: **95.00%** (171/180 ข้อ - วัดคำถามชนิด `value` และ `count`)
   - **Course Citation Coverage**: **99.8%** (503/504 รายวิชา มีเลขหน้าจริงในเล่ม มคอ.2 กำกับ)
   - **Regulation Citation Coverage**: **100.0%** (11/11 ข้อบังคับ มีเลขหน้าสแกนจริงในภาคผนวก ก)
   - หมายเหตุ: Citation Coverage วัดว่า **ข้อมูลในฐานข้อมูล** มีเลขหน้าครบหรือไม่ ไม่ได้วัดว่าคำตอบแต่ละข้อแสดงป้ายอ้างอิง
 - **ตัวชี้วัดจากการรันสด (`lab9/reports/live_eval_result.json`)**:
-  - **Live Retrieval Correctness**: **95.24%** (180/189 ข้อ ตรวจจาก SQL rows)
-  - **QA Latency**: เฉลี่ย **1.69 วินาที/ข้อ** (ต่ำสุด 0.74 วินาที, ค่ามัธยฐาน 1.66 วินาที, สูงสุด 8.00 วินาที, รวม 319.81 วินาที)
+  - **Live Retrieval Correctness**: **96.30%** (182/189 ข้อ ตรวจจาก SQL rows)
+  - **QA Latency**: เฉลี่ย **1.64 วินาที/ข้อ** (ต่ำสุด 0.74 วินาที, ค่ามัธยฐาน 1.58 วินาที, สูงสุด 3.75 วินาที, รวม 310.61 วินาที)
 - **ทดสอบอ้างอิงบนหน้าเว็บจริง (`POST /api/ask` คำถามข้อบังคับ 10 ข้อ)**: แสดงป้ายอ้างอิงพร้อมเลขข้อบังคับและเลขหน้าครบ **10/10 ข้อ** เช่น "เกียรตินิยมอันดับ 1 ต้องมี GPA สะสมอย่างน้อยเท่าไร" ตอบ 3.5 อ้างอิง ข้อ 27.2.2 หน้า 93
 
 ---
@@ -499,7 +500,7 @@ sequenceDiagram
 #### 5.2 ระยะเวลาและประสิทธิภาพ (Performance & Latency)
 - **Static Asset & UI Rendering**: พัฒนาด้วย Native Vanilla JS และ Clean CSS ไม่มี External Framework Bundle ขนาดใหญ่ ทำให้โหลดและแสดงผลหน้าเว็บได้ทันที
 - **Database Search Queries (`/api/courses`, `/api/regulations`)**: ดึงข้อมูลตรงจาก SQLite ผ่าน Indexed Query และ Limit/Offset Pagination ตอบสนองในระดับ Sub-second
-- **Natural Language Question (`/api/ask`) End-to-End**: ทดสอบยิง API จริง 30 คำถาม (กระจายทั่วชุด 189 ข้อ) ได้ HTTP 200 ครบ 30/30, ตอบถูก 29/30 (เท่ากับผล Benchmark ของ 30 ข้อนี้) และ SQL ตรงกับ Benchmark ทุกตัวอักษร 30/30 ใช้เวลาเฉลี่ย **1.92 วินาที/ข้อ** (มัธยฐาน 1.89 วินาที, สูงสุด 2.41 วินาที) ซึ่งรวม HTTP และการค้นป้ายอ้างอิงแล้ว สูงกว่าการเรียกฟังก์ชันตรงใน Benchmark (1.69 วินาที) ประมาณ 0.2 วินาที เวลาส่วนใหญ่ขึ้นอยู่กับการประมวลผลของ Local LLM (Ollama)
+- **Natural Language Question (`/api/ask`) End-to-End**: ทดสอบยิง API จริง 30 คำถาม (กระจายทั่วชุด 189 ข้อ) ได้ HTTP 200 ครบ 30/30, ตอบถูก 29/30 (เท่ากับผล Benchmark ของ 30 ข้อนี้) และ SQL ตรงกับ Benchmark ทุกตัวอักษร 30/30 ใช้เวลาเฉลี่ย **1.92 วินาที/ข้อ** (มัธยฐาน 1.89 วินาที, สูงสุด 2.41 วินาที) ซึ่งรวม HTTP และการค้นป้ายอ้างอิงแล้ว สูงกว่าการเรียกฟังก์ชันตรงใน Benchmark รอบเดียวกัน (1.69 วินาที; ทดสอบกับ Prompt รุ่นก่อนเพิ่มตัวอย่างรายการวิชา) ประมาณ 0.2 วินาที เวลาส่วนใหญ่ขึ้นอยู่กับการประมวลผลของ Local LLM (Ollama)
 - **คำขอแรกหลังเปิดเซิร์ฟเวอร์** อาจช้าถึงประมาณ 8–10 วินาที เพราะ Ollama ต้องโหลดโมเดลด้วย `num_ctx = 8192`
 
 ---
@@ -549,7 +550,7 @@ graph LR
 #### ระดับที่ 4: การค้นหาเกณฑ์และข้อบังคับสถาบัน (Institutional Regulations & Policies)
 - **ตัวอย่างคำถาม**: *"ทุจริตในการสอบจะถูกลงโทษอย่างไร"*, *"นักศึกษาที่ได้ GPA ต่ำกว่าเท่าไรถึงจะถูกภาคทัณฑ์"*
 - **SQL ที่ถูกต้องตามข้อมูลจริง**: `SELECT penalty_action FROM regulation WHERE category = 'การทุจริตในการสอบ' AND topic = 'ทุจริตครั้งแรก' LIMIT 1`
-- **ประสิทธิภาพ**: **90.00% (9/10 ข้อ)** โดย SQL รันผ่าน 10/10 ข้อ หลังแนบรายการ `category`/`topic` จริงจากตาราง `regulation` ใน Prompt และแก้ชื่อหมวดใน Few-shot ให้ตรงกับฐานข้อมูล (เวอร์ชันก่อนได้ 60% เพราะโมเดลสร้างชื่อหมวดไม่ตรง เช่น `เกณฑ์การทุจริตในการสอบ` แทน `การทุจริตในการสอบ`) ข้อที่ยังผิดคือคำถามเกณฑ์พ้นสภาพที่โมเดลเลือกคอลัมน์ `min_gpa` แทน `max_gpa`
+- **ประสิทธิภาพ**: **100.0% (10/10 ข้อ)** โดย SQL รันผ่าน 10/10 ข้อ หลังแนบรายการ `category`/`topic` จริงจากตาราง `regulation` ใน Prompt, แก้ชื่อหมวดใน Few-shot ให้ตรงกับฐานข้อมูล และเพิ่มตัวอย่างเกณฑ์พ้นสภาพที่ใช้ `max_gpa` (เวอร์ชันแรกได้ 60% เพราะโมเดลสร้างชื่อหมวดไม่ตรง เช่น `เกณฑ์การทุจริตในการสอบ` แทน `การทุจริตในการสอบ`)
 
 #### ระดับที่ 5: คำถามที่มีความกำกวมหรือไม่ได้ระบุหลักสูตร (Ambiguous / Cross-Curriculum Queries)
 - **ตัวอย่างคำถาม**: *"หลักสูตรนี้มีกี่หน่วยกิต"* (โดยไม่บอกชื่อสาขาวิชาในฐานข้อมูลรวม 4 สาขา)
@@ -561,10 +562,10 @@ graph LR
 | Level | จำนวนคำถาม | Valid SQL | Execution Accuracy |
 | :--- | ---: | ---: | ---: |
 | 1 — Simple Lookup | 144 | 100.0% (144/144) | 97.92% (141/144) |
-| 2 — Filter & Aggregate | 13 | 100.0% (13/13) | 76.92% (10/13) |
+| 2 — Filter & Aggregate | 12 | 100.0% (12/12) | 83.33% (10/12) |
 | 3 — Multi-table Relation | 17 | 100.0% (17/17) | 88.24% (15/17) |
-| 4 — Regulation Query | 10 | 100.0% (10/10) | 90.00% (9/10) |
-| 5 — Ambiguous Query | 5 | 100.0% (5/5) | 100.0% (5/5) |
+| 4 — Regulation Query | 10 | 100.0% (10/10) | 100.0% (10/10) |
+| 5 — Ambiguous Query | 6 | 100.0% (6/6) | 100.0% (6/6) |
 
 > ⚠️ `step5_eval_query_complexity.py` จัดระดับส่วนหนึ่งจาก **SQL ที่โมเดลสร้าง** (เช่น มี `JOIN` หรือใช้ค่าเริ่มต้น DSBA) ร่วมกับป้ายใน `lab9/query_complexity_labels.json` เมื่อ Prompt เปลี่ยน จำนวนข้อในแต่ละระดับจึงเปลี่ยนตาม (เวอร์ชันก่อนคือ 143/3/27/5/11) ไม่ควรเทียบรายระดับข้ามเวอร์ชัน ให้เทียบเฉพาะตัวเลขรวม
 
@@ -576,10 +577,10 @@ graph LR
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | **1. Extraction (Lab 7B)** | สกัดรายวิชาและข้อบังคับจาก PDF | - `Typhoon-OCR 1.5 3B`<br>- `Qwen3:4b`<br>- `PyMuPDF`<br>- `pdfplumber` | - Multi-pass Alignment<br>- Dual-path Extraction<br>- Thai Word Tokenization | - DPI = 150<br>- Chunk = 1 หน้า<br>- Temp = 0.0 (OCR/Text)<br>- Temp = 0.1 (Reg/GenEd Stage 2)<br>- Repeat Penalty = 1.2 (Reg) / 1.1 (GenEd)<br>- Num Ctx = 8192 | - ตารางวิชา End-to-End: 106.4–410.0s/เล่ม<br>(AIT 106.4s, BIT 268.7s, DSBA 283.9s, IT 410.0s)<br>- ข้อบังคับ VLM: ~38s (6 หน้า)<br>- ประเมินผลใน RAM: **0.12s** | - **Macro Precision**: 94.0%<br>- **Macro Recall**: 89.7% (AIT Recall: 68.4%)<br>- **Macro F1-Score**: **91.3%** |
 | **2. Schema & DB (Lab 8B)** | ตรวจสอบโครงสร้างและความสอดคล้อง | - `SQLite 3`<br>- `Pydantic v2` | - Option 2 Separation<br>- Composite FK Integrity<br>- Prerequisite Audit Engine<br>- 7 Assertion Rules (CHK1–7) | - PRAGMA foreign_keys=ON<br>- (Standard Journal Mode, No WAL)<br>- Unique Constraints | - สร้างและโหลด DB: Sub-second<br>- ตรวจ 7 กฎ: Sub-second | - **Schema Pass Rate**: 100.0%<br>- **Consistency Pass**: 100.0% (7/7 ข้อ) |
-| **3. NL to SQL (Lab 8B/9)** | แปลงภาษาธรรมชาติเป็นคำสั่ง SQL | - `Qwen3:4b` (Ollama)<br>- SQLite Engine | - Schema-Grounded Prompting (Prompt เดียว + Regulation Labels)<br>- Simple Repair (แก้ 1 ครั้ง)<br>- Security Guardrail 2 ชั้น<br>- Abstain on Empty | - Temp = 0.0 (Greedy)<br>- Num Ctx = 8192 (Prompt ≈ 4,341 token)<br>- Num Predict = 256<br>- สร้าง SQL สูงสุด 2 ครั้ง | - รันสด 189 ข้อ: **เฉลี่ย 1.69s/ข้อ** (ต่ำสุด 0.74s, มัธยฐาน 1.66s, สูงสุด 8.00s, รวม 319.81s)<br>- รัน Cached: **0.05s** | - **Valid SQL Rate**: 100.0% (189/189)<br>- **Execution Acc (SQL)**: **95.24%** (180/189) |
-| **4. Groundedness (Lab 8B/9)** | ตรวจสอบความซื่อสัตย์และการอ้างอิง | - `Qwen3:4b`<br>- SQLite Metadata | - Grounded Synthesis<br>- Metadata Citation Matching<br>- Regulation Lookup จาก SQL Filters<br>- Strict Grounded Guard | - Temp = 0.0 (ผ่าน `ollama_generate`)<br>- Num Ctx = 8192<br>- Num Predict = 256 | - สังเคราะห์คำตอบ: ประมาณ 0.86s/ข้อ<br>- ตรวจวัดทั้งชุด (Cached): **0.05s** | - **Faithfulness Proxy**: 95.24% (180/189)<br>- **Exact Match**: 95.00% (171/180)<br>- **Course Citation**: 99.8% (503/504)<br>- **Regulation Citation**: 100.0% (11/11) |
+| **3. NL to SQL (Lab 8B/9)** | แปลงภาษาธรรมชาติเป็นคำสั่ง SQL | - `Qwen3:4b` (Ollama)<br>- SQLite Engine | - Schema-Grounded Prompting (Prompt เดียว + Regulation Labels)<br>- Simple Repair (แก้ 1 ครั้ง)<br>- Security Guardrail 2 ชั้น<br>- Abstain on Empty | - Temp = 0.0 (Greedy)<br>- Num Ctx = 8192 (Prompt ≈ 4,777 token)<br>- Num Predict = 256<br>- สร้าง SQL สูงสุด 2 ครั้ง | - รันสด 189 ข้อ: **เฉลี่ย 1.64s/ข้อ** (ต่ำสุด 0.74s, มัธยฐาน 1.58s, สูงสุด 3.75s, รวม 310.61s)<br>- รัน Cached: **0.05s** | - **Valid SQL Rate**: 100.0% (189/189)<br>- **Execution Acc (SQL)**: **96.30%** (182/189) |
+| **4. Groundedness (Lab 8B/9)** | ตรวจสอบความซื่อสัตย์และการอ้างอิง | - `Qwen3:4b`<br>- SQLite Metadata | - Grounded Synthesis<br>- Metadata Citation Matching<br>- Regulation Lookup จาก SQL Filters<br>- Strict Grounded Guard | - Temp = 0.0 (ผ่าน `ollama_generate`)<br>- Num Ctx = 8192<br>- Num Predict = 256 | - สังเคราะห์คำตอบ: ประมาณ 0.86s/ข้อ<br>- ตรวจวัดทั้งชุด (Cached): **0.05s** | - **Faithfulness Proxy**: 96.30% (182/189)<br>- **Exact Match**: 96.11% (173/180)<br>- **Course Citation**: 99.8% (503/504)<br>- **Regulation Citation**: 100.0% (11/11) |
 | **5. Web App (Lab 10)** | ให้บริการค้นหาและถามตอบผ่านเว็บ | - `FastAPI` (13 Endpoints)<br>- `Uvicorn`<br>- Vanilla JS / Glassmorphism | - 3-State Finite State Machine<br>- Dynamic Plan Resolution<br>- `/api/ask` เรียก `lab8b.ask()` ตัวเดียวกับ Benchmark | - Port = 8000<br>- Max Rows = 100<br>- Async Endpoint Handling | - สืบค้นตรงผ่าน DB: Sub-second<br>- ถามตอบ LLM ผ่าน API (30 ข้อ): **เฉลี่ย 1.92s** (มัธยฐาน 1.89s, สูงสุด 2.41s) | - **API Test**: HTTP 200 30/30, SQL ตรงกับ Benchmark 30/30<br>- **ป้ายอ้างอิงข้อบังคับบนเว็บ**: 10/10 ข้อ |
-| **6. Evaluation (Lab 9)** | รัน 4 ขั้นตอนหลักและวิเคราะห์ Query Complexity | - `run_all_eval.py`<br>- `step5_eval_query_complexity.py` | - Modular Pipeline Aggregation<br>- Gold Labels + Deterministic SQL Classification | - `--live`, `--cached`, `--limit`<br>- `--labels lab9/query_complexity_labels.json` | - แบบ Cached: **0.78s**<br>- แบบ Live (189 ข้อ): **~5.3m** (319.81s)<br>- Complexity Analysis: ใช้ผล Step 3 โดยไม่เรียก LLM ซ้ำ | - JSON Metrics ขั้นที่ 1–4<br>- CSV Summary/Detail สำหรับ Level 1–5; Detail มีคำตอบระบบและเฉลย |
+| **6. Evaluation (Lab 9)** | รัน 4 ขั้นตอนหลักและวิเคราะห์ Query Complexity | - `run_all_eval.py`<br>- `step5_eval_query_complexity.py` | - Modular Pipeline Aggregation<br>- Gold Labels + Deterministic SQL Classification | - `--live`, `--cached`, `--limit`<br>- `--labels lab9/query_complexity_labels.json` | - แบบ Cached: **0.78s**<br>- แบบ Live (189 ข้อ): **~5.2m** (310.61s)<br>- Complexity Analysis: ใช้ผล Step 3 โดยไม่เรียก LLM ซ้ำ | - JSON Metrics ขั้นที่ 1–4<br>- CSV Summary/Detail สำหรับ Level 1–5; Detail มีคำตอบระบบและเฉลย |
 
 ---
 

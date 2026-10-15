@@ -259,7 +259,7 @@ lab8b_curriculum_db.ollama_generate()
 
 - **เปลี่ยนเฉพาะชื่อโมเดลใน Ollama**: ตั้ง `CURRICULUM_OLLAMA_MODEL` ใน `curriculum_app/.env` (หน้าเว็บส่งค่านี้เข้า `lab8b.ask(model=...)`) ส่วน Lab 9 ใช้ `LAB8_MODEL_TEXT`
 - **เปลี่ยนไปใช้โมเดลที่ไม่ใช่ Ollama**: แก้ `ollama_generate()` ให้เรียก inference ของโมเดลใหม่และคืนข้อความ JSON รูปแบบเดิม (`{"sql": ...}` หรือ `{"answer": ...}`) หน้าเว็บและ Benchmark จะใช้โมเดลใหม่พร้อมกัน ส่วน FastAPI, SQLite และ frontend ไม่ต้องแก้
-- Prompt แปลง SQL ยาวประมาณ 4,341 token จึงต้องใช้ `NUM_CTX = 8192` (หรือ context ของโมเดลใหม่ที่ใหญ่กว่า Prompt)
+- Prompt แปลง SQL ยาวประมาณ 4,777 token จึงต้องใช้ `NUM_CTX = 8192` (หรือ context ของโมเดลใหม่ที่ใหญ่กว่า Prompt)
 
 ส่วน Transcript App ใช้โมเดลผ่าน `lab8a_denoise.py` และ `lab7a_transcript.py` โดยตรง
 
