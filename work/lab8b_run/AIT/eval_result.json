@@ -9,11 +9,11 @@
     "n_rows": 1,
     "error": null,
     "sql_model_output": "{\"sql\": \"SELECT total_credits FROM program WHERE program_id = 'AIT' LIMIT 1\"}",
-    "answer_model_output": "{\"answer\": \"120\"}",
-    "answer": "120",
+    "answer_model_output": "{\"answer\": \"120 หน่วยกิต\"}",
+    "answer": "120 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.7
+    "seconds": 2.0
   },
   {
     "question": "หลักสูตร AIT ใช้เวลาเรียนกี่ปี",
@@ -45,7 +45,7 @@
     "answer": "ไม่พบข้อมูลนี้ในเล่มหลักสูตร",
     "correct": false,
     "why": "ไม่พบค่า 3 (ได้ [])",
-    "seconds": 1.0
+    "seconds": 0.9
   },
   {
     "question": "วิชา 06016401 ในหลักสูตร AIT เรียนชั้นปีที่เท่าไร",
@@ -77,7 +77,7 @@
     "answer": "ไม่พบข้อมูลนี้ในเล่มหลักสูตร",
     "correct": false,
     "why": "ไม่พบค่า 1 (ได้ [])",
-    "seconds": 0.9
+    "seconds": 0.8
   },
   {
     "question": "วิชา 06046400 มีกี่หน่วยกิต",
@@ -109,7 +109,7 @@
     "answer": "ปีที่ 1",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.9
+    "seconds": 1.8
   },
   {
     "question": "วิชา 06046400 เรียนภาคการศึกษาใด",
@@ -125,7 +125,7 @@
     "answer": "ภาคการศึกษา 1",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.8
+    "seconds": 2.7
   },
   {
     "question": "วิชา 06046402 มีกี่หน่วยกิต",
@@ -141,7 +141,7 @@
     "answer": "3 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.8
+    "seconds": 2.3
   },
   {
     "question": "วิชา 06046402 เรียนชั้นปีที่เท่าไร",
@@ -157,7 +157,7 @@
     "answer": "ปีที่ 1",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.8
+    "seconds": 2.6
   },
   {
     "question": "วิชา 06046402 เรียนภาคการศึกษาใด",
@@ -169,11 +169,11 @@
     "n_rows": 1,
     "error": null,
     "sql_model_output": "{\"sql\": \"SELECT semester FROM plan_item WHERE code = '06046402' LIMIT 1\"}",
-    "answer_model_output": "{\n  \"answer\": \"ภาคการศึกษา 1\"\n}",
+    "answer_model_output": "{\"answer\": \"ภาคการศึกษา 1\"}",
     "answer": "ภาคการศึกษา 1",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.7
+    "seconds": 2.3
   },
   {
     "question": "วิชา 06066000 มีกี่หน่วยกิต",
@@ -189,7 +189,7 @@
     "answer": "3 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.8
+    "seconds": 2.8
   },
   {
     "question": "วิชา 06066000 เรียนชั้นปีที่เท่าไร",
@@ -205,7 +205,7 @@
     "answer": "ปีที่ 1",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.8
+    "seconds": 1.9
   },
   {
     "question": "วิชา 06066000 เรียนภาคการศึกษาใด",
@@ -221,7 +221,7 @@
     "answer": "ภาคการศึกษา 1",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.8
+    "seconds": 1.7
   },
   {
     "question": "วิชา 06046401 มีกี่หน่วยกิต",
@@ -237,7 +237,7 @@
     "answer": "3 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.9
+    "seconds": 1.7
   },
   {
     "question": "วิชา 06046401 เรียนชั้นปีที่เท่าไร",
@@ -269,7 +269,7 @@
     "answer": "ภาคการศึกษาที่ 2",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.8
+    "seconds": 1.5
   },
   {
     "question": "วิชา 06046403 มีกี่หน่วยกิต",
@@ -301,7 +301,7 @@
     "answer": "ปีที่ 1",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.8
+    "seconds": 1.9
   },
   {
     "question": "วิชา 06046403 เรียนภาคการศึกษาใด",
@@ -317,7 +317,7 @@
     "answer": "ภาคการศึกษาที่ 2",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.8
+    "seconds": 1.7
   },
   {
     "question": "วิชา 06066301 ในหลักสูตร AIT มีกี่หน่วยกิต",
@@ -333,7 +333,7 @@
     "answer": "3 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.9
+    "seconds": 2.1
   },
   {
     "question": "วิชา 06066301 ในหลักสูตร AIT เรียนชั้นปีที่เท่าไร",
@@ -365,7 +365,7 @@
     "answer": "ภาคการศึกษาที่ 2",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.9
+    "seconds": 2.3
   },
   {
     "question": "วิชา 06046401 ต้องเรียนวิชาใดมาก่อน",
@@ -381,7 +381,7 @@
     "answer": "วิชา 06046400",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.9
+    "seconds": 2.0
   },
   {
     "question": "วิชา 06046405 ต้องเรียนวิชาใดมาก่อน",
@@ -397,7 +397,7 @@
     "answer": "06066001",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.8
+    "seconds": 1.9
   },
   {
     "question": "วิชา 06046406 ต้องเรียนวิชาใดมาก่อน",
@@ -413,7 +413,7 @@
     "answer": "06046401, 06046402",
     "correct": true,
     "why": "ตรง",
-    "seconds": 2.0
+    "seconds": 2.2
   },
   {
     "question": "วิชา 06046404 มีกี่หน่วยกิต",
@@ -445,7 +445,7 @@
     "answer": "3 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.8
+    "seconds": 2.0
   },
   {
     "question": "หลักสูตร AIT ปี 1 เทอม 1 เรียนกี่หน่วยกิต",
@@ -477,7 +477,7 @@
     "answer": "19 หน่วยกิต",
     "correct": false,
     "why": "ไม่พบค่า 16 (ได้ ['19'])",
-    "seconds": 2.0
+    "seconds": 2.2
   },
   {
     "question": "วิชา 06046405 มีกี่หน่วยกิต",
@@ -493,7 +493,7 @@
     "answer": "3 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.8
+    "seconds": 2.0
   },
   {
     "question": "วิชา 06046405 เรียนชั้นปีที่เท่าไร",
@@ -525,7 +525,7 @@
     "answer": "ภาคการศึกษา 1",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.8
+    "seconds": 1.9
   },
   {
     "question": "วิชา 06046406 มีกี่หน่วยกิต",
@@ -541,7 +541,7 @@
     "answer": "3 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.9
+    "seconds": 1.8
   },
   {
     "question": "วิชา 06046407 มีกี่หน่วยกิต",
@@ -573,7 +573,7 @@
     "answer": "ปีที่ 2",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.8
+    "seconds": 2.4
   },
   {
     "question": "วิชา 06046407 เรียนภาคการศึกษาใด",
@@ -589,7 +589,7 @@
     "answer": "ภาคการศึกษาที่ 2",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.9
+    "seconds": 2.4
   },
   {
     "question": "วิชา 06046410 มีกี่หน่วยกิต",
@@ -653,7 +653,7 @@
     "answer": "3 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.8
+    "seconds": 2.7
   },
   {
     "question": "วิชา 06046443 มีกี่หน่วยกิต",
@@ -669,7 +669,7 @@
     "answer": "6 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 1.7
+    "seconds": 1.8
   },
   {
     "question": "หลักสูตร AIT ปี 2 เทอม 1 เรียนกี่หน่วยกิต",
@@ -685,7 +685,7 @@
     "answer": "18 หน่วยกิต",
     "correct": true,
     "why": "ตรง",
-    "seconds": 2.0
+    "seconds": 2.5
   },
   {
     "question": "วิชา 88888888 ในหลักสูตร AIT มีกี่หน่วยกิต",
@@ -709,14 +709,14 @@
       "type": "none",
       "value": null
     },
-    "sql": "SELECT name_th FROM v_plan WHERE program_id = 'AIT' AND year = 7 AND semester = 1 LIMIT 1",
+    "sql": "SELECT DISTINCT code, name_th, name_en, credits FROM v_plan WHERE program_id = 'AIT' AND year = 7 AND semester = 1 LIMIT 200",
     "n_rows": 0,
     "error": null,
-    "sql_model_output": "{\"sql\": \"SELECT name_th FROM v_plan WHERE program_id = 'AIT' AND year = 7 AND semester = 1 LIMIT 1\"}",
+    "sql_model_output": "{\"sql\": \"SELECT DISTINCT code, name_th, name_en, credits FROM v_plan WHERE program_id = 'AIT' AND year = 7 AND semester = 1\"}",
     "answer_model_output": null,
     "answer": "ไม่พบข้อมูลนี้ในเล่มหลักสูตร",
     "correct": true,
     "why": "ตอบว่าไม่พบตามที่ควร",
-    "seconds": 0.9
+    "seconds": 1.0
   }
 ]
