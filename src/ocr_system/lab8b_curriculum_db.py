@@ -1566,6 +1566,18 @@ SQL: SELECT credits FROM v_semester_credits WHERE program_id = 'IT' AND year = 1
 คำถาม: หลักสูตร BIT ปี 1 เทอม 2 เรียนกี่หน่วยกิต
 SQL: SELECT credits FROM v_semester_credits WHERE program_id = 'BIT' AND year = 1 AND semester = 2 LIMIT 1
 
+คำถาม: ปี 1 เทอม 2 เรียนวิชาอะไรบ้าง
+SQL: SELECT DISTINCT code, name_th, name_en, credits FROM v_plan WHERE program_id = 'DSBA' AND plan_type = 'no_coop' AND year = 1 AND semester = 2
+
+คำถาม: หลักสูตร IT ปี 2 เทอม 2 เรียนวิชาอะไรบ้าง
+SQL: SELECT DISTINCT code, name_th, name_en, credits FROM v_plan WHERE program_id = 'IT' AND plan_type = 'no_coop' AND year = 2 AND semester = 2
+
+คำถาม: หลักสูตร BIT ปี 1 เทอม 1 เรียนวิชาอะไรบ้าง
+SQL: SELECT DISTINCT code, name_th, name_en, credits FROM v_plan WHERE program_id = 'BIT' AND plan_type = 'no_coop' AND year = 1 AND semester = 1
+
+คำถาม: หลักสูตร AIT ปี 2 เทอม 1 เรียนวิชาอะไรบ้าง
+SQL: SELECT DISTINCT code, name_th, name_en, credits FROM v_plan WHERE program_id = 'AIT' AND year = 2 AND semester = 1
+
 คำถาม: วิชาไหนบ้างที่ต้องเรียน 06026240 มาก่อน
 SQL: SELECT code FROM prerequisite WHERE requires = '06026240' AND kind = 'pre'
 
@@ -1590,6 +1602,9 @@ SQL: SELECT article_no FROM regulation WHERE category = 'การทุจร�
 คำถาม: นักศึกษาที่ได้ GPA ต่ำกว่าเท่าไรถึงจะถูกภาคทัณฑ์
 SQL: SELECT condition_desc, max_gpa FROM regulation WHERE category = 'เกณฑ์การภาคทัณฑ์' AND topic LIKE '%ติดภาคทัณฑ์%' LIMIT 1
 
+คำถาม: GPA สะสมต่ำกว่าเท่าไรจึงพ้นสภาพการเป็นนักศึกษา
+SQL: SELECT condition_desc, max_gpa FROM regulation WHERE category = 'เกณฑ์พ้นสภาพนักศึกษา' LIMIT 1
+
 คำถาม: ลงทะเบียนเรียนภาคปกติได้ต่ำสุดและสูงสุดกี่หน่วยกิต
 SQL: SELECT min_credits, max_credits FROM regulation WHERE category = 'เกณฑ์การลงทะเบียน' AND topic = 'ภาคปกติ' LIMIT 1
 
@@ -1612,7 +1627,8 @@ SQL: SELECT min_gpa FROM regulation WHERE category = 'เกณฑ์การ�
 - ถามว่าเรียนชั้นปีที่เท่าไร ให้ SELECT year FROM plan_item WHERE code = ...
 - ถามว่าเรียนภาคการศึกษาใด ให้ SELECT semester FROM plan_item WHERE code = ...
 - ถามว่ามีชั่วโมงปฏิบัติการกี่ชั่วโมง ให้ SELECT lab_h FROM course WHERE code = ...
-- ถามว่าเรียนวิชาอะไรบ้าง ให้ใช้ v_plan เพราะมีชื่อวิชาอยู่แล้ว
+- ถามว่าเรียนวิชาอะไรบ้าง ให้ SELECT DISTINCT code, name_th, name_en, credits FROM v_plan และคืนทุกแถว ห้ามใส่ LIMIT 1 เพราะหนึ่งภาคเรียนมีหลายวิชา
+  ต้องกรอง plan_type เสมอ: ไม่ระบุแผนใช้ plan_type = 'no_coop', ระบุแผนสหกิจใช้ plan_type = 'coop' (ยกเว้นเฉพาะหลักสูตร AIT ที่มีแผนเดียว ไม่ต้องกรอง plan_type)
 - ถามว่าวิชาไหนบ้างต้องเรียน X มาก่อน (วิชาที่ต้องผ่าน X): ให้ SELECT code FROM prerequisite WHERE requires = 'X' AND kind = 'pre'
 - ถามว่าวิชา X ต้องเรียนวิชาใดมาก่อน หรือ ต้องเรียนวิชาใดก่อนถึงจะลง X ได้ (วิชาบังคับก่อนของ X): ให้ SELECT requires FROM prerequisite WHERE code = 'X' AND kind = 'pre'
 - ในตาราง program, v_plan, v_semester_credits, plan_item มีเฉพาะ program_id: 'DSBA', 'IT', 'AIT', 'BIT' เท่านั้น ห้ามใช้ program_id = 'ALL' กับตารางเหล่านี้เด็ดขาด ('ALL' มีเฉพาะในตาราง regulation)
