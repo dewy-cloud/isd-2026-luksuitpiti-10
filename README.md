@@ -240,32 +240,32 @@ python src/ocr_system/lab8b_curriculum_db.py verify -d work/lab8b_run/curriculum
 python src/ocr_system/lab8b_curriculum_db.py eval -d work/lab8b_run/curriculum.db -q work/lab8b_run/gold_questions.json -o work/lab8b_run/eval_result.json --model qwen3:4b
 ```
 **สรุปผลการประเมิน (Evaluation Metrics):**
-- **การตั้งค่า NL2SQL ปัจจุบัน**: Prompt เดียวสำหรับทุกคำถาม (DDL + Few-shot 30 ข้อ + รายการ `category`/`topic` ของข้อบังคับจากฐานข้อมูล), `qwen3:4b` ที่ `temperature = 0.0` และ `num_ctx = 8192`, แก้ SQL 1 ครั้งเมื่อรันไม่ผ่าน และใช้ฟังก์ชัน `ask()` ตัวเดียวกันทั้ง Benchmark และหน้าเว็บ (รายละเอียดใน `sysdoc.md` หัวข้อ 3)
+- **การตั้งค่า NL2SQL ปัจจุบัน**: Prompt เดียวสำหรับทุกคำถาม (DDL + Few-shot 35 ข้อ + รายการ `category`/`topic` ของข้อบังคับจากฐานข้อมูล), `qwen3:4b` ที่ `temperature = 0.0` และ `num_ctx = 8192`, แก้ SQL 1 ครั้งเมื่อรันไม่ผ่าน และใช้ฟังก์ชัน `ask()` ตัวเดียวกันทั้ง Benchmark และหน้าเว็บ (รายละเอียดใน `sysdoc.md` หัวข้อ 3)
 - **ตัวชี้วัดจากคำสั่งประเมิน SQL (`work/lab8b_run/eval_result.json` และ `lab9/reports/step3_nl2sql_benchmark.json`)**:
   - **SQL Syntax Validity**: **100.0%** (189/189 คำถามสร้าง SQL ที่รันผ่านได้)
-  - **NL2SQL Execution Accuracy (Unified Database)**: **95.24%** (180/189 คำถามที่ผลลัพธ์ SQL ตรงกับ Ground Truth ในฐานข้อมูล) ข้อผิด 9 ข้อเป็นปัญหาที่ข้อมูลหรือเฉลย 7 ข้อ และโมเดลสร้าง SQL ผิด 2 ข้อ
+  - **NL2SQL Execution Accuracy (Unified Database)**: **96.30%** (182/189 คำถามที่ผลลัพธ์ SQL ตรงกับ Ground Truth ในฐานข้อมูล) ข้อผิด 7 ข้อทั้งหมดเป็นปัญหาที่ข้อมูลหรือเฉลย ไม่มีข้อที่โมเดลสร้าง SQL ผิด
   - **ผลแยกตาม Query Complexity (Lab 9 Step 5):**
 
 | Level | จำนวนคำถาม | Valid SQL | Execution Accuracy |
 | :--- | ---: | ---: | ---: |
 | 1 — Simple Lookup | 144 | 100.0% (144/144) | 97.92% (141/144) |
-| 2 — Filter & Aggregate | 13 | 100.0% (13/13) | 76.92% (10/13) |
+| 2 — Filter & Aggregate | 12 | 100.0% (12/12) | 83.33% (10/12) |
 | 3 — Multi-table Relation | 17 | 100.0% (17/17) | 88.24% (15/17) |
-| 4 — Regulation Query | 10 | 100.0% (10/10) | 90.00% (9/10) |
-| 5 — Ambiguous Query | 5 | 100.0% (5/5) | 100.0% (5/5) |
+| 4 — Regulation Query | 10 | 100.0% (10/10) | 100.0% (10/10) |
+| 5 — Ambiguous Query | 6 | 100.0% (6/6) | 100.0% (6/6) |
 
   - วิธีทำซ้ำ: รัน Step 3 เพื่อสร้าง `work/lab8b_run/eval_result.json` ก่อน แล้วรัน `python lab9/step5_eval_query_complexity.py --labels lab9/query_complexity_labels.json`
   - ผล Step 5: `lab9/reports/query_complexity_summary.csv` สรุปผลราย Level และ `lab9/reports/query_complexity_detail.csv` แสดงคำถาม, คำตอบจาก LLM, เฉลย, SQL และผลถูก/ผิด โดยป้าย Level กำหนดไว้ใน `lab9/query_complexity_labels.json`
-  - **Per-Program SQL Execution Accuracy (Isolated Databases; ชุดละ 45 ข้อจาก `work/lab8b_run/{P}/gold_questions.json` รันใหม่ด้วย Prompt ปัจจุบัน 13 ต.ค. 2569)**:
+  - **Per-Program SQL Execution Accuracy (Isolated Databases; ชุดละ 45 ข้อจาก `work/lab8b_run/{P}/gold_questions.json` รันใหม่ด้วย Prompt ปัจจุบัน 16 ต.ค. 2569)**:
     - **BIT**: **100.0%** (45/45 ข้อ)
     - **IT**: **100.0%** (45/45 ข้อ)
-    - **DSBA**: **91.1%** (41/45 ข้อ - คำถามที่ไม่ระบุหลักสูตร/แผนได้ 0 แถว เพราะฐานข้อมูลแยกของ DSBA ไม่มีแผนปกติที่เป็นค่าเริ่มต้น 3 ข้อ และกรองหลักสูตรผิด 1 ข้อ)
+    - **DSBA**: **91.1%** (41/45 ข้อ - คำถามที่ไม่ระบุแผนได้ 0 แถว 4 ข้อ เพราะฐานข้อมูลแยกของ DSBA มีเฉพาะแผนสหกิจ ไม่มีแผนปกติที่เป็นค่าเริ่มต้น)
     - **AIT**: **88.9%** (40/45 ข้อ - ปัญหาข้อมูล/เฉลยชุดเดียวกับฐานข้อมูลรวม 5 ข้อ)
     - **รวม 4 ฐาน**: Valid SQL **100.0%** (180/180), Execution Accuracy **95.0%** (171/180)
     - สร้างซ้ำได้ด้วย `python src/ocr_system/lab8b_curriculum_db.py eval -d work/lab8b_run/<P>/curriculum.db -q work/lab8b_run/<P>/gold_questions.json -o work/lab8b_run/<P>/eval_result.json` แล้วรัน `python lab9/step3_eval_nl2sql.py --cached`
 - **ตัวชี้วัดจากการรันสดล่าสุด (`lab9/reports/live_eval_result.json`)**:
-  - **Live Retrieval Correctness**: **95.24%** (180/189 ข้อ โดย `score_one()` ตรวจค่าจาก SQL rows)
-  - **Live QA Latency**: **เฉลี่ย 1.69 วินาที/ข้อ** (ต่ำสุด 0.74 วินาที, ค่ามัธยฐาน 1.66 วินาที, สูงสุด 8.00 วินาที, รวม 319.81 วินาที / 189 ข้อ)
+  - **Live Retrieval Correctness**: **96.30%** (182/189 ข้อ โดย `score_one()` ตรวจค่าจาก SQL rows)
+  - **Live QA Latency**: **เฉลี่ย 1.64 วินาที/ข้อ** (ต่ำสุด 0.74 วินาที, ค่ามัธยฐาน 1.58 วินาที, สูงสุด 3.75 วินาที, รวม 310.61 วินาที / 189 ข้อ)
   - **ทดสอบผ่าน API จริง (`POST /api/ask` 30 คำถาม)**: HTTP 200 ครบ 30/30 และ SQL ตรงกับ Benchmark ทุกตัวอักษร 30/30 เฉลี่ย 1.92 วินาที/ข้อ (รวม HTTP และการค้นป้ายอ้างอิง)
   - สร้างผลชุดนี้ซ้ำได้ด้วย `python lab9/run_all_eval.py --live` (ต้องใส่ `--live` มิฉะนั้นสคริปต์จะใช้ผลที่บันทึกไว้แทนการถามโมเดลสด)
 
