@@ -256,11 +256,13 @@ python src/ocr_system/lab8b_curriculum_db.py eval -d work/lab8b_run/curriculum.d
 
   - วิธีทำซ้ำ: รัน Step 3 เพื่อสร้าง `work/lab8b_run/eval_result.json` ก่อน แล้วรัน `python lab9/step5_eval_query_complexity.py --labels lab9/query_complexity_labels.json`
   - ผล Step 5: `lab9/reports/query_complexity_summary.csv` สรุปผลราย Level และ `lab9/reports/query_complexity_detail.csv` แสดงคำถาม, คำตอบจาก LLM, เฉลย, SQL และผลถูก/ผิด โดยป้าย Level กำหนดไว้ใน `lab9/query_complexity_labels.json`
-  - **Per-Program SQL Execution Accuracy (Isolated Databases; artifact เดิมแยกชุดละ 45 ข้อ รันเมื่อ 11 ต.ค. 2569 ด้วย Prompt เวอร์ชันก่อน ยังไม่ได้รันใหม่)**:
+  - **Per-Program SQL Execution Accuracy (Isolated Databases; ชุดละ 45 ข้อจาก `work/lab8b_run/{P}/gold_questions.json` รันใหม่ด้วย Prompt ปัจจุบัน 13 ต.ค. 2569)**:
     - **BIT**: **100.0%** (45/45 ข้อ)
     - **IT**: **100.0%** (45/45 ข้อ)
-    - **DSBA**: **86.7%** (39/45 ข้อ - ผลลัพธ์ว่างเปล่าเนื่องจากชื่อวิชาเลือก 6 ข้อ)
-    - **AIT**: **88.9%** (40/45 ข้อ - รหัสเฉพาะ 5 ข้อ)
+    - **DSBA**: **91.1%** (41/45 ข้อ - คำถามที่ไม่ระบุหลักสูตร/แผนได้ 0 แถว เพราะฐานข้อมูลแยกของ DSBA ไม่มีแผนปกติที่เป็นค่าเริ่มต้น 3 ข้อ และกรองหลักสูตรผิด 1 ข้อ)
+    - **AIT**: **88.9%** (40/45 ข้อ - ปัญหาข้อมูล/เฉลยชุดเดียวกับฐานข้อมูลรวม 5 ข้อ)
+    - **รวม 4 ฐาน**: Valid SQL **100.0%** (180/180), Execution Accuracy **95.0%** (171/180)
+    - สร้างซ้ำได้ด้วย `python src/ocr_system/lab8b_curriculum_db.py eval -d work/lab8b_run/<P>/curriculum.db -q work/lab8b_run/<P>/gold_questions.json -o work/lab8b_run/<P>/eval_result.json` แล้วรัน `python lab9/step3_eval_nl2sql.py --cached`
 - **ตัวชี้วัดจากการรันสดล่าสุด (`lab9/reports/live_eval_result.json`)**:
   - **Live Retrieval Correctness**: **95.24%** (180/189 ข้อ โดย `score_one()` ตรวจค่าจาก SQL rows)
   - **Live QA Latency**: **เฉลี่ย 1.69 วินาที/ข้อ** (ต่ำสุด 0.74 วินาที, ค่ามัธยฐาน 1.66 วินาที, สูงสุด 8.00 วินาที, รวม 319.81 วินาที / 189 ข้อ)
