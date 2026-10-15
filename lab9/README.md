@@ -43,9 +43,9 @@ lab9/
 
 ### 1. รันประเมินผลรวดเดียวทั้งระบบ (แนะนำ):
 ```bash
-python lab9/run_all_eval.py
+python lab9/run_all_eval.py --live
 ```
-*(ระบบจะประเมินทั้ง 4 ขั้นตอน และแสดงผลสรุปบนหน้าจอทันที)*
+*(ระบบจะประเมินทั้ง 4 ขั้นตอน และแสดงผลสรุปบนหน้าจอทันที ถ้าไม่ใส่ `--live` ขั้นที่ 3 จะใช้ผลที่บันทึกไว้ใน `work/lab8b_run/eval_result.json` แทนการถามโมเดลสด การรันสด 189 ข้อใช้เวลาประมาณ 5–6 นาที และต้องเปิด Ollama ไว้)*
 
 ### 2. รันประเมินผลแยกรายขั้นตอน:
 ```bash
@@ -119,24 +119,30 @@ WER แสดงเฉพาะฟิลด์ชื่อที่ประเ�
 | **2. ตรวจสอบ Schema** | **Schema Pass Rate** | ข้อมูลผ่าน Pydantic และตาราง Option 2: Full Separation | **100.0%** |
 | | **Consistency Pass Rate** | ผ่านกฎความสอดคล้อง **7 จาก 7 ข้อ (CHK1–CHK7)** | **100.0% (7/7 ข้อ)** |
 | **3. ค้นคืน (NL to SQL)** | **Valid SQL Rate** | สัดส่วนคำสั่ง SQL ที่สร้างขึ้นแล้วรันผ่านได้ | **100.0%** (189/189 คำถาม) |
-| | **Execution Accuracy (SQL)** | รัน SQL แล้วได้ผลลัพธ์ตรงกับ Ground Truth | **94.18%** (178/189 คำถาม) |
-| **4. ตอบ & อ้างอิง** | **Faithfulness / Groundedness Proxy** | ใช้ผล `correct` ที่ตรวจจาก SQL rows ใน `step4_groundedness_metrics.json` | **94.18%** (178/189 ข้อ) |
-| | **Exact Match (EM)** | คำตอบตรงเฉลยสำหรับชนิด `value` และ `count` | **93.89%** (169/180 ข้อ) |
+| | **Execution Accuracy (SQL)** | รัน SQL แล้วได้ผลลัพธ์ตรงกับ Ground Truth | **95.24%** (180/189 คำถาม) |
+| **4. ตอบ & อ้างอิง** | **Faithfulness / Groundedness Proxy** | ใช้ผล `correct` ที่ตรวจจาก SQL rows ใน `step4_groundedness_metrics.json` | **95.24%** (180/189 ข้อ) |
+| | **Exact Match (EM)** | คำตอบตรงเฉลยสำหรับชนิด `value` และ `count` | **95.00%** (171/180 ข้อ) |
 | | **Course Citation Coverage** | สัดส่วนวิชาที่มีเลขหน้าจริงจากเล่ม มคอ.2 กำกับอยู่ในระบบ | **99.8%** (503/504 รายวิชา) |
 | | **Regulation Citation Cov** | สัดส่วนข้อบังคับที่มีเลขหน้าสแกนจริงจากภาคผนวก ก | **100.0%** (11/11 ข้อบังคับ) |
 
 > 📌 **หมายเหตุการรันสดล่าสุด**:
-> `lab9/reports/live_eval_result.json` มีผล 189 ข้อ โดยฟิลด์ `correct` มาจาก `score_one()` ที่ตรวจ SQL rows จึงรายงานเป็น **Live Retrieval Correctness 94.18% (178/189)** ไม่ใช่ Human-rated Final-Answer Correctness ส่วน Latency เฉลี่ย **1.85 วินาที/ข้อ** (มัธยฐาน 1.81 วินาที, ต่ำสุด 0.77 วินาที, สูงสุด 10.19 วินาที, รวม 350.03 วินาที)
+> `lab9/reports/live_eval_result.json` มีผล 189 ข้อจากการรัน `python lab9/run_all_eval.py --live` โดยฟิลด์ `correct` มาจาก `score_one()` ที่ตรวจ SQL rows จึงรายงานเป็น **Live Retrieval Correctness 95.24% (180/189)** ไม่ใช่ Human-rated Final-Answer Correctness ส่วน Latency เฉลี่ย **1.69 วินาที/ข้อ** (มัธยฐาน 1.66 วินาที, ต่ำสุด 0.74 วินาที, สูงสุด 8.00 วินาที, รวม 319.81 วินาที) Step 3 และ Step 4 มาจากการรันรอบเดียวกัน
+>
+> ข้อผิด 9 ข้อ: เป็นปัญหาที่ข้อมูลหรือเฉลย 7 ข้อ (เช่น วิชา `06016401` ไม่อยู่ในแผน AIT, ไม่มีข้อมูลวิชาบังคับก่อนของ `06046414` และ `06046442`) และโมเดลสร้าง SQL ผิด 2 ข้อ รายละเอียดดู `sysdoc.md` หัวข้อ 3.5
+>
+> ผลแยกตามหลักสูตร (Isolated DB) ใน `step3_nl2sql_benchmark.json` อ่านมาจาก `work/lab8b_run/{BIT,IT,DSBA,AIT}/eval_result.json` ซึ่งรันใหม่ด้วย Prompt ปัจจุบันเมื่อ 13 ต.ค. 2569 (ชุดละ 45 ข้อ): BIT 100.0% (45/45), IT 100.0% (45/45), DSBA 91.1% (41/45), AIT 88.9% (40/45), รวม 95.0% (171/180) และ Valid SQL 100% ทุกฐาน (`run_all_eval.py --live` ไม่ได้รันชุดนี้ใหม่ ต้องรัน `lab8b_curriculum_db.py eval` แยกรายหลักสูตร)
 
 ### ผลแยกตาม Query Complexity
 
 | Level | จำนวนคำถาม | Valid SQL | Execution Accuracy |
 | :--- | ---: | ---: | ---: |
 | 1 — Simple Lookup | 144 | 100.0% (144/144) | 97.92% (141/144) |
-| 2 — Filter & Aggregate | 12 | 100.0% (12/12) | 83.33% (10/12) |
+| 2 — Filter & Aggregate | 13 | 100.0% (13/13) | 76.92% (10/13) |
 | 3 — Multi-table Relation | 17 | 100.0% (17/17) | 88.24% (15/17) |
-| 4 — Regulation Query | 10 | 100.0% (10/10) | 60.00% (6/10) |
-| 5 — Ambiguous Query | 6 | 100.0% (6/6) | 100.0% (6/6) |
+| 4 — Regulation Query | 10 | 100.0% (10/10) | 90.00% (9/10) |
+| 5 — Ambiguous Query | 5 | 100.0% (5/5) | 100.0% (5/5) |
+
+> การจัดระดับใช้ป้ายใน `lab9/query_complexity_labels.json` ร่วมกับลักษณะของ SQL ที่โมเดลสร้าง (เช่น มี `JOIN` หรือใช้ค่าเริ่มต้น DSBA) จำนวนข้อในแต่ละระดับจึงเปลี่ยนได้เมื่อ Prompt เปลี่ยน ควรเทียบข้ามเวอร์ชันเฉพาะตัวเลขรวม
 
 ### คำอธิบาย Query Complexity Levels
 

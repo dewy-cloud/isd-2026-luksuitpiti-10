@@ -97,6 +97,8 @@ def run_nl2sql_evaluation(live: bool = True, limit: int | None = None, model: st
                 "sql": got["sql"],
                 "n_rows": len(got["rows"]),
                 "error": got["error"],
+                "sql_model_output": got.get("sql_model_output"),
+                "answer_model_output": got.get("answer_model_output"),
                 "answer": got["answer"],
                 "correct": ok,
                 "why": why,

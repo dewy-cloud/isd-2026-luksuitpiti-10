@@ -57,6 +57,7 @@ MODEL_TEXT = os.environ.get("LAB8_MODEL_TEXT", "qwen3:4b")
 
 MAX_REPAIR_ROUNDS = 3      # จำนวนครั้งสูงสุดที่ยอมให้ LLM แก้ JSON ของตัวเอง
 SQL_ROW_LIMIT = 200        # กันไม่ให้ query เผลอดึงทั้งตารางมาใส่ prompt
+NUM_CTX = 8192             # prompt แปลง SQL ยาว ~4.3k token — ต่ำกว่านี้ Ollama จะตัด prompt ทิ้ง
 
 # ระเบียบหน่วยกิตต่อภาคเรียนของหลักสูตรปริญญาตรี (ใช้ในการตรวจ CHK7)
 MIN_CREDITS_PER_SEM = 9
@@ -1581,22 +1582,22 @@ SQL: SELECT min_gpa FROM regulation WHERE category = 'เกณฑ์เกี�
 SQL: SELECT min_gpa FROM regulation WHERE category = 'เกณฑ์เกียรตินิยม' AND topic = 'เกียรตินิยมอันดับ 1' LIMIT 1
 
 คำถาม: ทุจริตในการสอบจะถูกลงโทษอย่างไร
-SQL: SELECT condition_desc, penalty_action, article_no FROM regulation WHERE category = 'เกณฑ์การทุจริตในการสอบ' LIMIT 1
+SQL: SELECT condition_desc, penalty_action, article_no FROM regulation WHERE category = 'การทุจริตในการสอบ' LIMIT 1
 
 คำถาม: การทุจริตในการสอบอ้างอิงข้อบังคับข้อใด
-SQL: SELECT article_no FROM regulation WHERE category = 'เกณฑ์การทุจริตในการสอบ' LIMIT 1
+SQL: SELECT article_no FROM regulation WHERE category = 'การทุจริตในการสอบ' LIMIT 1
 
 คำถาม: นักศึกษาที่ได้ GPA ต่ำกว่าเท่าไรถึงจะถูกภาคทัณฑ์
-SQL: SELECT condition_desc, max_gpa FROM regulation WHERE category = 'เกณฑ์ภาคทัณฑ์' AND topic LIKE '%ติดภาคทัณฑ์%' LIMIT 1
+SQL: SELECT condition_desc, max_gpa FROM regulation WHERE category = 'เกณฑ์การภาคทัณฑ์' AND topic LIKE '%ติดภาคทัณฑ์%' LIMIT 1
 
 คำถาม: ลงทะเบียนเรียนภาคปกติได้ต่ำสุดและสูงสุดกี่หน่วยกิต
-SQL: SELECT min_credits, max_credits FROM regulation WHERE category = 'เกณฑ์การลงทะเบียน' LIMIT 1
+SQL: SELECT min_credits, max_credits FROM regulation WHERE category = 'เกณฑ์การลงทะเบียน' AND topic = 'ภาคปกติ' LIMIT 1
 
 คำถาม: ลงทะเบียนเรียนภาคปกติได้ต่ำสุดกี่หน่วยกิต
-SQL: SELECT min_credits FROM regulation WHERE category = 'เกณฑ์การลงทะเบียน' LIMIT 1
+SQL: SELECT min_credits FROM regulation WHERE category = 'เกณฑ์การลงทะเบียน' AND topic = 'ภาคปกติ' LIMIT 1
 
 คำถาม: ลงทะเบียนเรียนภาคปกติได้สูงสุดกี่หน่วยกิต
-SQL: SELECT max_credits FROM regulation WHERE category = 'เกณฑ์การลงทะเบียน' LIMIT 1
+SQL: SELECT max_credits FROM regulation WHERE category = 'เกณฑ์การลงทะเบียน' AND topic = 'ภาคปกติ' LIMIT 1
 
 คำถาม: เกณฑ์การสำเร็จการศึกษาต้องได้ GPA เท่าไร
 SQL: SELECT min_gpa FROM regulation WHERE category = 'เกณฑ์การสำเร็จการศึกษา' AND min_gpa IS NOT NULL LIMIT 1
@@ -1617,10 +1618,33 @@ SQL: SELECT min_gpa FROM regulation WHERE category = 'เกณฑ์การ�
 - ในตาราง program, v_plan, v_semester_credits, plan_item มีเฉพาะ program_id: 'DSBA', 'IT', 'AIT', 'BIT' เท่านั้น ห้ามใช้ program_id = 'ALL' กับตารางเหล่านี้เด็ดขาด ('ALL' มีเฉพาะในตาราง regulation)
 - หากในคำถามระบุชื่อหลักสูตร ให้เพิ่มเงื่อนไขระบุ program_id ใน WHERE เสมอ
 - หากในคำถามถามเกี่ยวกับแผนการเรียนหรือหน่วยกิตต่อเทอม (v_semester_credits, v_plan) แต่ไม่ได้ระบุชื่อหลักสูตร ให้ใช้ค่าเริ่มต้นเป็น program_id = 'DSBA' และ sp.plan_type = 'no_coop' (และต้อง JOIN study_plan AS sp ON sp.plan_id = v.plan_id เสมอเมื่อใช้ sp.plan_type)
+- ค่า category/topic ที่มีจริงในตาราง regulation (ใช้ค่าตรงตามนี้เท่านั้น):
+{regulation_labels}
 - ตอบเป็น SQL ล้วน ไม่ต้องมีคำอธิบายและไม่ต้องมี markdown fence
 
 คำถาม: {question}
 SQL:"""
+
+def ensure_answer_matches_rows(answer: str, rows: list[dict[str, Any]]) -> str:
+    """Prevent synthesis from claiming no data when SQL returned rows."""
+    if not rows:
+        return str(answer or "ไม่พบข้อมูลนี้ในเล่มหลักสูตร").strip()
+
+    answer = str(answer or "").strip()
+    no_data_claim = re.search(
+        r"ไม่พบข้อมูล|ไม่มีข้อมูล|ไม่พบผลลัพธ์|no\s+(?:data|records?|results?)",
+        answer,
+        flags=re.IGNORECASE,
+    )
+    if answer and not no_data_claim:
+        return answer
+
+    parts = [f"{key} = {value}" for row in rows[:10] for key, value in row.items()]
+    detail = "; ".join(parts) or json.dumps(rows[:10], ensure_ascii=False)
+    if len(rows) > 10:
+        detail += f"; (แสดง 10 จาก {len(rows)} แถว)"
+    return f"ผลจากฐานข้อมูล: {detail}"
+
 
 ANSWER_PROMPT = """ตอบคำถามต่อไปนี้เป็นภาษาไทย โดยใช้ผลลัพธ์จากฐานข้อมูลเท่านั้น
 
@@ -1647,37 +1671,89 @@ def clean_sql_output(s: str) -> str:
     return m.group(0).strip() if m else s
 
 
-def ask(conn: sqlite3.Connection, question: str,
-        verbose: bool = True) -> dict:
+def get_live_regulation_labels(conn: sqlite3.Connection) -> list[dict[str, str]]:
+    """อ่านคู่ category/topic ที่มีจริงในตาราง regulation เพื่อใส่ใน prompt"""
+    try:
+        rows = conn.execute(
+            "SELECT category, topic FROM regulation "
+            "WHERE category IS NOT NULL OR topic IS NOT NULL "
+            "GROUP BY category, topic ORDER BY MIN(rowid)"
+        ).fetchall()
+    except sqlite3.OperationalError:
+        return []
+    return [
+        {"category": str(row[0] or ""), "topic": str(row[1] or "")}
+        for row in rows
+    ]
+
+
+def format_regulation_labels(labels: list[dict[str, str]] | None) -> str:
+    """แปลงป้ายหมวด/หัวข้อข้อบังคับเป็นบรรทัดสำหรับ SQL_PROMPT"""
+    if not labels:
+        return "- (ไม่มีข้อมูลในตาราง regulation)"
+    return "\n".join(
+        f"- category='{x['category']}' topic='{x['topic']}'" for x in labels)
+
+
+def build_sql_prompt(question: str, repair_error: str | None = None, *,
+                     regulation_labels: list[dict[str, str]] | None = None) -> str:
+    """
+    สร้าง prompt แปลงคำถามเป็น SQL — ใช้ร่วมกันทั้ง CLI, Lab 9 และ Lab 10
+
+    ทุกคำถามใช้ prompt เดียวกัน ถ้ารอบแรกรันไม่ผ่าน จะต่อท้ายข้อความ error
+    ให้โมเดลเขียนใหม่ (repair แบบง่าย)
+    """
+    prompt = SQL_PROMPT.format(
+        ddl=DDL.strip(),
+        regulation_labels=format_regulation_labels(regulation_labels),
+        question=question)
+    if repair_error:
+        prompt += f"\n\nSQL ที่ลองไปแล้วมีข้อผิดพลาด: {repair_error}\nเขียนใหม่ให้ถูก\nSQL:"
+    return prompt + '\nตอบเป็น JSON รูปแบบ {"sql": "SELECT ..."} เท่านั้น'
+
+
+def generate_sql(question: str, repair_error: str | None = None, *,
+                 regulation_labels: list[dict[str, str]] | None = None,
+                 timeout: int = 600, model: str | None = None) -> tuple[str, str]:
+    """ให้ LLM สร้าง SQL หนึ่งคำสั่ง คืน (sql, raw_output)"""
+    raw_sql = ollama_generate(
+        build_sql_prompt(question, repair_error, regulation_labels=regulation_labels),
+        fmt={
+            "type": "object",
+            "properties": {"sql": {"type": "string"}},
+            "required": ["sql"],
+            "additionalProperties": False,
+        }, timeout=timeout, model=model, num_ctx=NUM_CTX, num_predict=256)
+    parsed_sql = parse_json_loose(raw_sql)
+    sql = clean_sql_output(
+        str(parsed_sql.get("sql", "")) if isinstance(parsed_sql, dict)
+        else raw_sql)
+    return sql, raw_sql
+
+
+def ask(conn: sqlite3.Connection, question: str, verbose: bool = True, *,
+        model: str | None = None, timeout: int = 600) -> dict:
     """
     ถามหนึ่งคำถาม — คืน dict ที่มี sql, rows, answer, error
 
     ขั้นตอน: สร้าง SQL -> ตรวจ -> รัน -> สรุปเป็นภาษาไทย
     ถ้ารันไม่ผ่าน จะให้โมเดลลองใหม่หนึ่งครั้งพร้อมข้อความ error
     แล้วถ้ายังไม่ผ่านอีก ให้ยอมแพ้ ไม่เดาคำตอบ
+    ได้ 0 แถวถือเป็นคำตอบ ("ไม่พบข้อมูล") ไม่ลองใหม่
     """
     result: dict[str, Any] = {
         "question": question, "sql": None, "rows": [], "answer": None,
         "error": None, "sql_model_output": None, "answer_model_output": None,
     }
-    ddl = DDL.strip()
-    prompt = SQL_PROMPT.format(ddl=ddl, question=question)
+    regulation_labels = get_live_regulation_labels(conn)
+    repair_error = None
 
     for attempt in range(2):
         try:
-            raw_sql = ollama_generate(
-                prompt + '\nตอบเป็น JSON รูปแบบ {"sql": "SELECT ..."} เท่านั้น',
-                fmt={
-                    "type": "object",
-                    "properties": {"sql": {"type": "string"}},
-                    "required": ["sql"],
-                    "additionalProperties": False,
-                }, num_ctx=4096, num_predict=256)
+            sql, raw_sql = generate_sql(
+                question, repair_error, regulation_labels=regulation_labels,
+                timeout=timeout, model=model)
             result["sql_model_output"] = raw_sql
-            parsed_sql = parse_json_loose(raw_sql)
-            sql = clean_sql_output(
-                str(parsed_sql.get("sql", "")) if isinstance(parsed_sql, dict)
-                else raw_sql)
             sql = guard_sql(sql)
             result["sql"] = sql
             rows = [dict(r) for r in conn.execute(sql).fetchall()]
@@ -1691,8 +1767,7 @@ def ask(conn: sqlite3.Connection, question: str,
             if attempt == 1:
                 result["answer"] = "ไม่สามารถตอบคำถามนี้ได้ กรุณาตรวจสอบเอง"
                 return result
-            prompt = (SQL_PROMPT.format(ddl=ddl, question=question)
-                      + f"\n\nSQL ที่ลองไปแล้วมีข้อผิดพลาด: {e}\nเขียนใหม่ให้ถูก\nSQL:")
+            repair_error = str(e)
 
     # ปฏิเสธที่จะเดา เมื่อไม่มีข้อมูล — จุดนี้สำคัญกว่าที่คิด
     if not result["rows"]:
@@ -1708,7 +1783,7 @@ def ask(conn: sqlite3.Connection, question: str,
             "properties": {"answer": {"type": "string"}},
             "required": ["answer"],
             "additionalProperties": False,
-        }, num_ctx=4096, num_predict=256).strip()
+        }, timeout=timeout, model=model, num_ctx=NUM_CTX, num_predict=256).strip()
     result["answer_model_output"] = raw_answer
     parsed_answer = parse_json_loose(raw_answer)
     result["answer"] = (
@@ -1716,6 +1791,7 @@ def ask(conn: sqlite3.Connection, question: str,
         if isinstance(parsed_answer, dict) else raw_answer)
     result["answer"] = re.sub(
         r"<think>.*?</think>", "", result["answer"], flags=re.S).strip()
+    result["answer"] = ensure_answer_matches_rows(result["answer"], result["rows"])
     return result
 
 

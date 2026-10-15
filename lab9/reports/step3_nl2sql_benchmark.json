@@ -1,17 +1,26 @@
 {
   "main_database": {
     "total_questions": 189,
-    "correct_answers": 178,
-    "execution_accuracy": 94.18,
+    "correct_answers": 180,
+    "execution_accuracy": 95.24,
     "valid_sql_count": 189,
     "valid_sql_rate": 100.0,
     "error_distribution": {
       "syntax_error": 0,
-      "empty_rows": 11,
+      "empty_rows": 9,
       "wrong_value": 0,
       "other": 0
     },
     "wrong_cases_sample": [
+      {
+        "question": "ปี 2 เทอม 2 เรียนกี่หน่วยกิต",
+        "expect": {
+          "type": "value",
+          "value": 21
+        },
+        "sql": "SELECT credits FROM v_semester_credits WHERE program_id = 'BIT' AND year = 2 AND semester = 2 LIMIT 1",
+        "why": "ไม่พบค่า 21 (ได้ ['18'])"
+      },
       {
         "question": "วิชา 06016401 ในหลักสูตร AIT เรียนชั้นปีที่เท่าไร",
         "expect": {
@@ -47,15 +56,6 @@
         },
         "sql": "SELECT requires FROM prerequisite WHERE code = '06046414' AND kind = 'pre' LIMIT 200",
         "why": "ไม่พบค่า 06046410 (ได้ [])"
-      },
-      {
-        "question": "วิชา 06046442 ต้องเรียนวิชาใดมาก่อน",
-        "expect": {
-          "type": "value",
-          "value": "06046441"
-        },
-        "sql": "SELECT requires FROM prerequisite WHERE code = '06046442' AND kind = 'pre' LIMIT 200",
-        "why": "ไม่พบค่า 06046441 (ได้ [])"
       }
     ]
   },
@@ -90,26 +90,17 @@
     },
     "DSBA": {
       "total_questions": 45,
-      "correct_answers": 39,
-      "execution_accuracy": 86.67,
+      "correct_answers": 41,
+      "execution_accuracy": 91.11,
       "valid_sql_count": 45,
       "valid_sql_rate": 100.0,
       "error_distribution": {
         "syntax_error": 0,
-        "empty_rows": 6,
+        "empty_rows": 4,
         "wrong_value": 0,
         "other": 0
       },
       "wrong_cases_sample": [
-        {
-          "question": "วิชา 90641001 มีกี่หน่วยกิต",
-          "expect": {
-            "type": "value",
-            "value": 2
-          },
-          "sql": "SELECT credits FROM course WHERE code = '90641001' LIMIT 1",
-          "why": "ไม่พบค่า 2 (ได้ ['3'])"
-        },
         {
           "question": "ปี 1 เทอม 1 เรียนกี่หน่วยกิต",
           "expect": {
@@ -129,15 +120,6 @@
           "why": "ไม่พบค่า 7 (ได้ [])"
         },
         {
-          "question": "วิชา 90641003 มีกี่หน่วยกิต",
-          "expect": {
-            "type": "value",
-            "value": 1
-          },
-          "sql": "SELECT credits FROM course WHERE code = '90641003' LIMIT 1",
-          "why": "ไม่พบค่า 1 (ได้ ['3'])"
-        },
-        {
           "question": "ปี 2 เทอม 1 เรียนกี่หน่วยกิต",
           "expect": {
             "type": "value",
@@ -145,6 +127,15 @@
           },
           "sql": "SELECT v.credits FROM v_semester_credits AS v JOIN study_plan AS sp ON sp.plan_id = v.plan_id WHERE v.program_id = 'DSBA' AND sp.plan_type = 'no_coop' AND v.year = 2 AND v.semester = 1 LIMIT 1",
           "why": "ไม่พบค่า 18 (ได้ [])"
+        },
+        {
+          "question": "ปี 2 เทอม 2 เรียนกี่หน่วยกิต",
+          "expect": {
+            "type": "value",
+            "value": 21
+          },
+          "sql": "SELECT credits FROM v_semester_credits WHERE program_id = 'BIT' AND year = 2 AND semester = 2 LIMIT 1",
+          "why": "ไม่พบค่า 21 (ได้ [])"
         }
       ]
     },

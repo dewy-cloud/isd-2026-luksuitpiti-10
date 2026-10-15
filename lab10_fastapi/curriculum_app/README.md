@@ -92,38 +92,45 @@ curriculum_app/static/
   | `question` | string | Yes | ข้อความคำถามภาษาธรรมชาติ (ความยาว 2–500 ตัวอักษร) |
 
 - **Response: สำเร็จ (200 OK)**:
+  ตัวอย่างจริงจากการทดสอบ (คำถามข้อบังคับ มีป้ายอ้างอิง):
   ```json
   {
-    "question": "หลักสูตร IT มีกี่หน่วยกิต",
-    "sql": "SELECT total_credits FROM program WHERE program_id LIKE 'IT%' LIMIT 1",
+    "question": "เกียรตินิยมอันดับ 1 ต้องมี GPA สะสมอย่างน้อยเท่าไร",
+    "sql": "SELECT min_gpa FROM regulation WHERE category = 'เกณฑ์เกียรตินิยม' AND topic = 'เกียรตินิยมอันดับ 1' LIMIT 1",
     "rows": [
       {
-        "total_credits": 129
+        "min_gpa": 3.5
       }
     ],
-    "answer": "หลักสูตร IT มีหน่วยกิตรวมทั้งหมด 129 หน่วยกิต",
+    "answer": "3.5",
     "sources": [
       {
-        "type": "program",
-        "title": "เล่มหลักสูตร",
-        "printed_pages": "หมวดที่ 3",
+        "type": "regulation",
+        "title": "เกียรตินิยมอันดับ 1",
+        "article_no": "ข้อ 27.2.2",
+        "printed_pages": "93",
         "pdf_pages": null
       }
     ]
   }
   ```
+  คำถามระดับหลักสูตร เช่น `"หลักสูตร IT มีกี่หน่วยกิต"` จะได้ `"sql": "SELECT total_credits FROM program WHERE program_id = 'IT' LIMIT 1"`, `"rows": [{"total_credits": 129}]` และ `"sources": []` เพราะตาราง `program` ไม่มีเลขหน้าในฐานข้อมูล
+
   | Field | Type | Description |
   | :--- | :--- | :--- |
   | `question` | string | คำถามเดิมที่ส่งเข้ามา |
-  | `sql` | string | คำสั่ง SQL ที่โมเดล Qwen3 สร้างขึ้น |
-  | `rows` | array[object] | ข้อมูลดิบที่ได้จากการคิวรี SQLite แบบ read-only |
-  | `answer` | string | คำตอบภาษาธรรมชาติที่โมเดลสังเคราะห์จาก rows โดยปราศจาก Hallucination |
-  | `sources` | array[object] | แหล่งอ้างอิงหลักฐาน (เลขหน้า มคอ.2, เลขข้อบังคับ, หมวดหลักสูตร) |
+  | `sql` | string | คำสั่ง SQL ล่าสุดที่ผ่าน `guard_sql()` (เป็นสตริงว่างถ้าโมเดลไม่เคยสร้าง SQL ที่ผ่าน `guard_sql()` ได้เลย) |
+  | `rows` | array[object] | ข้อมูลดิบที่ได้จากการคิวรี SQLite แบบ read-only (สูงสุด 100 แถว) |
+  | `answer` | string | คำตอบภาษาไทยที่โมเดลสังเคราะห์จาก rows เท่านั้น ถ้าได้ 0 แถวจะเป็น `"ไม่พบข้อมูลนี้ในเล่มหลักสูตร"` |
+  | `sources` | array[object] | แหล่งอ้างอิง: `type = "course"` (รหัสวิชา, `printed_pages`, `pdf_pages`) หรือ `type = "regulation"` (`article_no`, `printed_pages`) |
+
+  ขั้นตอนภายในใช้ `lab8b.ask()` ตัวเดียวกับที่ Lab 9 ใช้วัดผล: Prompt เดียว (DDL + Few-shot + ป้ายหมวดข้อบังคับ), `qwen3:4b` ที่ `num_ctx = 8192`, แก้ SQL 1 ครั้งเมื่อรันไม่ผ่าน และไม่ลองใหม่เมื่อได้ 0 แถว ผลทดสอบยิง API 30 ข้อได้ SQL ตรงกับ Benchmark ทุกข้อ
 
 - **Response: ข้อผิดพลาด (Error)**:
   | HTTP Status | เหตุการณ์ | รูปแบบ Response | วิธีแก้ไข / สิ่งที่ผู้ใช้ต้องทำ |
   | :--- | :--- | :--- | :--- |
-  | `422 Unprocessable Entity` | คำถามไม่สามารถแปลงเป็น SQL ที่ถูกต้อง หรือคิวรีขัดข้อง | `{"detail": "ข้อความอธิบายความผิดพลาด"}` | ปรับปรุงคำถามให้กระชับและเจาะจงขึ้น |
+  | `200 OK` (คำตอบปฏิเสธ) | โมเดลสร้าง SQL ที่ใช้ได้ไม่สำเร็จแม้แก้แล้ว 1 ครั้ง | `"answer": "ไม่สามารถตอบคำถามนี้ได้ กรุณาตรวจสอบเอง"` | ปรับปรุงคำถามให้กระชับและเจาะจงขึ้น เช่น ระบุหลักสูตรหรือรหัสวิชา |
+  | `422 Unprocessable Entity` | Request body ไม่ถูกต้อง (เช่น ไม่มี `question` หรือความยาวไม่อยู่ในช่วง 2–500 ตัวอักษร) | `{"detail": [...]}` | ตรวจรูปแบบ JSON ที่ส่ง |
   | `503 Service Unavailable` | ไม่พบไฟล์ `curriculum.db` หรือติดต่อ Ollama `qwen3:4b` ไม่ได้ | `{"detail": "ติดต่อ Ollama ไม่ได้"}` | ตรวจสอบสถานะ Ollama หรือเช็คที่ `/api/health` |
 
 ---

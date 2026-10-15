@@ -17,12 +17,12 @@
 16,ต้องเรียนวิชาอะไรมาก่อนจึงจะลงเรียน 06026217 ได้,ไม่พบข้อมูลนี้ในเล่มหลักสูตร,No result expected,none,3,Multi-table Relation,multi_table_relation,True,True,,ตอบว่าไม่พบตามที่ควร,SELECT requires FROM prerequisite WHERE code = '06026217' AND kind = 'pre' LIMIT 200
 17,ปี 1 เทอม 1 เรียนกี่หน่วยกิต,18 หน่วยกิต,18,value,5,Ambiguous Query,ambiguous_default_dsba,True,True,,ตรง,SELECT v.credits FROM v_semester_credits AS v JOIN study_plan AS sp ON sp.plan_id = v.plan_id WHERE v.program_id = 'DSBA' AND sp.plan_type = 'no_coop' AND v.year = 1 AND v.semester = 1 LIMIT 1
 18,ปี 1 เทอม 1 เรียนกี่วิชา,7 วิชา,7,value,5,Ambiguous Query,ambiguous_default_dsba,True,True,,ตรง,SELECT v.n_courses FROM v_semester_credits AS v JOIN study_plan AS sp ON sp.plan_id = v.plan_id WHERE v.program_id = 'DSBA' AND sp.plan_type = 'no_coop' AND v.year = 1 AND v.semester = 1 LIMIT 1
-19,ต้องเรียนวิชาอะไรมาก่อนจึงจะลงเรียน 06026212 ได้,ต้องเรียนวิชา 06066300 ก่อนจึงจะลงเรียน 06026212 ได้,06066300,value,3,Multi-table Relation,multi_table_relation,True,True,,ตรง,SELECT requires FROM prerequisite WHERE code = '06026212' AND kind = 'pre' LIMIT 200
+19,ต้องเรียนวิชาอะไรมาก่อนจึงจะลงเรียน 06026212 ได้,ต้องเรียนวิชา 06066300 ก่อน,06066300,value,3,Multi-table Relation,multi_table_relation,True,True,,ตรง,SELECT requires FROM prerequisite WHERE code = '06026212' AND kind = 'pre' LIMIT 200
 20,วิชา 06066300 เรียนชั้นปีที่เท่าไร,ปีที่ 2,2,value,1,Simple Lookup,single_table_lookup,True,True,,ตรง,SELECT year FROM plan_item WHERE code = '06066300' LIMIT 1
-21,วิชา 06066300 เรียนภาคการศึกษาใด,ภาคการศึกษา 1,1,value,1,Simple Lookup,single_table_lookup,True,True,,ตรง,SELECT semester FROM plan_item WHERE code = '06066300' LIMIT 1
+21,วิชา 06066300 เรียนภาคการศึกษาใด,ภาคการศึกษาที่ 1,1,value,1,Simple Lookup,single_table_lookup,True,True,,ตรง,SELECT semester FROM plan_item WHERE code = '06066300' LIMIT 1
 22,วิชา 06066300 มีกี่หน่วยกิต,3 หน่วยกิต,3,value,1,Simple Lookup,single_table_lookup,True,True,,ตรง,SELECT credits FROM course WHERE code = '06066300' LIMIT 1
 23,วิชาไหนบ้างที่ต้องเรียน 06066300 มาก่อน,"06026212, 06026213, 06016457, 060164: 06016458","06026212, 06026213",set,3,Multi-table Relation,multi_table_relation,True,True,,ครบ,SELECT code FROM prerequisite WHERE requires = '06066300' AND kind = 'pre' LIMIT 200
-24,ต้องเรียนวิชาอะไรมาก่อนจึงจะลงเรียน 06026215 ได้,ต้องเรียนวิชา 06026214 ก่อนจึงจะลงเรียน 06026215 ได้,06026214,value,3,Multi-table Relation,multi_table_relation,True,True,,ตรง,SELECT requires FROM prerequisite WHERE code = '06026215' AND kind = 'pre' LIMIT 200
+24,ต้องเรียนวิชาอะไรมาก่อนจึงจะลงเรียน 06026215 ได้,ต้องเรียนวิชา 06026214 ก่อนจึงจะลงเรียน 060 26215 ได้,06026214,value,3,Multi-table Relation,multi_table_relation,True,True,,ตรง,SELECT requires FROM prerequisite WHERE code = '06026215' AND kind = 'pre' LIMIT 200
 25,วิชา 06026215 เรียนชั้นปีที่เท่าไร,ปีที่ 4,4,value,1,Simple Lookup,single_table_lookup,True,True,,ตรง,SELECT year FROM plan_item WHERE code = '06026215' LIMIT 1
 26,วิชา 06026215 เรียนภาคการศึกษาใด,ภาคการศึกษา 1,1,value,1,Simple Lookup,single_table_lookup,True,True,,ตรง,SELECT semester FROM plan_item WHERE code = '06026215' LIMIT 1
 27,วิชา 06026215 มีกี่หน่วยกิต,3 หน่วยกิต,3,value,1,Simple Lookup,single_table_lookup,True,True,,ตรง,SELECT credits FROM course WHERE code = '06026215' LIMIT 1
@@ -34,7 +34,7 @@
 33,วิชา 06026201 เรียนชั้นปีที่เท่าไร,ปีที่ 1,1,value,1,Simple Lookup,single_table_lookup,True,True,,ตรง,SELECT year FROM plan_item WHERE code = '06026201' LIMIT 1
 34,วิชา 06026201 เรียนภาคการศึกษาใด,ภาคการศึกษาที่ 2,2,value,1,Simple Lookup,single_table_lookup,True,True,,ตรง,SELECT semester FROM plan_item WHERE code = '06026201' LIMIT 1
 35,วิชา 06026201 มีกี่หน่วยกิต,3 หน่วยกิต,3,value,1,Simple Lookup,single_table_lookup,True,True,,ตรง,SELECT credits FROM course WHERE code = '06026201' LIMIT 1
-36,ต้องเรียนวิชาอะไรมาก่อนจึงจะลงเรียน 06066102 ได้,ต้องเรียนวิชา 06066101 ก่อนจึงจะลงเรียน 06066102 ได้,06066101,value,3,Multi-table Relation,multi_table_relation,True,True,,ตรง,SELECT requires FROM prerequisite WHERE code = '06066102' AND kind = 'pre' LIMIT 200
+36,ต้องเรียนวิชาอะไรมาก่อนจึงจะลงเรียน 06066102 ได้,ต้องเรียนวิชา 06066101 ก่อน,06066101,value,3,Multi-table Relation,multi_table_relation,True,True,,ตรง,SELECT requires FROM prerequisite WHERE code = '06066102' AND kind = 'pre' LIMIT 200
 37,วิชาไหนบ้างที่ต้องเรียน 06066101 มาก่อน,"06016456, 06066102",06066102,value,3,Multi-table Relation,multi_table_relation,True,True,,ตรง,SELECT code FROM prerequisite WHERE requires = '06066101' AND kind = 'pre' LIMIT 200
 38,วิชา 06026213 มีกี่หน่วยกิต,3 หน่วยกิต,3,value,1,Simple Lookup,single_table_lookup,True,True,,ตรง,SELECT credits FROM course WHERE code = '06026213' LIMIT 1
 39,วิชา 06026202 มีกี่หน่วยกิต,3 หน่วยกิต,3,value,1,Simple Lookup,single_table_lookup,True,True,,ตรง,SELECT credits FROM course WHERE code = '06026202' LIMIT 1
@@ -42,9 +42,9 @@
 41,วิชา 06066303 มีกี่หน่วยกิต,3 หน่วยกิต,3,value,1,Simple Lookup,single_table_lookup,True,True,,ตรง,SELECT credits FROM course WHERE code = '06066303' LIMIT 1
 42,วิชา 90641003 มีกี่หน่วยกิต,1 หน่วยกิต,1,value,1,Simple Lookup,single_table_lookup,True,True,,ตรง,SELECT credits FROM course WHERE code = '90641003' LIMIT 1
 43,ปี 2 เทอม 1 เรียนกี่หน่วยกิต,18 หน่วยกิต,18,value,5,Ambiguous Query,ambiguous_default_dsba,True,True,,ตรง,SELECT v.credits FROM v_semester_credits AS v JOIN study_plan AS sp ON sp.plan_id = v.plan_id WHERE v.program_id = 'DSBA' AND sp.plan_type = 'no_coop' AND v.year = 2 AND v.semester = 1 LIMIT 1
-44,ปี 2 เทอม 2 เรียนกี่หน่วยกิต,21 หน่วยกิต,21,value,5,Ambiguous Query,ambiguous_default_dsba,True,True,,ตรง,SELECT v.credits FROM v_semester_credits AS v JOIN study_plan AS sp ON sp.plan_id = v.plan_id WHERE v.program_id = 'DSBA' AND sp.plan_type = 'no_coop' AND v.year = 2 AND v.semester = 2 LIMIT 1
+44,ปี 2 เทอม 2 เรียนกี่หน่วยกิต,18 หน่วยกิต,21,value,2,Filter & Aggregate,aggregate_or_plan_filter,True,False,,ไม่พบค่า 21 (ได้ ['18']),SELECT credits FROM v_semester_credits WHERE program_id = 'BIT' AND year = 2 AND semester = 2 LIMIT 1
 45,วิชา 06026999 ชื่ออะไร,ไม่พบข้อมูลนี้ในเล่มหลักสูตร,No result expected,none,1,Simple Lookup,single_table_lookup,True,True,,ตอบว่าไม่พบตามที่ควร,SELECT name_th FROM course WHERE code = '06026999' LIMIT 1
-46,หลักสูตร IT มีทั้งหมดกี่หน่วยกิต,129 หน่วยกิต,129,value,1,Simple Lookup,single_table_lookup,True,True,,ตรง,SELECT total_credits FROM program WHERE program_id = 'IT' LIMIT 1
+46,หลักสูตร IT มีทั้งหมดกี่หน่วยกิต,129,129,value,1,Simple Lookup,single_table_lookup,True,True,,ตรง,SELECT total_credits FROM program WHERE program_id = 'IT' LIMIT 1
 47,หลักสูตร IT ใช้เวลาเรียนกี่ปี,4 ปี,4,value,1,Simple Lookup,single_table_lookup,True,True,,ตรง,SELECT years FROM program WHERE program_id = 'IT' LIMIT 1
 48,วิชา 06016401 ในหลักสูตร IT มีกี่หน่วยกิต,3 หน่วยกิต,3,value,1,Simple Lookup,single_table_lookup,True,True,,ตรง,SELECT credits FROM course WHERE code = '06016401' LIMIT 1
 49,วิชา 06016401 ในหลักสูตร IT เรียนชั้นปีที่เท่าไร,ปีที่ 1,1,value,1,Simple Lookup,single_table_lookup,True,True,,ตรง,SELECT year FROM plan_item WHERE code = '06016401' AND program_id = 'IT' LIMIT 1
@@ -87,8 +87,8 @@
 86,หลักสูตร IT ปี 2 เทอม 1 เรียนกี่หน่วยกิต,18 หน่วยกิต,18,value,2,Filter & Aggregate,aggregate_or_plan_filter,True,True,,ตรง,SELECT credits FROM v_semester_credits WHERE program_id = 'IT' AND year = 2 AND semester = 1 LIMIT 1
 87,วิชา 06016481 มีกี่หน่วยกิต,6 หน่วยกิต,6,value,1,Simple Lookup,single_table_lookup,True,True,,ตรง,SELECT credits FROM course WHERE code = '06016481' LIMIT 1
 88,วิชา 99999999 ในหลักสูตร IT มีกี่หน่วยกิต,ไม่พบข้อมูลนี้ในเล่มหลักสูตร,No result expected,none,1,Simple Lookup,single_table_lookup,True,True,,ตอบว่าไม่พบตามที่ควร,SELECT credits FROM course WHERE code = '99999999' LIMIT 1
-89,ปี 7 เทอม 1 ในหลักสูตร IT เรียนวิชาอะไรบ้าง,ไม่พบข้อมูลนี้ในเล่มหลักสูตร,No result expected,none,2,Filter & Aggregate,aggregate_or_plan_filter,True,True,,ตอบว่าไม่พบตามที่ควร,"SELECT name_th, name_en, code, credits, year, semester, alt_group, note FROM v_plan WHERE program_id = 'IT' AND year = 7 AND semester = 1 LIMIT 1"
-90,หลักสูตร AIT มีทั้งหมดกี่หน่วยกิต,120 หน่วยกิต,120,value,1,Simple Lookup,single_table_lookup,True,True,,ตรง,SELECT total_credits FROM program WHERE program_id = 'AIT' LIMIT 1
+89,ปี 7 เทอม 1 ในหลักสูตร IT เรียนวิชาอะไรบ้าง,ไม่พบข้อมูลนี้ในเล่มหลักสูตร,No result expected,none,2,Filter & Aggregate,aggregate_or_plan_filter,True,True,,ตอบว่าไม่พบตามที่ควร,"SELECT name_th, name_en, code FROM v_plan WHERE program_id = 'IT' AND year = 7 AND semester = 1 LIMIT 1"
+90,หลักสูตร AIT มีทั้งหมดกี่หน่วยกิต,120,120,value,1,Simple Lookup,single_table_lookup,True,True,,ตรง,SELECT total_credits FROM program WHERE program_id = 'AIT' LIMIT 1
 91,หลักสูตร AIT ใช้เวลาเรียนกี่ปี,4 ปี,4,value,1,Simple Lookup,single_table_lookup,True,True,,ตรง,SELECT years FROM program WHERE program_id = 'AIT' LIMIT 1
 92,วิชา 06016401 ในหลักสูตร AIT มีกี่หน่วยกิต,3 หน่วยกิต,3,value,1,Simple Lookup,single_table_lookup,True,True,,ตรง,SELECT credits FROM course WHERE code = '06016401' LIMIT 1
 93,วิชา 06016401 ในหลักสูตร AIT เรียนชั้นปีที่เท่าไร,ไม่พบข้อมูลนี้ในเล่มหลักสูตร,1,value,1,Simple Lookup,single_table_lookup,True,False,,ไม่พบค่า 1 (ได้ []),SELECT year FROM plan_item WHERE code = '06016401' AND program_id = 'AIT' LIMIT 1
@@ -101,7 +101,7 @@
 100,วิชา 06046402 เรียนภาคการศึกษาใด,ภาคการศึกษา 1,1,value,1,Simple Lookup,single_table_lookup,True,True,,ตรง,SELECT semester FROM plan_item WHERE code = '06046402' LIMIT 1
 101,วิชา 06066000 มีกี่หน่วยกิต,3 หน่วยกิต,3,value,1,Simple Lookup,single_table_lookup,True,True,,ตรง,SELECT credits FROM course WHERE code = '06066000' LIMIT 1
 102,วิชา 06066000 เรียนชั้นปีที่เท่าไร,ปีที่ 2,1,value,1,Simple Lookup,single_table_lookup,True,False,,ไม่พบค่า 1 (ได้ ['2']),SELECT year FROM plan_item WHERE code = '06066000' LIMIT 1
-103,วิชา 06066000 เรียนภาคการศึกษาใด,ภาคการศึกษาที่ 1,1,value,1,Simple Lookup,single_table_lookup,True,True,,ตรง,SELECT semester FROM plan_item WHERE code = '06066000' LIMIT 1
+103,วิชา 06066000 เรียนภาคการศึกษาใด,ภาคการศึกษา 1,1,value,1,Simple Lookup,single_table_lookup,True,True,,ตรง,SELECT semester FROM plan_item WHERE code = '06066000' LIMIT 1
 104,วิชา 06046401 มีกี่หน่วยกิต,3 หน่วยกิต,3,value,1,Simple Lookup,single_table_lookup,True,True,,ตรง,SELECT credits FROM course WHERE code = '06046401' LIMIT 1
 105,วิชา 06046401 เรียนชั้นปีที่เท่าไร,ปีที่ 1,1,value,1,Simple Lookup,single_table_lookup,True,True,,ตรง,SELECT year FROM plan_item WHERE code = '06046401' LIMIT 1
 106,วิชา 06046401 เรียนภาคการศึกษาใด,ภาคการศึกษาที่ 2,2,value,1,Simple Lookup,single_table_lookup,True,True,,ตรง,SELECT semester FROM plan_item WHERE code = '06046401' LIMIT 1
@@ -113,7 +113,7 @@
 112,วิชา 06066301 ในหลักสูตร AIT เรียนภาคการศึกษาใด,ภาคการศึกษาที่ 2,2,value,1,Simple Lookup,single_table_lookup,True,True,,ตรง,SELECT semester FROM plan_item WHERE code = '06066301' AND program_id = 'AIT' LIMIT 1
 113,วิชา 06046401 ต้องเรียนวิชาใดมาก่อน,วิชา 06046400,06046400,value,3,Multi-table Relation,multi_table_relation,True,True,,ตรง,SELECT requires FROM prerequisite WHERE code = '06046401' AND kind = 'pre' LIMIT 200
 114,วิชา 06046405 ต้องเรียนวิชาใดมาก่อน,06066001,06066001,value,3,Multi-table Relation,multi_table_relation,True,True,,ตรง,SELECT requires FROM prerequisite WHERE code = '06046405' AND kind = 'pre' LIMIT 200
-115,วิชา 06046406 ต้องเรียนวิชาใดมาก่อน,"วิชา 06046401, 06046402",06046401,value,3,Multi-table Relation,multi_table_relation,True,True,,ตรง,SELECT requires FROM prerequisite WHERE code = '06046406' AND kind = 'pre' LIMIT 200
+115,วิชา 06046406 ต้องเรียนวิชาใดมาก่อน,"06046401, 06046402",06046401,value,3,Multi-table Relation,multi_table_relation,True,True,,ตรง,SELECT requires FROM prerequisite WHERE code = '06046406' AND kind = 'pre' LIMIT 200
 116,วิชา 06046414 ต้องเรียนวิชาใดมาก่อน,ไม่พบข้อมูลนี้ในเล่มหลักสูตร,06046410,value,3,Multi-table Relation,multi_table_relation,True,False,,ไม่พบค่า 06046410 (ได้ []),SELECT requires FROM prerequisite WHERE code = '06046414' AND kind = 'pre' LIMIT 200
 117,วิชา 06046442 ต้องเรียนวิชาใดมาก่อน,ไม่พบข้อมูลนี้ในเล่มหลักสูตร,06046441,value,3,Multi-table Relation,multi_table_relation,True,False,,ไม่พบค่า 06046441 (ได้ []),SELECT requires FROM prerequisite WHERE code = '06046442' AND kind = 'pre' LIMIT 200
 118,หลักสูตร AIT ปี 1 เทอม 1 เรียนกี่หน่วยกิต,15 หน่วยกิต,18,value,2,Filter & Aggregate,aggregate_or_plan_filter,True,False,,ไม่พบค่า 18 (ได้ ['15']),SELECT credits FROM v_semester_credits WHERE program_id = 'AIT' AND year = 1 AND semester = 1 LIMIT 1
@@ -129,10 +129,10 @@
 128,วิชา 06046415 มีกี่หน่วยกิต,3 หน่วยกิต,3,value,1,Simple Lookup,single_table_lookup,True,True,,ตรง,SELECT credits FROM course WHERE code = '06046415' LIMIT 1
 129,วิชา 06046415 เรียนชั้นปีที่เท่าไร,ปีที่ 3,3,value,1,Simple Lookup,single_table_lookup,True,True,,ตรง,SELECT year FROM plan_item WHERE code = '06046415' LIMIT 1
 130,วิชา 06046441 มีกี่หน่วยกิต,3 หน่วยกิต,3,value,1,Simple Lookup,single_table_lookup,True,True,,ตรง,SELECT credits FROM course WHERE code = '06046441' LIMIT 1
-131,วิชา 06046443 มีกี่หน่วยกิต,6,6,value,1,Simple Lookup,single_table_lookup,True,True,,ตรง,SELECT credits FROM course WHERE code = '06046443' LIMIT 1
+131,วิชา 06046443 มีกี่หน่วยกิต,6 หน่วยกิต,6,value,1,Simple Lookup,single_table_lookup,True,True,,ตรง,SELECT credits FROM course WHERE code = '06046443' LIMIT 1
 132,หลักสูตร AIT ปี 2 เทอม 1 เรียนกี่หน่วยกิต,18 หน่วยกิต,18,value,2,Filter & Aggregate,aggregate_or_plan_filter,True,True,,ตรง,SELECT credits FROM v_semester_credits WHERE program_id = 'AIT' AND year = 2 AND semester = 1 LIMIT 1
 133,วิชา 88888888 ในหลักสูตร AIT มีกี่หน่วยกิต,ไม่พบข้อมูลนี้ในเล่มหลักสูตร,No result expected,none,1,Simple Lookup,single_table_lookup,True,True,,ตอบว่าไม่พบตามที่ควร,SELECT credits FROM course WHERE code = '88888888' LIMIT 1
-134,ปี 7 เทอม 1 ในหลักสูตร AIT เรียนวิชาอะไรบ้าง,ไม่พบข้อมูลนี้ในเล่มหลักสูตร,No result expected,none,2,Filter & Aggregate,aggregate_or_plan_filter,True,True,,ตอบว่าไม่พบตามที่ควร,"SELECT name_th, name_en, code, credits, year, semester, alt_group, note FROM v_plan WHERE program_id = 'AIT' AND year = 7 AND semester = 1 LIMIT 1"
+134,ปี 7 เทอม 1 ในหลักสูตร AIT เรียนวิชาอะไรบ้าง,ไม่พบข้อมูลนี้ในเล่มหลักสูตร,No result expected,none,2,Filter & Aggregate,aggregate_or_plan_filter,True,True,,ตอบว่าไม่พบตามที่ควร,SELECT name_th FROM v_plan WHERE program_id = 'AIT' AND year = 7 AND semester = 1 LIMIT 1
 135,หลักสูตร BIT มีทั้งหมดกี่หน่วยกิต,126 หน่วยกิต,126,value,1,Simple Lookup,single_table_lookup,True,True,,ตรง,SELECT total_credits FROM program WHERE program_id = 'BIT' LIMIT 1
 136,หลักสูตร BIT ใช้เวลาเรียนกี่ปี,4 ปี,4,value,1,Simple Lookup,single_table_lookup,True,True,,ตรง,SELECT years FROM program WHERE program_id = 'BIT' LIMIT 1
 137,วิชา 06036100 ในหลักสูตร BIT มีกี่หน่วยกิต,3 หน่วยกิต,3,value,1,Simple Lookup,single_table_lookup,True,True,,ตรง,SELECT credits FROM course WHERE code = '06036100' LIMIT 1
@@ -143,7 +143,7 @@
 142,วิชา 06036101 เรียนภาคการศึกษาใด,ภาคการศึกษา 1,1,value,1,Simple Lookup,single_table_lookup,True,True,,ตรง,SELECT semester FROM plan_item WHERE code = '06036101' LIMIT 1
 143,วิชา 06036118 มีกี่หน่วยกิต,3 หน่วยกิต,3,value,1,Simple Lookup,single_table_lookup,True,True,,ตรง,SELECT credits FROM course WHERE code = '06036118' LIMIT 1
 144,วิชา 06036118 เรียนชั้นปีที่เท่าไร,ปีที่ 1,1,value,1,Simple Lookup,single_table_lookup,True,True,,ตรง,SELECT year FROM plan_item WHERE code = '06036118' LIMIT 1
-145,วิชา 06036118 เรียนภาคการศึกษาใด,ภาคการศึกษาที่ 1,1,value,1,Simple Lookup,single_table_lookup,True,True,,ตรง,SELECT semester FROM plan_item WHERE code = '06036118' LIMIT 1
+145,วิชา 06036118 เรียนภาคการศึกษาใด,ภาคการศึกษา 1,1,value,1,Simple Lookup,single_table_lookup,True,True,,ตรง,SELECT semester FROM plan_item WHERE code = '06036118' LIMIT 1
 146,วิชา 06036102 มีกี่หน่วยกิต,3 หน่วยกิต,3,value,1,Simple Lookup,single_table_lookup,True,True,,ตรง,SELECT credits FROM course WHERE code = '06036102' LIMIT 1
 147,วิชา 06036102 เรียนชั้นปีที่เท่าไร,ปีที่ 1,1,value,1,Simple Lookup,single_table_lookup,True,True,,ตรง,SELECT year FROM plan_item WHERE code = '06036102' LIMIT 1
 148,วิชา 06036102 เรียนภาคการศึกษาใด,ภาคการศึกษาที่ 2,2,value,1,Simple Lookup,single_table_lookup,True,True,,ตรง,SELECT semester FROM plan_item WHERE code = '06036102' LIMIT 1
@@ -153,13 +153,13 @@
 152,วิชา 06036119 มีกี่หน่วยกิต,3 หน่วยกิต,3,value,1,Simple Lookup,single_table_lookup,True,True,,ตรง,SELECT credits FROM course WHERE code = '06036119' LIMIT 1
 153,วิชา 06036119 เรียนชั้นปีที่เท่าไร,ปีที่ 1,1,value,1,Simple Lookup,single_table_lookup,True,True,,ตรง,SELECT year FROM plan_item WHERE code = '06036119' LIMIT 1
 154,วิชา 06036119 เรียนภาคการศึกษาใด,ภาคการศึกษาที่ 2,2,value,1,Simple Lookup,single_table_lookup,True,True,,ตรง,SELECT semester FROM plan_item WHERE code = '06036119' LIMIT 1
-155,วิชา 06036103 มีกี่หน่วยกิต,3,3,value,1,Simple Lookup,single_table_lookup,True,True,,ตรง,SELECT credits FROM course WHERE code = '06036103' LIMIT 1
+155,วิชา 06036103 มีกี่หน่วยกิต,3 หน่วยกิต,3,value,1,Simple Lookup,single_table_lookup,True,True,,ตรง,SELECT credits FROM course WHERE code = '06036103' LIMIT 1
 156,วิชา 06036103 เรียนชั้นปีที่เท่าไร,ปีที่ 2,2,value,1,Simple Lookup,single_table_lookup,True,True,,ตรง,SELECT year FROM plan_item WHERE code = '06036103' LIMIT 1
-157,วิชา 06036103 เรียนภาคการศึกษาใด,ภาคการศึกษา 1,1,value,1,Simple Lookup,single_table_lookup,True,True,,ตรง,SELECT semester FROM plan_item WHERE code = '06036103' LIMIT 1
+157,วิชา 06036103 เรียนภาคการศึกษาใด,ภาคการศึกษาที่ 1,1,value,1,Simple Lookup,single_table_lookup,True,True,,ตรง,SELECT semester FROM plan_item WHERE code = '06036103' LIMIT 1
 158,วิชา 06036104 มีกี่หน่วยกิต,3 หน่วยกิต,3,value,1,Simple Lookup,single_table_lookup,True,True,,ตรง,SELECT credits FROM course WHERE code = '06036104' LIMIT 1
 159,วิชา 06036104 เรียนชั้นปีที่เท่าไร,ปีที่ 2,2,value,1,Simple Lookup,single_table_lookup,True,True,,ตรง,SELECT year FROM plan_item WHERE code = '06036104' LIMIT 1
 160,วิชา 06036104 เรียนภาคการศึกษาใด,ภาคการศึกษา 1,1,value,1,Simple Lookup,single_table_lookup,True,True,,ตรง,SELECT semester FROM plan_item WHERE code = '06036104' LIMIT 1
-161,วิชา 06036108 อยู่ชั้นปีที่เท่าไร,ปีที่ 2,2,value,1,Simple Lookup,single_table_lookup,True,True,,ตรง,SELECT year FROM plan_item WHERE code = '06036108' LIMIT 1
+161,วิชา 06036108 อยู่ชั้นปีที่เท่าไร,2,2,value,1,Simple Lookup,single_table_lookup,True,True,,ตรง,SELECT year FROM plan_item WHERE code = '06036108' LIMIT 1
 162,วิชา 06036108 เรียนภาคการศึกษาใด,ภาคการศึกษาที่ 2,2,value,1,Simple Lookup,single_table_lookup,True,True,,ตรง,SELECT semester FROM plan_item WHERE code = '06036108' LIMIT 1
 163,วิชา 06036111 มีกี่หน่วยกิต,3 หน่วยกิต,3,value,1,Simple Lookup,single_table_lookup,True,True,,ตรง,SELECT credits FROM course WHERE code = '06036111' LIMIT 1
 164,วิชา 06036111 เรียนชั้นปีที่เท่าไร,ปีที่ 2,2,value,1,Simple Lookup,single_table_lookup,True,True,,ตรง,SELECT year FROM plan_item WHERE code = '06036111' LIMIT 1
@@ -177,14 +177,14 @@
 176,หลักสูตร BIT ปี 1 เทอม 2 เรียนกี่หน่วยกิต,18 หน่วยกิต,18,value,2,Filter & Aggregate,aggregate_or_plan_filter,True,True,,ตรง,SELECT credits FROM v_semester_credits WHERE program_id = 'BIT' AND year = 1 AND semester = 2 LIMIT 1
 177,หลักสูตร BIT ปี 2 เทอม 1 เรียนกี่หน่วยกิต,18 หน่วยกิต,18,value,2,Filter & Aggregate,aggregate_or_plan_filter,True,True,,ตรง,SELECT credits FROM v_semester_credits WHERE program_id = 'BIT' AND year = 2 AND semester = 1 LIMIT 1
 178,วิชา 06036999 ชื่ออะไร,ไม่พบข้อมูลนี้ในเล่มหลักสูตร,No result expected,none,1,Simple Lookup,single_table_lookup,True,True,,ตอบว่าไม่พบตามที่ควร,SELECT name_th FROM course WHERE code = '06036999' LIMIT 1
-179,ปี 7 เทอม 1 ในหลักสูตร BIT เรียนวิชาอะไรบ้าง,ไม่พบข้อมูลนี้ในเล่มหลักสูตร,No result expected,none,2,Filter & Aggregate,aggregate_or_plan_filter,True,True,,ตอบว่าไม่พบตามที่ควร,"SELECT name_th, name_en, code, credits, year, semester, alt_group, note FROM v_plan WHERE program_id = 'BIT' AND year = 7 AND semester = 1 LIMIT 1"
-180,ภาคการศึกษาปกติต้องลงทะเบียนอย่างน้อยกี่หน่วยกิต,9 หน่วยกิต,9,value,4,Regulation Query,regulation_query,True,True,,ตรง,SELECT min_credits FROM regulation WHERE category = 'เกณฑ์การลงทะเบียน' LIMIT 1
-181,ภาคการศึกษาปกติลงทะเบียนได้สูงสุดกี่หน่วยกิต,22,22,value,4,Regulation Query,regulation_query,True,True,,ตรง,SELECT max_credits FROM regulation WHERE category = 'เกณฑ์การลงทะเบียน' LIMIT 1
-182,กรณีพิเศษเพื่อขอจบลงทะเบียนได้สูงสุดกี่หน่วยกิต,27 หน่วยกิต,27,value,4,Regulation Query,regulation_query,True,True,,ตรง,SELECT max_credits FROM regulation WHERE category = 'เกณฑ์การลงทะเบียน' AND topic LIKE '%กรณีพิเศษ%' LIMIT 1
-183,ภาคการศึกษาพิเศษฤดูร้อนลงทะเบียนได้สูงสุดกี่หน่วยกิต,9 หน่วยกิต,9,value,4,Regulation Query,regulation_query,True,True,,ตรง,SELECT max_credits FROM regulation WHERE category = 'เกณฑ์การลงทะเบียน' AND topic LIKE '%ฤดูร้อน%' LIMIT 1
-184,ทุจริตในการสอบครั้งแรกได้รับโทษอะไร,ไม่พบข้อมูลนี้ในเล่มหลักสูตร,พักการเรียน 1 ภาคการศึกษาถัดไป,value,4,Regulation Query,regulation_query,True,False,,ไม่พบค่า พักการเรียน 1 ภาคการศึกษาถัดไป (ได้ []),"SELECT condition_desc, penalty_action, article_no FROM regulation WHERE category = 'เกณฑ์การทุจริตในการสอบ' LIMIT 1"
-185,ทุจริตในการสอบซ้ำมากกว่า 3 ครั้งได้รับโทษอะไร,ไม่พบข้อมูลนี้ในเล่มหลักสูตร,พ้นสภาพการเป็นนักศึกษา,value,4,Regulation Query,regulation_query,True,False,,ไม่พบค่า พ้นสภาพการเป็นนักศึกษา (ได้ []),"SELECT condition_desc, penalty_action, article_no FROM regulation WHERE category = 'เกณฑ์การทุจริตในการสอบ' AND condition_desc LIKE '%ซ้ำมากกว่า 3 ครั้ง%' LIMIT 1"
-186,GPA สะสมสูงสุดที่ยังถือว่าติดภาคทัณฑ์คือเท่าไร,ไม่พบข้อมูลนี้ในเล่มหลักสูตร,1.99,value,4,Regulation Query,regulation_query,True,False,,ไม่พบค่า 1.99 (ได้ []),SELECT max_gpa FROM regulation WHERE category = 'เกณฑ์ภาคทัณฑ์' AND topic LIKE '%ติดภาคทัณฑ์%' LIMIT 1
-187,GPA สะสมสูงสุดตามเกณฑ์พ้นสภาพนักศึกษาคือเท่าไร,ไม่พบข้อมูลนี้ในเล่มหลักสูตร,0.99,value,4,Regulation Query,regulation_query,True,False,,ไม่พบค่า 0.99 (ได้ []),SELECT max_gpa FROM regulation WHERE category = 'เกณฑ์พ้นสภาพ' AND topic LIKE '%GPA%' LIMIT 1
-188,เกียรตินิยมอันดับ 1 เหรียญทองต้องมี GPA สะสมอย่างน้อยเท่าไร,3.75,3.75,value,4,Regulation Query,regulation_query,True,True,,ตรง,SELECT min_gpa FROM regulation WHERE category = 'เกณฑ์เกียรตินิยม' AND topic LIKE '%เหรียญทอง%' LIMIT 1
+179,ปี 7 เทอม 1 ในหลักสูตร BIT เรียนวิชาอะไรบ้าง,ไม่พบข้อมูลนี้ในเล่มหลักสูตร,No result expected,none,2,Filter & Aggregate,aggregate_or_plan_filter,True,True,,ตอบว่าไม่พบตามที่ควร,"SELECT name_th, name_en, code FROM v_plan WHERE program_id = 'BIT' AND year = 7 AND semester = 1 LIMIT 1"
+180,ภาคการศึกษาปกติต้องลงทะเบียนอย่างน้อยกี่หน่วยกิต,9 หน่วยกิต,9,value,4,Regulation Query,regulation_query,True,True,,ตรง,SELECT min_credits FROM regulation WHERE category = 'เกณฑ์การลงทะเบียน' AND topic = 'ภาคปกติ' LIMIT 1
+181,ภาคการศึกษาปกติลงทะเบียนได้สูงสุดกี่หน่วยกิต,22,22,value,4,Regulation Query,regulation_query,True,True,,ตรง,SELECT max_credits FROM regulation WHERE category = 'เกณฑ์การลงทะเบียน' AND topic = 'ภาคปกติ' LIMIT 1
+182,กรณีพิเศษเพื่อขอจบลงทะเบียนได้สูงสุดกี่หน่วยกิต,27 หน่วยกิต,27,value,4,Regulation Query,regulation_query,True,True,,ตรง,SELECT max_credits FROM regulation WHERE category = 'เกณฑ์การลงทะเบียน' AND topic = 'กรณีพิเศษขอจบ' LIMIT 1
+183,ภาคการศึกษาพิเศษฤดูร้อนลงทะเบียนได้สูงสุดกี่หน่วยกิต,9 หน่วยกิต,9,value,4,Regulation Query,regulation_query,True,True,,ตรง,SELECT max_credits FROM regulation WHERE category = 'เกณฑ์การลงทะเบียน' AND topic = 'ภาคพิเศษฤดูร้อน' LIMIT 1
+184,ทุจริตในการสอบครั้งแรกได้รับโทษอะไร,พักการเรียน 1 ภาคการศึกษาถัดไป,พักการเรียน 1 ภาคการศึกษาถัดไป,value,4,Regulation Query,regulation_query,True,True,,ตรง,SELECT penalty_action FROM regulation WHERE category = 'การทุจริตในการสอบ' AND topic = 'ทุจริตครั้งแรก' LIMIT 1
+185,ทุจริตในการสอบซ้ำมากกว่า 3 ครั้งได้รับโทษอะไร,พ้นสภาพการเป็นนักศึกษา,พ้นสภาพการเป็นนักศึกษา,value,4,Regulation Query,regulation_query,True,True,,ตรง,SELECT penalty_action FROM regulation WHERE category = 'การทุจริตในการสอบ' AND topic = 'ทุจริตซ้ำมากกว่า 3 ครั้ง' LIMIT 1
+186,GPA สะสมสูงสุดที่ยังถือว่าติดภาคทัณฑ์คือเท่าไร,1.99,1.99,value,4,Regulation Query,regulation_query,True,True,,ตรง,SELECT max_gpa FROM regulation WHERE category = 'เกณฑ์การภาคทัณฑ์' AND topic = 'เกณฑ์การติดภาคทัณฑ์ตามข้อ 22' LIMIT 1
+187,GPA สะสมสูงสุดตามเกณฑ์พ้นสภาพนักศึกษาคือเท่าไร,ผลจากฐานข้อมูล: min_gpa = None,0.99,value,4,Regulation Query,regulation_query,True,False,,ไม่พบค่า 0.99 (ได้ []),SELECT min_gpa FROM regulation WHERE category = 'เกณฑ์พ้นสภาพนักศึกษา' AND topic = 'เกณฑ์พ้นสภาพนักศึกษาจากผลการเรียนตามข้อ 33' LIMIT 1
+188,เกียรตินิยมอันดับ 1 เหรียญทองต้องมี GPA สะสมอย่างน้อยเท่าไร,3.75,3.75,value,4,Regulation Query,regulation_query,True,True,,ตรง,SELECT min_gpa FROM regulation WHERE category = 'เกณฑ์เกียรตินิยม' AND topic = 'เกียรตินิยมอันดับ 1 เหรียญทอง' LIMIT 1
 189,เกียรตินิยมอันดับ 1 ต้องมี GPA สะสมอย่างน้อยเท่าไร,3.5,3.5,value,4,Regulation Query,regulation_query,True,True,,ตรง,SELECT min_gpa FROM regulation WHERE category = 'เกณฑ์เกียรตินิยม' AND topic = 'เกียรตินิยมอันดับ 1' LIMIT 1
